@@ -1,0 +1,40 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+coverage
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+.DS_Store
+
+# Documentation
+*.md
+docs
+
+# Test
+test
+
+# Scripts
+scripts
+
+# Prisma migrations (already in prisma folder)
+# Keep prisma folder for schema and migrations
+
+# GitHub
+.github
+
+# Misc
+*.log
+npm-debug.log*

@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  rdv-backend-v2:
+    image: ghcr.io/{organization}/{repository}:latest
+    container_name: { repository-production }
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env.production
+    restart: unless-stopped
+
+networks:
+  default:
+    name: { repository-production-network }
+    driver: bridge
