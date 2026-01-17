@@ -1,9 +1,15 @@
 import { Module, Provider } from '@nestjs/common';
 import { CharacterCoreModule } from './character-core.module';
 import { UserCharacterController } from './presentation/controllers';
-import { FindCharacterListUseCase } from './application/usecases';
+import {
+  FindCharacterListUseCase,
+  FindMyCharacterListUseCase,
+} from './application/usecases';
 
-const useCases: Provider[] = [FindCharacterListUseCase];
+const useCases: Provider[] = [
+  FindCharacterListUseCase,
+  FindMyCharacterListUseCase,
+];
 
 /**
  * Character User 모듈
