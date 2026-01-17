@@ -417,11 +417,204 @@ model auth_users {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model public_users {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  username   String
-  created_at DateTime @default(now()) @db.Timestamptz(6)
+  id                                            String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  device_id                                     String                   @unique
+  nickname                                      String
+  name_tag                                      String                   @unique
+  preferred_theme_color                         String
+  character_code                                String
+  level                                         Int                      @default(1)
+  experience                                    Int                      @default(0)
+  created_at                                    DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime                 @db.Timestamptz(6)
+  account_transfer_codes                        account_transfer_codes[]
+  event_participants                            event_participants[]
+  event_results                                 event_results[]
+  events                                        events[]
+  group_members_group_members_invited_byTousers group_members[]          @relation("group_members_invited_byTousers")
+  group_members_group_members_user_idTousers    group_members[]          @relation("group_members_user_idTousers")
+  groups                                        groups[]
+  invite_codes_invite_codes_created_byTousers   invite_codes[]           @relation("invite_codes_created_byTousers")
+  invite_codes_invite_codes_used_byTousers      invite_codes[]           @relation("invite_codes_used_byTousers")
+  location_trackings                            location_trackings[]
+  user_characters                               user_characters[]
 
   @@map("users")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model account_transfer_codes {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String       @db.Uuid
+  code       String       @unique
+  expires_at DateTime     @db.Timestamptz(6)
+  is_used    Boolean
+  used_at    DateTime?    @db.Timestamptz(6)
+  created_at DateTime     @default(now()) @db.Timestamptz(6)
+  users      public_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model characters {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  character_code   String            @unique
+  name             String
+  description      String
+  unlock_condition Json?
+  is_default       Boolean
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime          @db.Timestamptz(6)
+  user_characters  user_characters[]
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model event_participants {
+  id          String             @id(map: "event_participant_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id    String             @db.Uuid
+  user_id     String             @db.Uuid
+  status      participant_status
+  joined_at   DateTime           @default(now()) @db.Timestamptz(6)
+  departed_at DateTime?          @db.Timestamptz(6)
+  arrived_at  DateTime?          @db.Timestamptz(6)
+  events      events             @relation(fields: [event_id], references: [id], onDelete: Cascade, map: "event_participant_event_id_fkey")
+  users       public_users       @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "event_participant_user_id_fkey")
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model event_results {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id   String            @db.Uuid
+  user_id    String            @db.Uuid
+  result     attendance_result
+  created_at DateTime          @default(now()) @db.Timestamptz(6)
+  events     events            @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  users      public_users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model events {
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  group_id            String               @db.Uuid
+  created_by          String               @db.Uuid
+  title               String
+  description         String
+  event_time          DateTime             @db.Timestamptz(6)
+  tracking_start_time DateTime             @db.Timestamptz(6)
+  end_time            DateTime             @db.Timestamptz(6)
+  location_address    String
+  location_latitude   Decimal              @db.Decimal
+  location_longitude  Decimal              @db.Decimal
+  status              event_status
+  created_at          DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime             @db.Timestamptz(6)
+  event_participants  event_participants[]
+  event_results       event_results[]
+  users               public_users         @relation(fields: [created_by], references: [id])
+  groups              groups               @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  location_trackings  location_trackings[]
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model group_members {
+  id                                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  group_id                              String            @db.Uuid
+  user_id                               String            @db.Uuid
+  role                                  group_member_role
+  invited_by                            String?           @db.Uuid
+  joined_at                             DateTime          @default(now()) @db.Timestamptz(6)
+  groups                                groups            @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  users_group_members_invited_byTousers public_users?     @relation("group_members_invited_byTousers", fields: [invited_by], references: [id])
+  users_group_members_user_idTousers    public_users      @relation("group_members_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([group_id, user_id], map: "idx_group_member_unique")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model groups {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  description   String
+  icon_code     String
+  owner_id      String          @db.Uuid
+  max_members   Int
+  is_public     Boolean
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @db.Timestamptz(6)
+  events        events[]
+  group_members group_members[]
+  users         public_users    @relation(fields: [owner_id], references: [id])
+  invite_codes  invite_codes[]
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model invite_codes {
+  id                                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  group_id                             String        @db.Uuid
+  code                                 String        @unique
+  created_by                           String        @db.Uuid
+  expires_at                           DateTime      @db.Timestamptz(6)
+  is_used                              Boolean
+  used_by                              String?       @db.Uuid
+  used_at                              DateTime?     @db.Timestamptz(6)
+  created_at                           DateTime      @default(now()) @db.Timestamptz(6)
+  users_invite_codes_created_byTousers public_users  @relation("invite_codes_created_byTousers", fields: [created_by], references: [id], onDelete: Cascade)
+  groups                               groups        @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  users_invite_codes_used_byTousers    public_users? @relation("invite_codes_used_byTousers", fields: [used_by], references: [id])
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model location_trackings {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id       String       @db.Uuid
+  user_id        String       @db.Uuid
+  nickname       String
+  name_tag       String
+  character_code String
+  latitude       Decimal      @db.Decimal
+  longitude      Decimal      @db.Decimal
+  updated_at     DateTime     @default(now()) @db.Timestamptz(6)
+  events         events       @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  users          public_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model user_characters {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String       @db.Uuid
+  character_id String       @db.Uuid
+  unlocked_at  DateTime     @default(now()) @db.Timestamptz(6)
+  characters   characters   @relation(fields: [character_id], references: [id], onDelete: Cascade)
+  users        public_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, character_id], map: "idx_user_character_unique")
   @@schema("public")
 }
 
@@ -493,4 +686,39 @@ enum one_time_token_type {
   phone_change_token
 
   @@schema("auth")
+}
+
+/// This enum is commented in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+enum attendance_result {
+  ARRIVED
+  LATE
+  ABSENT
+
+  @@schema("public")
+}
+
+/// This enum is commented in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+enum event_status {
+  RECRUITING
+  IN_PROGRESS
+  ENDED
+
+  @@schema("public")
+}
+
+/// This enum is commented in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+enum group_member_role {
+  OWNER
+  MEMBER
+
+  @@schema("public")
+}
+
+/// This enum is commented in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+enum participant_status {
+  PREPARING
+  DEPARTED
+  ARRIVED
+
+  @@schema("public")
 }
