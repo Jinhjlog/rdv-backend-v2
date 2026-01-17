@@ -1,15 +1,29 @@
-import { Controller, Get, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Body,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiOkResponse,
   ApiBadRequestResponse,
   ApiQuery,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CheckAccountExistsUseCase } from '../../application/usecases';
 import {
+  CheckAccountExistsUseCase,
+  LoginUseCase,
+} from '../../application/usecases';
+import {
+  AuthUserResponseDto,
   CheckAccountExistsRequestDto,
   CheckAccountExistsResponseDto,
+  LoginRequestDto,
 } from '../dtos';
 
 @ApiTags('인증 - Auth 관리')
@@ -17,6 +31,7 @@ import {
 export class AuthController {
   constructor(
     private readonly checkAccountExistsUseCase: CheckAccountExistsUseCase,
+    private readonly loginUseCase: LoginUseCase,
   ) {}
 
   @ApiOperation({
@@ -55,5 +70,38 @@ export class AuthController {
     @Query() dto: CheckAccountExistsRequestDto,
   ): Promise<CheckAccountExistsResponseDto> {
     return await this.checkAccountExistsUseCase.execute(dto);
+  }
+
+  @ApiOperation({
+    summary: '게스트 - 로그인',
+    description:
+      '기존 사용자의 deviceId로 인증하고 JWT 토큰을 발급합니다.<br><br>' +
+      '**목적**<br>' +
+      '앱 실행 시 기존 사용자를 자동으로 로그인하고 accessToken, refreshToken을 발급합니다.<br><br>' +
+      '**필수 항목**<br>' +
+      'deviceId (비어있지 않은 문자열)<br><br>' +
+      '**주의사항**<br>' +
+      '- deviceId는 필수 입력값입니다.<br>' +
+      '- 등록되지 않은 deviceId는 인증에 실패합니다.<br>',
+  })
+  @ApiOkResponse({
+    description: '로그인 성공 및 토큰 발급 완료',
+    type: AuthUserResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (필드 검증 실패 등)<br>' +
+      '**deviceId**<br>' +
+      '- deviceId가 비어있거나 문자열이 아닌 경우<br>',
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      '인증 실패<br>' +
+      '- 등록되지 않은 deviceId: _**AUTHENTICATION_FAILED**_<br>',
+  })
+  @HttpCode(HttpStatus.OK)
+  @Post('login')
+  async login(@Body() dto: LoginRequestDto): Promise<AuthUserResponseDto> {
+    return this.loginUseCase.execute(dto);
   }
 }
