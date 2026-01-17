@@ -102,4 +102,16 @@ export class GroupRepositoryImpl implements GroupRepository {
 
     return count > 0;
   }
+
+  /**
+   * Group을 삭제합니다.
+   * 연결된 GroupMembers도 함께 삭제됩니다 (Cascade Delete).
+   *
+   * @param {string} id 삭제할 Group ID
+   */
+  async delete(id: string): Promise<void> {
+    await this.prisma.groups.delete({
+      where: { id },
+    });
+  }
 }

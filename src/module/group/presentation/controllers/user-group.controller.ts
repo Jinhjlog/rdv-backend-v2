@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   HttpCode,
@@ -15,6 +16,7 @@ import {
   ApiOperation,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiNoContentResponse,
   ApiBadRequestResponse,
   ApiConflictResponse,
   ApiNotFoundResponse,
@@ -27,6 +29,7 @@ import {
   FindGroupListUseCase,
   FindGroupDetailUseCase,
   UpdateGroupUseCase,
+  DeleteGroupUseCase,
 } from '../../application/usecases';
 import {
   CreateGroupRequestDto,
@@ -44,6 +47,7 @@ export class UserGroupController {
     private readonly findGroupListUseCase: FindGroupListUseCase,
     private readonly findGroupDetailUseCase: FindGroupDetailUseCase,
     private readonly updateGroupUseCase: UpdateGroupUseCase,
+    private readonly deleteGroupUseCase: DeleteGroupUseCase,
   ) {}
 
   @ApiOperation({
@@ -215,5 +219,49 @@ export class UserGroupController {
       userId: user.userId,
     });
     return GroupTransformer.toDetailResponse(group);
+  }
+
+  @ApiOperation({
+    summary: '[모임장] - 모임 삭제',
+    description:
+      '모임을 삭제합니다. 모임장만 삭제 가능하며, 모임장이 유일한 참여자여야 합니다.<br><br>' +
+      '**삭제 조건**<br>' +
+      '- 모임장 권한이 필요합니다.<br>' +
+      '- 모임장 혼자만 남아있어야 합니다 (다른 멤버가 없어야 함).<br><br>' +
+      '**주의사항**<br>' +
+      '- 삭제된 모임은 복구할 수 없습니다.<br>' +
+      '- 모임 삭제 후 모든 관련 데이터는 영구 삭제됩니다.',
+  })
+  @ApiParam({
+    name: 'groupId',
+    description: '모임 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiNoContentResponse({
+    description: '모임 삭제 성공',
+  })
+  @ApiNotFoundResponse({
+    description: '모임을 찾을 수 없음: _**GROUP_NOT_FOUND**_',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '요청 충돌<br>' +
+      '**권한 오류**<br>' +
+      '- 모임장만 삭제 가능합니다: _**GROUP_OWNER_ONLY**_<br>' +
+      '<br>' +
+      '**비즈니스 규칙 위반**<br>' +
+      '- 다른 참여자가 있는 모임은 삭제할 수 없습니다 (모임장만 남아있어야 함): _**GROUP_HAS_OTHER_MEMBERS**_<br>',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':groupId')
+  async deleteGroup(
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @User() user: UserInfo,
+  ): Promise<void> {
+    await this.deleteGroupUseCase.execute({
+      groupId,
+      userId: user.userId,
+    });
   }
 }
