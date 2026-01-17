@@ -5,6 +5,7 @@ import {
   FindGroupListUseCase,
   FindGroupDetailUseCase,
   UpdateGroupUseCase,
+  DeleteGroupUseCase,
 } from './application/usecases';
 import { UserGroupController } from './presentation/controllers';
 
@@ -13,6 +14,7 @@ const useCases: Provider[] = [
   FindGroupListUseCase,
   FindGroupDetailUseCase,
   UpdateGroupUseCase,
+  DeleteGroupUseCase,
 ];
 
 @Module({
