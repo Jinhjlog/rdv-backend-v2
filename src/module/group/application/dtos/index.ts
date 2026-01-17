@@ -6,3 +6,4 @@ export * from './update-group.dto';
 export * from './join-group.dto';
 export * from './remove-member.dto';
 export * from './leave-group.dto';
+export * from './transfer-ownership.dto';

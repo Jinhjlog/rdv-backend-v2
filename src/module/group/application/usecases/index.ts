@@ -7,3 +7,4 @@ export * from './create-invite-code.usecase';
 export * from './join-group.usecase';
 export * from './remove-member.usecase';
 export * from './leave-group.usecase';
+export * from './transfer-ownership.usecase';

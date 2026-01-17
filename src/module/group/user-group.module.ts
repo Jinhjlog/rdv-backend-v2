@@ -10,6 +10,7 @@ import {
   JoinGroupUseCase,
   RemoveMemberUseCase,
   LeaveGroupUseCase,
+  TransferOwnershipUseCase,
 } from './application/usecases';
 import { UserGroupController } from './presentation/controllers';
 import { InviteCodeCoreModule } from './invite-code-core.module';
@@ -24,6 +25,7 @@ const useCases: Provider[] = [
   JoinGroupUseCase,
   RemoveMemberUseCase,
   LeaveGroupUseCase,
+  TransferOwnershipUseCase,
 ];
 
 @Module({

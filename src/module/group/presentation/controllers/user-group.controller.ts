@@ -34,11 +34,13 @@ import {
   JoinGroupUseCase,
   RemoveMemberUseCase,
   LeaveGroupUseCase,
+  TransferOwnershipUseCase,
 } from '../../application/usecases';
 import {
   CreateGroupRequestDto,
   UpdateGroupRequestDto,
   JoinGroupRequestDto,
+  TransferOwnershipRequestDto,
   GroupListResponseDto,
   GroupDetailResponseDto,
   CreateInviteCodeResponseDto,
@@ -58,6 +60,7 @@ export class UserGroupController {
     private readonly joinGroupUseCase: JoinGroupUseCase,
     private readonly removeMemberUseCase: RemoveMemberUseCase,
     private readonly leaveGroupUseCase: LeaveGroupUseCase,
+    private readonly transferOwnershipUseCase: TransferOwnershipUseCase,
   ) {}
 
   @ApiOperation({
@@ -473,5 +476,60 @@ export class UserGroupController {
       groupId,
       userId: user.userId,
     });
+  }
+
+  @ApiOperation({
+    summary: '[모임장] - 모임장 이전',
+    description:
+      '모임장 권한을 다른 참여자에게 이전합니다. 현재 모임장만 이전할 수 있습니다.<br><br>' +
+      '**이전 조건**<br>' +
+      '- 현재 모임장 권한이 필요합니다.<br>' +
+      '- 새로운 모임장이 될 사용자가 모임의 참여자여야 합니다.<br><br>' +
+      '**주의사항**<br>' +
+      '- 모임장 이전 후 즉시 권한이 이전됩니다.<br>' +
+      '- 이전 후 기존 모임장은 일반 참여자로 변경됩니다.<br>' +
+      '- 되돌릴 수 없으므로 신중하게 진행해주세요.',
+  })
+  @ApiParam({
+    name: 'groupId',
+    description: '모임 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiCreatedResponse({
+    description: '모임장 이전 성공',
+    type: GroupDetailResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: '모임을 찾을 수 없음: _**GROUP_NOT_FOUND**_',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (권한 오류 또는 비즈니스 규칙 위반)<br>' +
+      '**권한 오류**<br>' +
+      '- 모임장만 모임장 권한을 이전할 수 있습니다: _**GROUP_OWNER_ONLY**_<br>' +
+      '<br>' +
+      '**비즈니스 규칙 위반**<br>' +
+      '- 본인에게 모임장 권한을 이전할 수 없습니다: _**GROUP_OWNER_CANNOT_TRANSFER_TO_SELF**_<br>' +
+      '- 새로운 모임장이 될 멤버가 모임에 존재하지 않습니다: _**GROUP_MEMBER_NOT_FOUND**_<br>',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':groupId/transfer-ownership')
+  async transferOwnership(
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Body() dto: TransferOwnershipRequestDto,
+    @User() user: UserInfo,
+  ): Promise<GroupDetailResponseDto> {
+    await this.transferOwnershipUseCase.execute({
+      groupId,
+      userId: user.userId,
+      newOwnerId: dto.newOwnerId,
+    });
+
+    const group = await this.findGroupDetailUseCase.execute({
+      groupId,
+      userId: user.userId,
+    });
+    return GroupTransformer.toDetailResponse(group);
   }
 }
