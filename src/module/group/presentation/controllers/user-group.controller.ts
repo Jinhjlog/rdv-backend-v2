@@ -31,10 +31,12 @@ import {
   UpdateGroupUseCase,
   DeleteGroupUseCase,
   CreateInviteCodeUseCase,
+  JoinGroupUseCase,
 } from '../../application/usecases';
 import {
   CreateGroupRequestDto,
   UpdateGroupRequestDto,
+  JoinGroupRequestDto,
   GroupListResponseDto,
   GroupDetailResponseDto,
   CreateInviteCodeResponseDto,
@@ -51,6 +53,7 @@ export class UserGroupController {
     private readonly updateGroupUseCase: UpdateGroupUseCase,
     private readonly deleteGroupUseCase: DeleteGroupUseCase,
     private readonly createInviteCodeUseCase: CreateInviteCodeUseCase,
+    private readonly joinGroupUseCase: JoinGroupUseCase,
   ) {}
 
   @ApiOperation({
@@ -312,5 +315,62 @@ export class UserGroupController {
       code: result.code,
       expiresAt: result.expiresAt,
     };
+  }
+
+  @ApiOperation({
+    summary: '[비참여자] - 초대 코드로 모임 참여',
+    description:
+      '초대 코드를 사용하여 모임에 참여합니다. 초대 코드는 모임 참여자가 생성한 유효한 코드여야 합니다.<br><br>' +
+      '**필수 항목**<br>' +
+      '- inviteCode: 초대 코드<br><br>' +
+      '**참여 조건**<br>' +
+      '- 초대 코드가 유효하고 만료되지 않아야 합니다.<br>' +
+      '- 모임의 최대 인원에 도달하지 않아야 합니다.<br><br>' +
+      '**반환 정보**<br>' +
+      '- 참여 후 모임의 상세 정보와 멤버 목록',
+  })
+  @ApiCreatedResponse({
+    description: '모임 참여 성공',
+    type: GroupDetailResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description:
+      '리소스를 찾을 수 없음<br>' +
+      '**초대 코드**<br>' +
+      '- 초대 코드가 존재하지 않습니다: _**INVITE_CODE_NOT_FOUND**_<br>' +
+      '<br>' +
+      '**모임**<br>' +
+      '- 모임을 찾을 수 없습니다: _**GROUP_NOT_FOUND**_<br>',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (필드 검증 실패 또는 비즈니스 규칙 위반)<br>' +
+      '**필드 검증 오류**<br>' +
+      '- 초대 코드는 필수 입력값입니다<br>' +
+      '- 초대 코드는 문자열이어야 합니다<br>' +
+      '<br>' +
+      '**초대 코드 상태**<br>' +
+      '- 만료되었거나 이미 사용된 초대 코드입니다: _**INVITE_CODE_EXPIRED**_<br>' +
+      '<br>' +
+      '**모임 참여 조건**<br>' +
+      '- 모임 인원이 가득 찼습니다 (최대 8명): _**GROUP_MEMBERS_LIMIT_EXCEEDED**_<br>',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.CREATED)
+  @Post('join')
+  async joinGroup(
+    @Body() dto: JoinGroupRequestDto,
+    @User() user: UserInfo,
+  ): Promise<GroupDetailResponseDto> {
+    const { groupId } = await this.joinGroupUseCase.execute({
+      inviteCode: dto.inviteCode,
+      userId: user.userId,
+    });
+
+    const group = await this.findGroupDetailUseCase.execute({
+      groupId,
+      userId: user.userId,
+    });
+    return GroupTransformer.toDetailResponse(group);
   }
 }
