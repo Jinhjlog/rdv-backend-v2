@@ -1,42 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-class GroupDetailMemberResponseDto {
-  @ApiProperty({
-    description: '모임원 ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  id: string;
-
-  @ApiProperty({
-    description: '사용자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  userId: string;
-
-  @ApiProperty({
-    description: '역할',
-    enum: ['OWNER', 'MEMBER'],
-    example: 'MEMBER',
-  })
-  role: string;
-
-  @ApiProperty({
-    type: String,
-    description: '초대자 사용자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-    required: true,
-    nullable: true,
-  })
-  invitedBy: string | null;
-
-  @ApiProperty({
-    description: '참여 일시',
-    example: '2025-01-01T00:00:00.000Z',
-  })
-  joinedAt: Date;
-}
-
-export class GroupDetailResponseDto {
+export class GroupListItemResponseDto {
   @ApiProperty({
     description: '모임 ID',
     example: '550e8400-e29b-41d4-a716-446655440000',
@@ -90,6 +54,12 @@ export class GroupDetailResponseDto {
     example: '2025-01-01T00:00:00.000Z',
   })
   updatedAt: Date;
+}
 
-  members: GroupDetailMemberResponseDto[];
+export class GroupListResponseDto {
+  @ApiProperty({
+    description: '모임 목록',
+    type: [GroupListItemResponseDto],
+  })
+  items: GroupListItemResponseDto[];
 }
