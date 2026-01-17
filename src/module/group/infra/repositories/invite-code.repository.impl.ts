@@ -1,16 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { InviteCode, InviteCodeRepository } from '../../domain';
-import { PrismaService } from '@core/database';
+import { PrismaService, PrismaTransactionClient } from '@core/database';
 import { InviteCodeMapper } from '../mappers';
+import { TransactionContextService } from '@lib/infra/unit-of-work';
 
 @Injectable()
 export class InviteCodeRepositoryImpl implements InviteCodeRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly txContext: TransactionContextService<PrismaTransactionClient>,
+  ) {}
+
+  private get client(): PrismaService | PrismaTransactionClient {
+    const tx = this.txContext.getTransactionContext();
+    return tx ?? this.prisma;
+  }
 
   async save(entity: InviteCode): Promise<void> {
     const data = InviteCodeMapper.toPersistence(entity);
 
-    await this.prisma.invite_codes.upsert({
+    await this.client.invite_codes.upsert({
       where: { id: entity.id.toString() },
       create: data,
       update: data,
@@ -18,7 +27,7 @@ export class InviteCodeRepositoryImpl implements InviteCodeRepository {
   }
 
   async findByCode(code: string): Promise<InviteCode | undefined> {
-    const prismaInviteCode = await this.prisma.invite_codes.findUnique({
+    const prismaInviteCode = await this.client.invite_codes.findUnique({
       where: { code },
     });
     if (!prismaInviteCode) {
@@ -29,7 +38,7 @@ export class InviteCodeRepositoryImpl implements InviteCodeRepository {
   }
 
   async existsByCode(code: string): Promise<boolean> {
-    const count = await this.prisma.invite_codes.count({
+    const count = await this.client.invite_codes.count({
       where: { code },
     });
 
