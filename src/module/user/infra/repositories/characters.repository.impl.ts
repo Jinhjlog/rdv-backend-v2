@@ -22,4 +22,20 @@ export class CharactersRepositoryImpl implements CharactersRepository {
 
     return defaultCharacter.character_code;
   }
+
+  async existsUserCharacter(
+    userId: string,
+    characterCode: string,
+  ): Promise<boolean> {
+    const userCharacter = await this.prisma.user_characters.findFirst({
+      where: {
+        user_id: userId,
+        characters: {
+          character_code: characterCode,
+        },
+      },
+    });
+
+    return userCharacter !== null;
+  }
 }
