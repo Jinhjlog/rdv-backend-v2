@@ -1,9 +1,17 @@
 import { Module, Provider } from '@nestjs/common';
 import { GroupCoreModule } from './group-core.module';
-import { CreateGroupUseCase } from './application/usecases';
+import {
+  CreateGroupUseCase,
+  FindGroupListUseCase,
+  FindGroupDetailUseCase,
+} from './application/usecases';
 import { UserGroupController } from './presentation/controllers';
 
-const useCases: Provider[] = [CreateGroupUseCase];
+const useCases: Provider[] = [
+  CreateGroupUseCase,
+  FindGroupListUseCase,
+  FindGroupDetailUseCase,
+];
 
 @Module({
   imports: [GroupCoreModule],

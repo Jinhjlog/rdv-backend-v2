@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
-import { GroupRepository } from './domain/repositories';
-import { GroupRepositoryImpl } from './infra/repositories';
+import { GroupRepository, GroupQueryRepository } from './domain/repositories';
+import {
+  GroupRepositoryImpl,
+  GroupQueryRepositoryImpl,
+} from './infra/repositories';
 
 /**
  * Group Core 모듈
@@ -13,7 +16,11 @@ import { GroupRepositoryImpl } from './infra/repositories';
       provide: GroupRepository,
       useClass: GroupRepositoryImpl,
     },
+    {
+      provide: GroupQueryRepository,
+      useClass: GroupQueryRepositoryImpl,
+    },
   ],
-  exports: [GroupRepository],
+  exports: [GroupRepository, GroupQueryRepository],
 })
 export class GroupCoreModule {}
