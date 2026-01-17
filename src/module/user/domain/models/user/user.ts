@@ -78,4 +78,22 @@ export class User extends AggregateRoot<UserProps> {
     this.props.preferredThemeColor = color;
     this.props.updatedAt = new Date();
   }
+
+  /**
+   * 사용자 생성 팩토리 메서드
+   *
+   * @param props 사용자 속성
+   * @returns 생성된 User 엔티티
+   */
+  static create(
+    props: Omit<UserProps, 'id' | 'createdAt' | 'updatedAt'>,
+  ): User {
+    const now = new Date();
+
+    return new User({
+      ...props,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
 }

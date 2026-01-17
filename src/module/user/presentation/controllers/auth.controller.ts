@@ -14,16 +14,20 @@ import {
   ApiBadRequestResponse,
   ApiQuery,
   ApiUnauthorizedResponse,
+  ApiCreatedResponse,
+  ApiConflictResponse,
 } from '@nestjs/swagger';
 import {
   CheckAccountExistsUseCase,
   LoginUseCase,
+  RegisterUseCase,
 } from '../../application/usecases';
 import {
   AuthUserResponseDto,
   CheckAccountExistsRequestDto,
   CheckAccountExistsResponseDto,
   LoginRequestDto,
+  RegisterRequestDto,
 } from '../dtos';
 
 @ApiTags('인증 - Auth 관리')
@@ -32,6 +36,7 @@ export class AuthController {
   constructor(
     private readonly checkAccountExistsUseCase: CheckAccountExistsUseCase,
     private readonly loginUseCase: LoginUseCase,
+    private readonly registerUseCase: RegisterUseCase,
   ) {}
 
   @ApiOperation({
@@ -103,5 +108,51 @@ export class AuthController {
   @Post('login')
   async login(@Body() dto: LoginRequestDto): Promise<AuthUserResponseDto> {
     return this.loginUseCase.execute(dto);
+  }
+
+  @ApiOperation({
+    summary: '게스트 - 회원가입',
+    description:
+      '신규 사용자 계정을 생성하고 자동 로그인합니다.<br><br>' +
+      '**목적**<br>' +
+      '앱 실행 시 신규 사용자의 계정을 생성하고 accessToken, refreshToken을 발급하여 자동 로그인합니다.<br><br>' +
+      '**필수 항목**<br>' +
+      '- deviceId (비어있지 않은 문자열)<br>' +
+      '- nickname (2~5자 문자열)<br>' +
+      '- preferredThemeColor (비어있지 않은 문자열)<br><br>' +
+      '**주의사항**<br>' +
+      '- deviceId는 이미 가입한 기기인 경우 중복 오류 발생<br>' +
+      '- nickname은 2자 이상 5자 이하여야 합니다.<br>' +
+      '- 사용자 생성 시 기본 캐릭터와 네임태그가 자동 할당됩니다.<br>',
+  })
+  @ApiCreatedResponse({
+    description: '사용자 계정 생성 및 토큰 발급 완료',
+    type: AuthUserResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (필드 검증 실패 등)<br>' +
+      '**deviceId**<br>' +
+      '- deviceId가 비어있거나 문자열이 아닌 경우<br>' +
+      '<br>' +
+      '**nickname**<br>' +
+      '- nickname이 비어있거나 문자열이 아닌 경우<br>' +
+      '- nickname이 2자 미만인 경우: _**NICKNAME_TOO_SHORT**_<br>' +
+      '- nickname이 5자를 초과하는 경우: _**NICKNAME_TOO_LONG**_<br>' +
+      '<br>' +
+      '**preferredThemeColor**<br>' +
+      '- preferredThemeColor가 비어있거나 문자열이 아닌 경우<br>',
+  })
+  @ApiConflictResponse({
+    description:
+      '리소스 충돌<br>' +
+      '- deviceId가 이미 가입된 경우: _**USER_ALREADY_EXISTS**_<br>',
+  })
+  @HttpCode(HttpStatus.CREATED)
+  @Post('register')
+  async register(
+    @Body() dto: RegisterRequestDto,
+  ): Promise<AuthUserResponseDto> {
+    return await this.registerUseCase.execute(dto);
   }
 }
