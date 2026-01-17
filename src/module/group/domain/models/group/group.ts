@@ -58,6 +58,15 @@ export class Group extends AggregateRoot<GroupProps> {
   }
 
   /**
+   * 사용자가 그룹장인지 확인합니다.
+   * @param userId
+   * @returns 그룹장인 경우 true, 그렇지 않은 경우 false
+   */
+  isOwner(userId: string): boolean {
+    return this.props.ownerId === userId;
+  }
+
+  /**
    * 멤버를 그룹에 추가합니다.
    * @param member
    *
@@ -74,6 +83,28 @@ export class Group extends AggregateRoot<GroupProps> {
     }
 
     this.props.members.push(member);
+  }
+
+  /**
+   * 그룹 정보를 업데이트합니다.
+   *
+   * @param props 업데이트할 속성들 (선택적)
+   */
+  updateInfo(props: {
+    name?: BoundedString;
+    description?: BoundedString;
+    iconCode?: string;
+  }): void {
+    if (props.name !== undefined) {
+      this.props.name = props.name;
+    }
+    if (props.description !== undefined) {
+      this.props.description = props.description;
+    }
+    if (props.iconCode !== undefined) {
+      this.props.iconCode = props.iconCode;
+    }
+    this.props.updatedAt = new Date();
   }
 
   hasMember(userId: string): boolean {
