@@ -46,6 +46,38 @@ export class CharacterQueryRepositoryImpl implements CharacterQueryRepository {
   }
 
   /**
+   * 내 보유 캐릭터 목록을 조회합니다.
+   *
+   * @param userId 사용자 ID
+   * @returns 보유한 캐릭터 목록
+   */
+  async findMyCharacterList(
+    userId: string,
+  ): Promise<CharacterListItemQueryModel[]> {
+    const results = await this.prisma.user_characters.findMany({
+      where: {
+        user_id: userId,
+      },
+      include: {
+        characters: true,
+      },
+      orderBy: {
+        unlocked_at: 'asc',
+      },
+    });
+
+    return results.map((result) => ({
+      id: result.characters.id,
+      characterCode: result.characters.character_code,
+      name: result.characters.name,
+      description: result.characters.description,
+      isDefault: result.characters.is_default,
+      createdAt: result.characters.created_at,
+      updatedAt: result.characters.updated_at,
+    }));
+  }
+
+  /**
    * ID로 상세 정보를 조회합니다.
    *
    * @param id 엔티티 ID
