@@ -110,4 +110,14 @@ export class Group extends AggregateRoot<GroupProps> {
   hasMember(userId: string): boolean {
     return this.props.members.some((member) => member.userId === userId);
   }
+
+  /**
+   * 그룹을 삭제할 수 있는지 확인합니다.
+   * 모임장 혼자만 남아있어야 삭제 가능합니다.
+   *
+   * @returns 삭제 가능한 경우 true, 그렇지 않은 경우 false
+   */
+  canBeDeleted(): boolean {
+    return this.props.members.length === 1;
+  }
 }
