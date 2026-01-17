@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   HttpCode,
@@ -25,9 +26,11 @@ import {
   CreateGroupUseCase,
   FindGroupListUseCase,
   FindGroupDetailUseCase,
+  UpdateGroupUseCase,
 } from '../../application/usecases';
 import {
   CreateGroupRequestDto,
+  UpdateGroupRequestDto,
   GroupListResponseDto,
   GroupDetailResponseDto,
 } from '../dtos';
@@ -40,6 +43,7 @@ export class UserGroupController {
     private readonly createGroupUseCase: CreateGroupUseCase,
     private readonly findGroupListUseCase: FindGroupListUseCase,
     private readonly findGroupDetailUseCase: FindGroupDetailUseCase,
+    private readonly updateGroupUseCase: UpdateGroupUseCase,
   ) {}
 
   @ApiOperation({
@@ -152,6 +156,64 @@ export class UserGroupController {
       userId: user.userId,
     });
 
+    return GroupTransformer.toDetailResponse(group);
+  }
+
+  @ApiOperation({
+    summary: '[모임장] - 모임 정보 수정',
+    description:
+      '모임의 기본 정보를 수정합니다. 모임장만 수정 가능합니다.<br><br>' +
+      '**필수 항목**<br>' +
+      '없음 (모든 필드 선택 수정)<br><br>' +
+      '**선택 항목**<br>' +
+      '- name: 모임 이름<br>' +
+      '- description: 모임 소개<br>' +
+      '- iconCode: 모임 아이콘 코드<br><br>' +
+      '**주의사항**<br>' +
+      '- 모임장만 수정 가능합니다.<br>' +
+      '- 요청 본문에 포함된 필드만 업데이트됩니다.<br>' +
+      '- 최소 1개 이상의 필드를 제공해야 합니다.',
+  })
+  @ApiParam({
+    name: 'groupId',
+    description: '모임 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiOkResponse({
+    description: '모임 정보 수정 성공',
+    type: GroupDetailResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: '모임을 찾을 수 없음: _**GROUP_NOT_FOUND**_',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (필드 검증 실패 등)<br>' +
+      '모임장만 수정 가능합니다: _**GROUP_OWNER_ONLY**_<br>' +
+      '**모임 이름**<br>' +
+      '- 모임 이름이 너무 짧거나 긴 경우 (2~30자): _**NAME_TOO_SHORT**_, _**NAME_TOO_LONG**_<br>' +
+      '<br>' +
+      '**모임 소개**<br>' +
+      '- 모임 소개가 너무 짧거나 긴 경우 (10~500자): _**DESCRIPTION_TOO_SHORT**_, _**DESCRIPTION_TOO_LONG**_<br>',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.OK)
+  @Patch(':groupId')
+  async updateGroup(
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Body() dto: UpdateGroupRequestDto,
+    @User() user: UserInfo,
+  ): Promise<GroupDetailResponseDto> {
+    await this.updateGroupUseCase.execute({
+      groupId,
+      userId: user.userId,
+      ...dto,
+    });
+
+    const group = await this.findGroupDetailUseCase.execute({
+      groupId,
+      userId: user.userId,
+    });
     return GroupTransformer.toDetailResponse(group);
   }
 }
