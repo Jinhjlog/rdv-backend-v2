@@ -32,6 +32,7 @@ import {
   DeleteGroupUseCase,
   CreateInviteCodeUseCase,
   JoinGroupUseCase,
+  RemoveMemberUseCase,
 } from '../../application/usecases';
 import {
   CreateGroupRequestDto,
@@ -54,6 +55,7 @@ export class UserGroupController {
     private readonly deleteGroupUseCase: DeleteGroupUseCase,
     private readonly createInviteCodeUseCase: CreateInviteCodeUseCase,
     private readonly joinGroupUseCase: JoinGroupUseCase,
+    private readonly removeMemberUseCase: RemoveMemberUseCase,
   ) {}
 
   @ApiOperation({
@@ -272,52 +274,6 @@ export class UserGroupController {
   }
 
   @ApiOperation({
-    summary: '[모임 멤버] - 초대 코드 생성',
-    description:
-      '모임 참여자가 다른 사람을 초대하기 위한 초대 코드를 생성합니다. 모임장 또는 일반 멤버만 생성 가능합니다.<br><br>' +
-      '**반환 정보**<br>' +
-      '- code: 초대 코드 (다른 사용자가 모임 참여 시 사용)<br>' +
-      '- expiresAt: 초대 코드 만료 시간<br><br>' +
-      '**주의사항**<br>' +
-      '- 모임 참여자만 초대 코드를 생성할 수 있습니다.<br>' +
-      '- 초대 코드는 만료 시간 이내에만 사용 가능합니다.<br>' +
-      '- 초대 코드는 중복되지 않도록 자동으로 생성됩니다.',
-  })
-  @ApiParam({
-    name: 'groupId',
-    description: '모임 ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  @ApiCreatedResponse({
-    description: '초대 코드 생성 성공',
-    type: CreateInviteCodeResponseDto,
-  })
-  @ApiNotFoundResponse({
-    description: '모임을 찾을 수 없음: _**GROUP_NOT_FOUND**_',
-  })
-  @ApiBadRequestResponse({
-    description:
-      '모임 참여자만 초대 코드를 생성할 수 있습니다: _**GROUP_MEMBER_ONLY**_',
-  })
-  @UserAuth()
-  @HttpCode(HttpStatus.CREATED)
-  @Post(':groupId/invite-codes')
-  async createInviteCode(
-    @Param('groupId', ParseUUIDPipe) groupId: string,
-    @User() user: UserInfo,
-  ): Promise<CreateInviteCodeResponseDto> {
-    const result = await this.createInviteCodeUseCase.execute({
-      groupId,
-      userId: user.userId,
-    });
-
-    return {
-      code: result.code,
-      expiresAt: result.expiresAt,
-    };
-  }
-
-  @ApiOperation({
     summary: '[비참여자] - 초대 코드로 모임 참여',
     description:
       '초대 코드를 사용하여 모임에 참여합니다. 초대 코드는 모임 참여자가 생성한 유효한 코드여야 합니다.<br><br>' +
@@ -372,5 +328,104 @@ export class UserGroupController {
       userId: user.userId,
     });
     return GroupTransformer.toDetailResponse(group);
+  }
+
+  @ApiOperation({
+    summary: '[모임 멤버] - 초대 코드 생성',
+    description:
+      '모임 참여자가 다른 사람을 초대하기 위한 초대 코드를 생성합니다. 모임장 또는 일반 멤버만 생성 가능합니다.<br><br>' +
+      '**반환 정보**<br>' +
+      '- code: 초대 코드 (다른 사용자가 모임 참여 시 사용)<br>' +
+      '- expiresAt: 초대 코드 만료 시간<br><br>' +
+      '**주의사항**<br>' +
+      '- 모임 참여자만 초대 코드를 생성할 수 있습니다.<br>' +
+      '- 초대 코드는 만료 시간 이내에만 사용 가능합니다.<br>' +
+      '- 초대 코드는 중복되지 않도록 자동으로 생성됩니다.',
+  })
+  @ApiParam({
+    name: 'groupId',
+    description: '모임 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiCreatedResponse({
+    description: '초대 코드 생성 성공',
+    type: CreateInviteCodeResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: '모임을 찾을 수 없음: _**GROUP_NOT_FOUND**_',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '모임 참여자만 초대 코드를 생성할 수 있습니다: _**GROUP_MEMBER_ONLY**_',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':groupId/invite-codes')
+  async createInviteCode(
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @User() user: UserInfo,
+  ): Promise<CreateInviteCodeResponseDto> {
+    const result = await this.createInviteCodeUseCase.execute({
+      groupId,
+      userId: user.userId,
+    });
+
+    return {
+      code: result.code,
+      expiresAt: result.expiresAt,
+    };
+  }
+
+  @ApiOperation({
+    summary: '[모임장] - 참여자 강퇴',
+    description:
+      '모임에서 특정 참여자를 강퇴합니다. 모임장만 강퇴할 수 있습니다.<br><br>' +
+      '**강퇴 조건**<br>' +
+      '- 모임장 권한이 필요합니다.<br>' +
+      '- 강퇴하려는 대상이 모임에 속해있어야 합니다.<br>' +
+      '- 모임장 본인은 강퇴할 수 없습니다.<br><br>' +
+      '**주의사항**<br>' +
+      '- 강퇴된 참여자는 즉시 모임에서 제외됩니다.<br>' +
+      '- 강퇴 후 해당 참여자는 초대 코드를 통해 다시 참여할 수 있습니다.',
+  })
+  @ApiParam({
+    name: 'groupId',
+    description: '모임 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiParam({
+    name: 'userId',
+    description: '강퇴할 참여자의 사용자 ID',
+    example: '660e8400-e29b-41d4-a716-446655440001',
+  })
+  @ApiNoContentResponse({
+    description: '참여자 강퇴 성공',
+  })
+  @ApiNotFoundResponse({
+    description: '모임을 찾을 수 없음: _**GROUP_NOT_FOUND**_',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (권한 오류 또는 비즈니스 규칙 위반)<br>' +
+      '**권한 오류**<br>' +
+      '- 모임장만 참여자를 강퇴할 수 있습니다: _**GROUP_OWNER_ONLY**_<br>' +
+      '<br>' +
+      '**비즈니스 규칙 위반**<br>' +
+      '- 모임장은 강퇴할 수 없습니다: _**GROUP_OWNER_CANNOT_BE_REMOVED**_<br>' +
+      '- 강퇴하려는 멤버가 모임에 존재하지 않습니다: _**GROUP_MEMBER_NOT_FOUND**_<br>',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':groupId/members/:userId')
+  async removeMember(
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Param('userId', ParseUUIDPipe) targetUserId: string,
+    @User() user: UserInfo,
+  ): Promise<void> {
+    await this.removeMemberUseCase.execute({
+      groupId,
+      userId: user.userId,
+      targetUserId,
+    });
   }
 }
