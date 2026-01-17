@@ -3,3 +3,4 @@ export * from './create-invite-code.dto';
 export * from './find-group-list.dto';
 export * from './find-group-detail.dto';
 export * from './update-group.dto';
+export * from './join-group.dto';
