@@ -274,52 +274,6 @@ export class UserGroupController {
   }
 
   @ApiOperation({
-    summary: '[모임 멤버] - 초대 코드 생성',
-    description:
-      '모임 참여자가 다른 사람을 초대하기 위한 초대 코드를 생성합니다. 모임장 또는 일반 멤버만 생성 가능합니다.<br><br>' +
-      '**반환 정보**<br>' +
-      '- code: 초대 코드 (다른 사용자가 모임 참여 시 사용)<br>' +
-      '- expiresAt: 초대 코드 만료 시간<br><br>' +
-      '**주의사항**<br>' +
-      '- 모임 참여자만 초대 코드를 생성할 수 있습니다.<br>' +
-      '- 초대 코드는 만료 시간 이내에만 사용 가능합니다.<br>' +
-      '- 초대 코드는 중복되지 않도록 자동으로 생성됩니다.',
-  })
-  @ApiParam({
-    name: 'groupId',
-    description: '모임 ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  @ApiCreatedResponse({
-    description: '초대 코드 생성 성공',
-    type: CreateInviteCodeResponseDto,
-  })
-  @ApiNotFoundResponse({
-    description: '모임을 찾을 수 없음: _**GROUP_NOT_FOUND**_',
-  })
-  @ApiBadRequestResponse({
-    description:
-      '모임 참여자만 초대 코드를 생성할 수 있습니다: _**GROUP_MEMBER_ONLY**_',
-  })
-  @UserAuth()
-  @HttpCode(HttpStatus.CREATED)
-  @Post(':groupId/invite-codes')
-  async createInviteCode(
-    @Param('groupId', ParseUUIDPipe) groupId: string,
-    @User() user: UserInfo,
-  ): Promise<CreateInviteCodeResponseDto> {
-    const result = await this.createInviteCodeUseCase.execute({
-      groupId,
-      userId: user.userId,
-    });
-
-    return {
-      code: result.code,
-      expiresAt: result.expiresAt,
-    };
-  }
-
-  @ApiOperation({
     summary: '[비참여자] - 초대 코드로 모임 참여',
     description:
       '초대 코드를 사용하여 모임에 참여합니다. 초대 코드는 모임 참여자가 생성한 유효한 코드여야 합니다.<br><br>' +
@@ -374,6 +328,52 @@ export class UserGroupController {
       userId: user.userId,
     });
     return GroupTransformer.toDetailResponse(group);
+  }
+
+  @ApiOperation({
+    summary: '[모임 멤버] - 초대 코드 생성',
+    description:
+      '모임 참여자가 다른 사람을 초대하기 위한 초대 코드를 생성합니다. 모임장 또는 일반 멤버만 생성 가능합니다.<br><br>' +
+      '**반환 정보**<br>' +
+      '- code: 초대 코드 (다른 사용자가 모임 참여 시 사용)<br>' +
+      '- expiresAt: 초대 코드 만료 시간<br><br>' +
+      '**주의사항**<br>' +
+      '- 모임 참여자만 초대 코드를 생성할 수 있습니다.<br>' +
+      '- 초대 코드는 만료 시간 이내에만 사용 가능합니다.<br>' +
+      '- 초대 코드는 중복되지 않도록 자동으로 생성됩니다.',
+  })
+  @ApiParam({
+    name: 'groupId',
+    description: '모임 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiCreatedResponse({
+    description: '초대 코드 생성 성공',
+    type: CreateInviteCodeResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: '모임을 찾을 수 없음: _**GROUP_NOT_FOUND**_',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '모임 참여자만 초대 코드를 생성할 수 있습니다: _**GROUP_MEMBER_ONLY**_',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':groupId/invite-codes')
+  async createInviteCode(
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @User() user: UserInfo,
+  ): Promise<CreateInviteCodeResponseDto> {
+    const result = await this.createInviteCodeUseCase.execute({
+      groupId,
+      userId: user.userId,
+    });
+
+    return {
+      code: result.code,
+      expiresAt: result.expiresAt,
+    };
   }
 
   @ApiOperation({
