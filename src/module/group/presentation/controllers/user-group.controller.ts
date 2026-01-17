@@ -33,6 +33,7 @@ import {
   CreateInviteCodeUseCase,
   JoinGroupUseCase,
   RemoveMemberUseCase,
+  LeaveGroupUseCase,
 } from '../../application/usecases';
 import {
   CreateGroupRequestDto,
@@ -56,6 +57,7 @@ export class UserGroupController {
     private readonly createInviteCodeUseCase: CreateInviteCodeUseCase,
     private readonly joinGroupUseCase: JoinGroupUseCase,
     private readonly removeMemberUseCase: RemoveMemberUseCase,
+    private readonly leaveGroupUseCase: LeaveGroupUseCase,
   ) {}
 
   @ApiOperation({
@@ -426,6 +428,50 @@ export class UserGroupController {
       groupId,
       userId: user.userId,
       targetUserId,
+    });
+  }
+
+  @ApiOperation({
+    summary: '[일반 참여자] - 모임 탈퇴',
+    description:
+      '모임에서 탈퇴합니다. 일반 참여자만 탈퇴할 수 있습니다.<br><br>' +
+      '**탈퇴 조건**<br>' +
+      '- 일반 참여자(MEMBER)만 탈퇴 가능합니다.<br>' +
+      '- 모임장은 탈퇴할 수 없습니다.<br><br>' +
+      '**주의사항**<br>' +
+      '- 탈퇴 후에는 즉시 모임에서 제외됩니다.<br>' +
+      '- 탈퇴 후 복구는 불가능합니다.',
+  })
+  @ApiParam({
+    name: 'groupId',
+    description: '모임 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiNoContentResponse({
+    description: '모임 탈퇴 성공',
+  })
+  @ApiNotFoundResponse({
+    description: '모임을 찾을 수 없음: _**GROUP_NOT_FOUND**_',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (비즈니스 규칙 위반)<br>' +
+      '**탈퇴 권한**<br>' +
+      '- 모임장은 탈퇴할 수 없습니다: _**GROUP_OWNER_CANNOT_LEAVE**_<br>' +
+      '<br>' +
+      '**멤버 확인**<br>' +
+      '- 멤버를 찾을 수 없습니다: _**GROUP_MEMBER_NOT_FOUND**_<br>',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':groupId/leave')
+  async leaveGroup(
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @User() user: UserInfo,
+  ): Promise<void> {
+    await this.leaveGroupUseCase.execute({
+      groupId,
+      userId: user.userId,
     });
   }
 }
