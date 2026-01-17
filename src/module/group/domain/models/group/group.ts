@@ -198,4 +198,36 @@ export class Group extends AggregateRoot<GroupProps> {
     this.props.members.splice(memberIndex, 1);
     this.props.updatedAt = new Date();
   }
+
+  /**
+   * 모임장 권한을 다른 멤버에게 이전합니다.
+   *
+   * @param newOwnerId 새로운 모임장이 될 사용자 ID
+   * @throws {DomainRuleViolationException} GROUP_OWNER_CANNOT_TRANSFER_TO_SELF - 본인에게 이전하려는 경우
+   * @throws {DomainRuleViolationException} GROUP_MEMBER_NOT_FOUND - 멤버를 찾을 수 없는 경우
+   */
+  transferOwnership(newOwnerId: string): void {
+    // 본인에게 이전 불가 확인
+    if (this.isOwner(newOwnerId)) {
+      throw new DomainRuleViolationException({
+        entityName: 'Group',
+        reason: '본인에게 모임장 권한을 이전할 수 없습니다.',
+        errorCode: 'GROUP_OWNER_CANNOT_TRANSFER_TO_SELF',
+      });
+    }
+
+    // 멤버 존재 여부 확인
+    const member = this.props.members.find((m) => m.userId === newOwnerId);
+    if (!member) {
+      throw new DomainRuleViolationException({
+        entityName: 'Group',
+        reason: '멤버를 찾을 수 없습니다.',
+        errorCode: 'GROUP_MEMBER_NOT_FOUND',
+      });
+    }
+
+    // 모임장 변경
+    this.props.ownerId = newOwnerId;
+    this.props.updatedAt = new Date();
+  }
 }
