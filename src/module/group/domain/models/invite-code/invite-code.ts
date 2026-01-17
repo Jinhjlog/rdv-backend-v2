@@ -1,4 +1,4 @@
-import { EntityClass, UniqueEntityId } from '@lib/domain';
+import { AggregateRoot, UniqueEntityId } from '@lib/domain';
 import { InviteAccessCode } from './invite-access-code';
 
 export interface InviteCodeProps {
@@ -13,7 +13,7 @@ export interface InviteCodeProps {
   createdAt: Date;
 }
 
-export class InviteCode extends EntityClass<InviteCodeProps> {
+export class InviteCode extends AggregateRoot<InviteCodeProps> {
   constructor(props: InviteCodeProps) {
     super(props, new UniqueEntityId(props.id));
   }
@@ -48,6 +48,36 @@ export class InviteCode extends EntityClass<InviteCodeProps> {
 
   get createdAt(): Date {
     return this.props.createdAt;
+  }
+
+  /**
+   * 초대 코드를 사용 처리합니다.
+   *
+   * @param userId 사용자 ID
+   */
+  markAsUsed(userId: string): void {
+    this.props.isUsed = true;
+    this.props.usedBy = userId;
+    this.props.usedAt = new Date();
+  }
+
+  /**
+   * 초대 코드가 만료되었는지 확인합니다.
+   *
+   * @returns 만료된 경우 true, 그렇지 않은 경우 false
+   */
+  isExpired(): boolean {
+    return new Date() > this.props.expiresAt;
+  }
+
+  /**
+   * 초대 코드가 사용 가능한지 확인합니다.
+   * 미사용 + 미만료 상태여야 합니다.
+   *
+   * @returns 사용 가능한 경우 true, 그렇지 않은 경우 false
+   */
+  isValid(): boolean {
+    return !this.props.isUsed && !this.isExpired();
   }
 
   static create(
