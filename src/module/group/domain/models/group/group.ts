@@ -163,4 +163,39 @@ export class Group extends AggregateRoot<GroupProps> {
     this.props.members.splice(memberIndex, 1);
     this.props.updatedAt = new Date();
   }
+
+  /**
+   * 회원이 모임에서 탈퇴합니다.
+   *
+   * @param userId 탈퇴하려는 회원의 사용자 ID
+   * @throws {DomainRuleViolationException} GROUP_OWNER_CANNOT_LEAVE - 모임장이 탈퇴하려는 경우
+   * @throws {DomainRuleViolationException} GROUP_MEMBER_NOT_FOUND - 멤버를 찾을 수 없는 경우
+   */
+  leaveGroup(userId: string): void {
+    // 모임장은 탈퇴할 수 없음
+    if (this.isOwner(userId)) {
+      throw new DomainRuleViolationException({
+        entityName: 'Group',
+        reason: '모임장은 탈퇴할 수 없습니다.',
+        errorCode: 'GROUP_OWNER_CANNOT_LEAVE',
+      });
+    }
+
+    // 멤버 존재 여부 확인
+    const memberIndex = this.props.members.findIndex(
+      (member) => member.userId === userId,
+    );
+
+    if (memberIndex === -1) {
+      throw new DomainRuleViolationException({
+        entityName: 'Group',
+        reason: '멤버를 찾을 수 없습니다.',
+        errorCode: 'GROUP_MEMBER_NOT_FOUND',
+      });
+    }
+
+    // 멤버 제거
+    this.props.members.splice(memberIndex, 1);
+    this.props.updatedAt = new Date();
+  }
 }
