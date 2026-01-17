@@ -62,3 +62,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 *.sql
 
 /generated/prisma
+
+/docs/temp
