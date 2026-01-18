@@ -602,6 +602,7 @@ model location_trackings {
   events         events       @relation(fields: [event_id], references: [id], onDelete: Cascade)
   users          public_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  @@unique([event_id, user_id], map: "idx_location_trackings_event_user")
   @@schema("public")
 }
 

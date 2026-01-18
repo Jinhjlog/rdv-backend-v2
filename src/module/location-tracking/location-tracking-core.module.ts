@@ -10,13 +10,6 @@ import {
   UserRepositoryImpl,
 } from './infra/repositories';
 
-/**
- * LocationTracking Core Module
- *
- * LocationTracking 도메인의 핵심 기능을 제공하는 모듈
- * - 위치 추적 정보 저장 (UPSERT)
- * - 최초 스냅샷 생성
- */
 @Module({
   providers: [
     {
