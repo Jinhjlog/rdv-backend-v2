@@ -5,12 +5,14 @@ import { HealthModule } from './health/health.module';
 import { UserModule } from './user/user.module';
 import { UserGroupModule } from './group/user-group.module';
 import { UserCharacterModule } from './character/user-character.module';
+import { UserEventModule } from './event/user-event.module';
 
 export const modules: Type<any>[] = [
   CoreModule,
   AuthModule,
   HealthModule,
   UserModule,
-  UserGroupModule,
   UserCharacterModule,
+  UserGroupModule,
+  UserEventModule,
 ];
