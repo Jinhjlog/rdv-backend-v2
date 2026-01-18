@@ -1,4 +1,5 @@
 import { AggregateRoot, UniqueEntityId } from '@lib/domain';
+import { RealTimeLocation } from './real-time-location';
 
 /**
  * LocationTracking 도메인 엔티티 Props
@@ -13,9 +14,7 @@ export interface LocationTrackingProps {
   nickname: string;
   nameTag: string;
   characterCode: string;
-  latitude: string;
-  longitude: string;
-  updatedAt: Date;
+  realTimeLocation?: RealTimeLocation;
 }
 
 /**
@@ -49,15 +48,7 @@ export class LocationTracking extends AggregateRoot<LocationTrackingProps> {
     return this.props.characterCode;
   }
 
-  get latitude(): string {
-    return this.props.latitude;
-  }
-
-  get longitude(): string {
-    return this.props.longitude;
-  }
-
-  get updatedAt(): Date {
-    return this.props.updatedAt;
+  get realTimeLocation(): RealTimeLocation | undefined {
+    return this.props.realTimeLocation;
   }
 }

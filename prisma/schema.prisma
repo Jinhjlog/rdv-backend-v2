@@ -596,9 +596,9 @@ model location_trackings {
   nickname       String
   name_tag       String
   character_code String
-  latitude       Decimal      @db.Decimal
-  longitude      Decimal      @db.Decimal
-  updated_at     DateTime     @default(now()) @db.Timestamptz(6)
+  latitude       Decimal?     @db.Decimal
+  longitude      Decimal?     @db.Decimal
+  updated_at     DateTime?    @db.Timestamptz(6)
   events         events       @relation(fields: [event_id], references: [id], onDelete: Cascade)
   users          public_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 

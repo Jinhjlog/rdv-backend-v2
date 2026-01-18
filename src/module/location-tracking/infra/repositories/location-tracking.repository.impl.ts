@@ -3,8 +3,6 @@ import { LocationTrackingRepository } from '../../domain/repositories';
 import { LocationTracking } from '../../domain/models';
 import { PrismaService } from '@core/database/prisma.service';
 import { LocationTrackingMapper } from '../mappers';
-import { TransactionContextService } from '@lib/infra/unit-of-work';
-import { PrismaTransactionClient } from '@core/database';
 
 /**
  * LocationTracking Repository 구현체
@@ -13,15 +11,7 @@ import { PrismaTransactionClient } from '@core/database';
  */
 @Injectable()
 export class LocationTrackingRepositoryImpl implements LocationTrackingRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly txContext: TransactionContextService<PrismaTransactionClient>,
-  ) {}
-
-  private get client(): PrismaService | PrismaTransactionClient {
-    const tx = this.txContext.getTransactionContext();
-    return tx ?? this.prisma;
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * 위치 정보 저장 (UPSERT)
@@ -37,7 +27,7 @@ export class LocationTrackingRepositoryImpl implements LocationTrackingRepositor
   async save(entity: LocationTracking): Promise<void> {
     const data = LocationTrackingMapper.toPersistence(entity);
 
-    await this.client.location_trackings.upsert({
+    await this.prisma.location_trackings.upsert({
       where: {
         id: entity.id.toString(),
       },
@@ -54,10 +44,9 @@ export class LocationTrackingRepositoryImpl implements LocationTrackingRepositor
    * ID로 조회
    */
   async findById(id: string): Promise<LocationTracking | undefined> {
-    const raw = await this.client.location_trackings.findUnique({
+    const raw = await this.prisma.location_trackings.findUnique({
       where: { id },
     });
-
     if (!raw) {
       return undefined;
     }

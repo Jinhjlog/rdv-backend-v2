@@ -3,6 +3,7 @@ import {
   location_trackings as LocationTrackingPrisma,
 } from '@prisma/generated/client';
 import { LocationTracking } from '../../domain/models';
+import { RealTimeLocation } from '../../domain/models/location-tracking/real-time-location';
 
 /**
  * LocationTrackingMapper
@@ -22,6 +23,18 @@ export class LocationTrackingMapper {
   static toDomain(
     prismaLocationTracking: LocationTrackingPrisma,
   ): LocationTracking {
+    let realTimeLocation: RealTimeLocation | undefined;
+    if (
+      prismaLocationTracking.latitude !== null &&
+      prismaLocationTracking.longitude !== null &&
+      prismaLocationTracking.updated_at !== null
+    ) {
+      realTimeLocation = RealTimeLocation.unsafeCreate({
+        latitude: prismaLocationTracking.latitude.toString(),
+        longitude: prismaLocationTracking.longitude.toString(),
+        updatedAt: prismaLocationTracking.updated_at,
+      });
+    }
     return new LocationTracking({
       id: prismaLocationTracking.id,
       eventId: prismaLocationTracking.event_id,
@@ -29,21 +42,8 @@ export class LocationTrackingMapper {
       nickname: prismaLocationTracking.nickname,
       nameTag: prismaLocationTracking.name_tag,
       characterCode: prismaLocationTracking.character_code,
-      latitude: this.decimalToString(prismaLocationTracking.latitude),
-      longitude: this.decimalToString(prismaLocationTracking.longitude),
-      updatedAt: prismaLocationTracking.updated_at,
+      realTimeLocation: realTimeLocation,
     });
-  }
-
-  /**
-   * Decimal 타입을 고정밀도 문자열로 변환
-   * GPS 좌표의 정밀도를 보존하기 위해 8자리까지 유지
-   */
-  private static decimalToString(decimal: Prisma.Decimal | number): string {
-    if (typeof decimal === 'number') {
-      return decimal.toFixed(8);
-    }
-    return decimal.toFixed(8);
   }
 
   /**
@@ -55,6 +55,20 @@ export class LocationTrackingMapper {
   static toPersistence(
     domainLocationTracking: LocationTracking,
   ): Prisma.location_trackingsCreateInput {
+    let latitude: Prisma.Decimal | null = null;
+    let longitude: Prisma.Decimal | null = null;
+    let updatedAt: Date | null = null;
+
+    if (domainLocationTracking.realTimeLocation) {
+      latitude = new Prisma.Decimal(
+        domainLocationTracking.realTimeLocation.latitude,
+      );
+      longitude = new Prisma.Decimal(
+        domainLocationTracking.realTimeLocation.longitude,
+      );
+      updatedAt = domainLocationTracking.realTimeLocation.updatedAt;
+    }
+
     return {
       id: domainLocationTracking.id.toString(),
       events: { connect: { id: domainLocationTracking.eventId } },
@@ -62,9 +76,9 @@ export class LocationTrackingMapper {
       nickname: domainLocationTracking.nickname,
       name_tag: domainLocationTracking.nameTag,
       character_code: domainLocationTracking.characterCode,
-      latitude: domainLocationTracking.latitude,
-      longitude: domainLocationTracking.longitude,
-      updated_at: domainLocationTracking.updatedAt,
+      latitude: latitude,
+      longitude: longitude,
+      updated_at: updatedAt,
     };
   }
 }
