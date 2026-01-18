@@ -2,6 +2,7 @@ import { AggregateRoot, BoundedString, UniqueEntityId } from '@lib/domain';
 import { EventParticipant } from './event-participant';
 import { EventResult } from './event-result';
 import { Location } from './location';
+import { EventSchedule } from './event-schedule';
 
 /**
  * 일정 상태 Enum
@@ -29,9 +30,7 @@ export interface EventProps {
   createdBy: string;
   title: BoundedString;
   description: BoundedString;
-  eventTime: Date;
-  trackingStartTime: Date;
-  endTime: Date;
+  schedule: EventSchedule;
   location: Location;
   status: EventStatus;
   createdAt: Date;
@@ -62,16 +61,8 @@ export class Event extends AggregateRoot<EventProps> {
     return this.props.description;
   }
 
-  get eventTime(): Date {
-    return this.props.eventTime;
-  }
-
-  get trackingStartTime(): Date {
-    return this.props.trackingStartTime;
-  }
-
-  get endTime(): Date {
-    return this.props.endTime;
+  get schedule(): EventSchedule {
+    return this.props.schedule;
   }
 
   get location(): Location {
@@ -96,5 +87,9 @@ export class Event extends AggregateRoot<EventProps> {
 
   get result(): EventResult | undefined {
     return this.props.result;
+  }
+
+  addParticipant(participant: EventParticipant): void {
+    this.props.participants.push(participant);
   }
 }
