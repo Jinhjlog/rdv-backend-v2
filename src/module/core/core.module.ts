@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerModule } from './logger';
 import { JwtModule } from './jwt/jwt.module';
 import { RedisModule } from './database/redis.module';
+import { QueueModule } from './queue/queue.module';
 
 @Global()
 @Module({
@@ -17,8 +18,9 @@ import { RedisModule } from './database/redis.module';
     RedisModule,
     JwtModule,
     DatabaseModule,
+    QueueModule,
   ],
   providers: [ConfigService],
-  exports: [ConfigService, RedisModule, DatabaseModule, JwtModule],
+  exports: [ConfigService, RedisModule, DatabaseModule, JwtModule, QueueModule],
 })
 export class CoreModule {}
