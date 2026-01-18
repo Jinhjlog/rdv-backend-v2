@@ -9,6 +9,7 @@ import {
 } from '../mappers';
 import { TransactionContextService } from '@lib/infra/unit-of-work';
 import { PrismaTransactionClient } from '@core/database';
+import { event_status } from '@prisma/generated/enums';
 
 @Injectable()
 export class EventRepositoryImpl implements EventRepository {
@@ -54,6 +55,13 @@ export class EventRepositoryImpl implements EventRepository {
     client: PrismaService | PrismaTransactionClient,
     event: Event,
   ): Promise<void> {
+    // 0. 새로 생성된 Event인지 확인 (upsert 전에 존재 여부 체크)
+    const existingEvent = await client.events.findUnique({
+      where: { id: event.id.toString() },
+      select: { created_at: true },
+    });
+    const isNewEvent = !existingEvent;
+
     // 1. Event (Aggregate Root) 저장
     const eventData = EventMapper.toPersistence(event);
 
@@ -62,6 +70,17 @@ export class EventRepositoryImpl implements EventRepository {
       update: eventData,
       create: eventData,
     });
+
+    // 1-1. 새로 생성된 경우, 생성자를 참여자에 자동 추가
+    if (isNewEvent) {
+      await client.event_participants.create({
+        data: {
+          event_id: event.id.toString(),
+          user_id: event.createdBy,
+          status: 'PREPARING',
+        },
+      });
+    }
 
     // 2. 제거된 멤버 삭제 (Orphan 제거)
     const currentParticipantIds = event.participants.map((participant) =>
@@ -125,5 +144,15 @@ export class EventRepositoryImpl implements EventRepository {
         : undefined;
 
     return EventMapper.toDomain(prismaEvent, eventParticipants, eventResult);
+  }
+
+  async findRecurringEventCountByGroupId(groupId: string): Promise<number> {
+    const count = await this.client.events.count({
+      where: {
+        group_id: groupId,
+        status: event_status.RECRUITING,
+      },
+    });
+    return count;
   }
 }

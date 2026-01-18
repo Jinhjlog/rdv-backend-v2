@@ -3,8 +3,16 @@ import { Module } from '@nestjs/common';
 import { EVENT_QUEUE } from './event.constants';
 import { EventQueueService } from './infra/services';
 import { EventProcessor } from './infra/processors';
-import { EventQueryRepositoryImpl } from './infra/repositories';
-import { EventQueryRepository } from './domain/repositories';
+import {
+  EventQueryRepositoryImpl,
+  EventRepositoryImpl,
+  GroupRepositoryImpl,
+} from './infra/repositories';
+import {
+  EventQueryRepository,
+  EventRepository,
+  GroupRepository,
+} from './domain/repositories';
 
 @Module({
   imports: [
@@ -17,9 +25,23 @@ import { EventQueryRepository } from './domain/repositories';
       provide: EventQueryRepository,
       useClass: EventQueryRepositoryImpl,
     },
+    {
+      provide: EventRepository,
+      useClass: EventRepositoryImpl,
+    },
+    {
+      provide: GroupRepository,
+      useClass: GroupRepositoryImpl,
+    },
     EventQueueService,
     EventProcessor,
   ],
-  exports: [EventQueryRepository, EventQueueService, EventProcessor],
+  exports: [
+    EventQueryRepository,
+    EventRepository,
+    GroupRepository,
+    EventQueueService,
+    EventProcessor,
+  ],
 })
 export class EventCoreModule {}
