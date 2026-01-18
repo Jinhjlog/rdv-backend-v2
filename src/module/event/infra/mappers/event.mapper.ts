@@ -37,6 +37,7 @@ export class EventMapper {
       endTime: prismaEvent.end_time,
       location: Location.unsafeCreate({
         address: prismaEvent.location_address,
+        detail: BoundedString.unsafeCreate(prismaEvent.location_detail),
         latitude: prismaEvent.location_latitude.toString(),
         longitude: prismaEvent.location_longitude.toString(),
       }),
@@ -65,6 +66,7 @@ export class EventMapper {
       tracking_start_time: domainEvent.trackingStartTime,
       end_time: domainEvent.endTime,
       location_address: domainEvent.location.address,
+      location_detail: domainEvent.location.detail.value,
       location_latitude: domainEvent.location.latitude,
       location_longitude: domainEvent.location.longitude,
       status: domainEvent.status,
