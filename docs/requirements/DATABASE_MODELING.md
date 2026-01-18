@@ -44,6 +44,10 @@ erDiagram
     Event ||--o{ EventResult : "결과"
     Event ||--o{ LocationTracking : "위치추적"
 
+    %% Chat Domain
+    Group ||--o{ ChatMessage : "채팅"
+    User ||--o{ ChatMessage : "발신"
+
     %% User
     User {
         uuid id PK
@@ -174,6 +178,15 @@ erDiagram
         decimal latitude "현재 위도"
         decimal longitude "현재 경도"
         datetime updated_at
+    }
+
+    %% ChatMessage
+    ChatMessage {
+        uuid id PK
+        uuid group_id FK
+        uuid sender_id FK "발신자 ID"
+        text content "메시지 내용"
+        datetime created_at
     }
 ```
 
@@ -566,6 +579,38 @@ ABSENT   - 부재
 
 ---
 
+### 12. ChatMessage (채팅 메시지)
+
+모임 내 Short Talk 채팅 메시지
+
+| 컬럼명     | 타입        | 제약조건     | 설명             | 기본값            |
+| ---------- | ----------- | ------------ | ---------------- | ----------------- |
+| id         | UUID        | PK           | 고유 식별자      | gen_random_uuid() |
+| group_id   | UUID        | FK, NOT NULL | 모임 ID          | -                 |
+| sender_id  | UUID        | FK, NOT NULL | 발신자 사용자 ID | -                 |
+| content    | TEXT        | NOT NULL     | 메시지 내용      | -                 |
+| created_at | TIMESTAMPTZ | NOT NULL     | 전송 일시        | now()             |
+
+**인덱스**
+
+- `idx_chat_message_group_id`: group_id
+- `idx_chat_message_created_at`: created_at (DESC)
+- `idx_chat_message_group_created`: (group_id, created_at DESC) - 복합 인덱스
+
+**외래키**
+
+- group_id → Group(id) ON DELETE CASCADE
+- sender_id → User(id) ON DELETE CASCADE
+
+**비즈니스 규칙**
+
+- 모임 참여자(GroupMember)만 메시지 전송 가능
+- 메시지 수정/삭제 불가 (MVP)
+- 메시지 최대 길이: 1000자
+- 모임 삭제 시 해당 모임의 모든 메시지 CASCADE 삭제
+
+---
+
 ## Enum 정의
 
 ### GroupMemberRole
@@ -607,14 +652,16 @@ CREATE TYPE attendance_result AS ENUM ('ARRIVED', 'LATE', 'ABSENT');
 | User → EventParticipant    | 일정 참여   | 1:N             |
 | User → EventResult         | 출석 결과   | 1:N             |
 | User → LocationTracking    | 위치 정보   | 1:N             |
+| User → ChatMessage         | 채팅 메시지 | 1:N             |
 
 ### Group 중심 관계
 
-| 관계                | 설명      | 카디널리티 |
-| ------------------- | --------- | ---------- |
-| Group → GroupMember | 멤버      | 1:N        |
-| Group → InviteCode  | 초대 코드 | 1:N        |
-| Group → Event       | 일정      | 1:N        |
+| 관계                | 설명        | 카디널리티 |
+| ------------------- | ----------- | ---------- |
+| Group → GroupMember | 멤버        | 1:N        |
+| Group → InviteCode  | 초대 코드   | 1:N        |
+| Group → Event       | 일정        | 1:N        |
+| Group → ChatMessage | 채팅 메시지 | 1:N        |
 
 ### Event 중심 관계
 
@@ -662,6 +709,7 @@ CREATE TYPE attendance_result AS ENUM ('ARRIVED', 'LATE', 'ABSENT');
 | User        | EventParticipant         | CASCADE   |
 | User        | EventResult              | CASCADE   |
 | User        | LocationTracking         | CASCADE   |
+| User        | ChatMessage              | CASCADE   |
 | User        | Group (owner)            | RESTRICT  |
 | User        | InviteCode (created_by)  | CASCADE   |
 | User        | InviteCode (used_by)     | SET NULL  |
@@ -671,6 +719,7 @@ CREATE TYPE attendance_result AS ENUM ('ARRIVED', 'LATE', 'ABSENT');
 | Group       | GroupMember              | CASCADE   |
 | Group       | InviteCode               | CASCADE   |
 | Group       | Event                    | CASCADE   |
+| Group       | ChatMessage              | CASCADE   |
 | Event       | EventParticipant         | CASCADE   |
 | Event       | EventResult              | CASCADE   |
 | Event       | LocationTracking         | CASCADE   |
@@ -700,6 +749,11 @@ CREATE INDEX idx_event_event_time ON "Event"(event_time);
 
 -- 위치 추적 조회
 CREATE INDEX idx_location_tracking_event_id ON "LocationTracking"(event_id);
+
+-- 채팅 메시지 조회
+CREATE INDEX idx_chat_message_group_id ON "ChatMessage"(group_id);
+CREATE INDEX idx_chat_message_created_at ON "ChatMessage"(created_at DESC);
+CREATE INDEX idx_chat_message_group_created ON "ChatMessage"(group_id, created_at DESC);
 ```
 
 ### 복합 유니크 인덱스
@@ -732,6 +786,12 @@ CREATE UNIQUE INDEX idx_location_tracking_unique ON "LocationTracking"(event_id,
 - expires_at 인덱스로 만료 코드 정리 배치 작업 지원
 - 또는 조회 시 만료 여부 확인
 
+### 4. 채팅 메시지 조회 최적화
+
+- (group_id, created_at DESC) 복합 인덱스로 최신 메시지 빠른 조회
+- 커서 기반 페이지네이션으로 대량 메시지 효율적 처리
+- created_at DESC 정렬 인덱스로 히스토리 조회 최적화
+
 ---
 
 ## 참고사항
@@ -750,6 +810,6 @@ CREATE UNIQUE INDEX idx_location_tracking_unique ON "LocationTracking"(event_id,
 2. User, Character 테이블 (독립)
 3. UserCharacter, AccountTransferCode 테이블 (User 의존)
 4. Group 테이블 (User 의존)
-5. GroupMember, InviteCode 테이블 (Group 의존)
+5. GroupMember, InviteCode, ChatMessage 테이블 (Group 의존)
 6. Event 테이블 (Group 의존)
 7. EventParticipant, EventResult, LocationTracking 테이블 (Event 의존)
