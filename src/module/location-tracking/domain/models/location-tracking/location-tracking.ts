@@ -1,5 +1,4 @@
-import { AggregateRoot, UniqueEntityId } from '@lib/domain';
-import { RealTimeLocation } from './real-time-location';
+import { AggregateRoot, UniqueEntityId, Coordinate } from '@lib/domain';
 
 /**
  * LocationTracking 도메인 엔티티 Props
@@ -14,7 +13,7 @@ export interface LocationTrackingProps {
   nickname: string;
   nameTag: string;
   characterCode: string;
-  realTimeLocation?: RealTimeLocation;
+  coordinate?: Coordinate;
 }
 
 /**
@@ -48,16 +47,16 @@ export class LocationTracking extends AggregateRoot<LocationTrackingProps> {
     return this.props.characterCode;
   }
 
-  get realTimeLocation(): RealTimeLocation | undefined {
-    return this.props.realTimeLocation;
+  get coordinate(): Coordinate | undefined {
+    return this.props.coordinate;
   }
 
   /**
-   * 실시간 위치 정보 갱신
+   * 위치 좌표 갱신
    *
-   * @param location 새로운 실시간 위치 정보
+   * @param coordinate 새로운 위치 좌표
    */
-  updateLocation(location: RealTimeLocation): void {
-    this.props.realTimeLocation = location;
+  updateLocation(coordinate: Coordinate): void {
+    this.props.coordinate = coordinate;
   }
 }
