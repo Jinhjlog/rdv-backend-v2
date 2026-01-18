@@ -1,7 +1,8 @@
-import { ValueObject } from '@lib/domain';
+import { BoundedString, ValueObject } from '@lib/domain';
 
 export interface LocationProps {
   address: string;
+  detail: BoundedString;
   latitude: string;
   longitude: string;
 }
@@ -13,6 +14,10 @@ export class Location extends ValueObject<LocationProps> {
 
   get address(): string {
     return this.props.address;
+  }
+
+  get detail(): BoundedString {
+    return this.props.detail;
   }
 
   get latitude(): string {
