@@ -51,4 +51,13 @@ export class LocationTracking extends AggregateRoot<LocationTrackingProps> {
   get realTimeLocation(): RealTimeLocation | undefined {
     return this.props.realTimeLocation;
   }
+
+  /**
+   * 실시간 위치 정보 갱신
+   *
+   * @param location 새로운 실시간 위치 정보
+   */
+  updateLocation(location: RealTimeLocation): void {
+    this.props.realTimeLocation = location;
+  }
 }

@@ -16,4 +16,12 @@ export abstract class LocationTrackingRepository {
    * ID로 조회
    */
   abstract findById(id: string): Promise<LocationTracking | undefined>;
+
+  /**
+   * eventId로 조회
+   */
+  abstract findByUserIdAndEventId(
+    userId: string,
+    eventId: string,
+  ): Promise<LocationTracking | undefined>;
 }
