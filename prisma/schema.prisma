@@ -521,6 +521,7 @@ model events {
   status              event_status
   created_at          DateTime             @default(now()) @db.Timestamptz(6)
   updated_at          DateTime             @db.Timestamptz(6)
+  location_detail     String
   event_participants  event_participants[]
   event_results       event_results[]
   users               public_users         @relation(fields: [created_by], references: [id])
