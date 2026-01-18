@@ -3,10 +3,15 @@ import { EventCoreModule } from './event-core.module';
 import {
   FindEventListUseCase,
   FindEventDetailUseCase,
+  CreateEventUseCase,
 } from './application/usecases';
 import { UserEventController } from './presentation/controllers';
 
-const useCases: Provider[] = [FindEventListUseCase, FindEventDetailUseCase];
+const useCases: Provider[] = [
+  FindEventListUseCase,
+  FindEventDetailUseCase,
+  CreateEventUseCase,
+];
 
 @Module({
   imports: [EventCoreModule],
