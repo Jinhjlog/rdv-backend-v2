@@ -1,7 +1,7 @@
 import { ValueObjectValidationException } from '@shared/exception';
-import { RealTimeLocation, RealTimeLocationError } from './real-time-location';
+import { Coordinate, CoordinateError } from './coordinate';
 
-describe('RealTimeLocation', () => {
+describe('Coordinate', () => {
   describe('create', () => {
     describe('성공 케이스', () => {
       it('유효한 위도와 경도로 객체를 생성해야 한다', () => {
@@ -10,16 +10,16 @@ describe('RealTimeLocation', () => {
         const longitude = '126.123456';
 
         // when
-        const location = RealTimeLocation.create({
+        const coordinate = Coordinate.create({
           latitude,
           longitude,
         });
 
         // then
-        expect(location).toBeDefined();
-        expect(location.latitude).toBe(latitude);
-        expect(location.longitude).toBe(longitude);
-        expect(location.updatedAt).toBeInstanceOf(Date);
+        expect(coordinate).toBeDefined();
+        expect(coordinate.latitude).toBe(latitude);
+        expect(coordinate.longitude).toBe(longitude);
+        expect(coordinate.updatedAt).toBeInstanceOf(Date);
       });
 
       it('음수 좌표도 유효하게 생성해야 한다', () => {
@@ -28,15 +28,15 @@ describe('RealTimeLocation', () => {
         const longitude = '-126.123456';
 
         // when
-        const location = RealTimeLocation.create({
+        const coordinate = Coordinate.create({
           latitude,
           longitude,
         });
 
         // then
-        expect(location).toBeDefined();
-        expect(location.latitude).toBe(latitude);
-        expect(location.longitude).toBe(longitude);
+        expect(coordinate).toBeDefined();
+        expect(coordinate.latitude).toBe(latitude);
+        expect(coordinate.longitude).toBe(longitude);
       });
 
       it('경계값(최소)으로 생성해야 한다', () => {
@@ -45,13 +45,13 @@ describe('RealTimeLocation', () => {
         const longitude = '-180.000000';
 
         // when
-        const location = RealTimeLocation.create({
+        const coordinate = Coordinate.create({
           latitude,
           longitude,
         });
 
         // then
-        expect(location).toBeDefined();
+        expect(coordinate).toBeDefined();
       });
 
       it('경계값(최대)으로 생성해야 한다', () => {
@@ -60,13 +60,13 @@ describe('RealTimeLocation', () => {
         const longitude = '180.000000';
 
         // when
-        const location = RealTimeLocation.create({
+        const coordinate = Coordinate.create({
           latitude,
           longitude,
         });
 
         // then
-        expect(location).toBeDefined();
+        expect(coordinate).toBeDefined();
       });
 
       it('소수점 6자리로 생성해야 한다', () => {
@@ -75,13 +75,13 @@ describe('RealTimeLocation', () => {
         const longitude = '126.123456';
 
         // when
-        const location = RealTimeLocation.create({
+        const coordinate = Coordinate.create({
           latitude,
           longitude,
         });
 
         // then
-        expect(location).toBeDefined();
+        expect(coordinate).toBeDefined();
       });
 
       it('소수점 7자리로 생성해야 한다', () => {
@@ -90,13 +90,13 @@ describe('RealTimeLocation', () => {
         const longitude = '126.1234567';
 
         // when
-        const location = RealTimeLocation.create({
+        const coordinate = Coordinate.create({
           latitude,
           longitude,
         });
 
         // then
-        expect(location).toBeDefined();
+        expect(coordinate).toBeDefined();
       });
 
       it('소수점 8자리로 생성해야 한다', () => {
@@ -105,13 +105,13 @@ describe('RealTimeLocation', () => {
         const longitude = '126.12345678';
 
         // when
-        const location = RealTimeLocation.create({
+        const coordinate = Coordinate.create({
           latitude,
           longitude,
         });
 
         // then
-        expect(location).toBeDefined();
+        expect(coordinate).toBeDefined();
       });
     });
 
@@ -134,52 +134,52 @@ describe('RealTimeLocation', () => {
       ])('%s (%s) 형식은 위도 검증에 실패해야 한다', (_, invalidLatitude) => {
         // when & then
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: invalidLatitude,
             longitude: '126.123456',
           }),
         ).toThrow(ValueObjectValidationException);
 
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: invalidLatitude,
             longitude: '126.123456',
           }),
-        ).toThrow(RealTimeLocationError.INVALID_LATITUDE_FORMAT);
+        ).toThrow(CoordinateError.INVALID_LATITUDE_FORMAT);
       });
 
       it('위도가 -90보다 작으면 범위 벗어남 에러를 던져야 한다', () => {
         // when & then
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: '-91.123456',
             longitude: '126.123456',
           }),
         ).toThrow(ValueObjectValidationException);
 
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: '-91.123456',
             longitude: '126.123456',
           }),
-        ).toThrow(RealTimeLocationError.LATITUDE_OUT_OF_RANGE);
+        ).toThrow(CoordinateError.LATITUDE_OUT_OF_RANGE);
       });
 
       it('위도가 90보다 크면 범위 벗어남 에러를 던져야 한다', () => {
         // when & then
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: '100.123456',
             longitude: '126.123456',
           }),
         ).toThrow(ValueObjectValidationException);
 
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: '100.123456',
             longitude: '126.123456',
           }),
-        ).toThrow(RealTimeLocationError.LATITUDE_OUT_OF_RANGE);
+        ).toThrow(CoordinateError.LATITUDE_OUT_OF_RANGE);
       });
     });
 
@@ -202,52 +202,52 @@ describe('RealTimeLocation', () => {
       ])('%s (%s) 형식은 경도 검증에 실패해야 한다', (_, invalidLongitude) => {
         // when & then
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: '37.123456',
             longitude: invalidLongitude,
           }),
         ).toThrow(ValueObjectValidationException);
 
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: '37.123456',
             longitude: invalidLongitude,
           }),
-        ).toThrow(RealTimeLocationError.INVALID_LONGITUDE_FORMAT);
+        ).toThrow(CoordinateError.INVALID_LONGITUDE_FORMAT);
       });
 
       it('경도가 -180보다 작으면 범위 벗어남 에러를 던져야 한다', () => {
         // when & then
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: '37.123456',
             longitude: '-181.123456',
           }),
         ).toThrow(ValueObjectValidationException);
 
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: '37.123456',
             longitude: '-181.123456',
           }),
-        ).toThrow(RealTimeLocationError.LONGITUDE_OUT_OF_RANGE);
+        ).toThrow(CoordinateError.LONGITUDE_OUT_OF_RANGE);
       });
 
       it('경도가 180보다 크면 범위 벗어남 에러를 던져야 한다', () => {
         // when & then
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: '37.123456',
             longitude: '200.123456',
           }),
         ).toThrow(ValueObjectValidationException);
 
         expect(() =>
-          RealTimeLocation.create({
+          Coordinate.create({
             latitude: '37.123456',
             longitude: '200.123456',
           }),
-        ).toThrow(RealTimeLocationError.LONGITUDE_OUT_OF_RANGE);
+        ).toThrow(CoordinateError.LONGITUDE_OUT_OF_RANGE);
       });
     });
   });

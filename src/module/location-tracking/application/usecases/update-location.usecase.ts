@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Coordinate } from '@lib/domain';
 import { EntityNotFoundException } from '@shared/exception';
 import { LocationTrackingRepository } from '../../domain/repositories';
-import { RealTimeLocation } from '../../domain/models';
 import { UpdateLocationDto } from '../dtos';
 
 /**
@@ -30,14 +30,14 @@ export class UpdateLocationUseCase {
       });
     }
 
-    // 2. 새로운 RealTimeLocation Value Object 생성
-    const newLocation = RealTimeLocation.create({
+    // 2. 새로운 Coordinate Value Object 생성
+    const newCoordinate = Coordinate.create({
       latitude: dto.latitude,
       longitude: dto.longitude,
     });
 
     // 3. LocationTracking에 새 위치 설정 (도메인 로직)
-    tracking.updateLocation(newLocation);
+    tracking.updateLocation(newCoordinate);
 
     // 4. 저장
     await this.locationTrackingRepository.save(tracking);

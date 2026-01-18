@@ -1,7 +1,7 @@
 import { ValueObject } from '@lib/domain';
 import { ValueObjectValidationException } from '@shared/exception';
 
-export const RealTimeLocationError = {
+export const CoordinateError = {
   INVALID_LATITUDE_FORMAT:
     '위도는 유효한 문자열로 이루어진 숫자여야 합니다 (소수점 6~8자리)',
   INVALID_LONGITUDE_FORMAT:
@@ -10,22 +10,22 @@ export const RealTimeLocationError = {
   LONGITUDE_OUT_OF_RANGE: '경도는 -180 ~ 180 사이여야 합니다',
 } as const;
 
-export type RealTimeLocationErrorType =
-  (typeof RealTimeLocationError)[keyof typeof RealTimeLocationError];
+export type CoordinateErrorType =
+  (typeof CoordinateError)[keyof typeof CoordinateError];
 
-export interface RealTimeLocationProps {
+export interface CoordinateProps {
   latitude: string; // 위도
   longitude: string; // 경도
-  updatedAt: Date; // 위치 정보가 수집된 시간
+  updatedAt: Date; // 좌표 정보가 수집된 시간
 }
 
-export class RealTimeLocation extends ValueObject<RealTimeLocationProps> {
+export class Coordinate extends ValueObject<CoordinateProps> {
   private static readonly LATITUDE_MIN = -90;
   private static readonly LATITUDE_MAX = 90;
   private static readonly LONGITUDE_MIN = -180;
   private static readonly LONGITUDE_MAX = 180;
 
-  private constructor(props: RealTimeLocationProps) {
+  private constructor(props: CoordinateProps) {
     super(props);
   }
 
@@ -46,15 +46,12 @@ export class RealTimeLocation extends ValueObject<RealTimeLocationProps> {
     return coordinateRegex.test(coordinate);
   }
 
-  static create(props: {
-    latitude: string;
-    longitude: string;
-  }): RealTimeLocation {
+  static create(props: { latitude: string; longitude: string }): Coordinate {
     // 위도 형식 검증 (소수점 6~8자리)
     if (!this.isValidCoordinateFormat(props.latitude)) {
       throw new ValueObjectValidationException({
-        entityName: 'RealTimeLocation',
-        reason: RealTimeLocationError.INVALID_LATITUDE_FORMAT,
+        entityName: 'Coordinate',
+        reason: CoordinateError.INVALID_LATITUDE_FORMAT,
         errorCode: 'LATITUDE_FORMAT_INVALID',
       });
     }
@@ -62,8 +59,8 @@ export class RealTimeLocation extends ValueObject<RealTimeLocationProps> {
     // 경도 형식 검증 (소수점 6~8자리)
     if (!this.isValidCoordinateFormat(props.longitude)) {
       throw new ValueObjectValidationException({
-        entityName: 'RealTimeLocation',
-        reason: RealTimeLocationError.INVALID_LONGITUDE_FORMAT,
+        entityName: 'Coordinate',
+        reason: CoordinateError.INVALID_LONGITUDE_FORMAT,
         errorCode: 'LONGITUDE_FORMAT_INVALID',
       });
     }
@@ -75,8 +72,8 @@ export class RealTimeLocation extends ValueObject<RealTimeLocationProps> {
       latitudeValue > this.LATITUDE_MAX
     ) {
       throw new ValueObjectValidationException({
-        entityName: 'RealTimeLocation',
-        reason: RealTimeLocationError.LATITUDE_OUT_OF_RANGE,
+        entityName: 'Coordinate',
+        reason: CoordinateError.LATITUDE_OUT_OF_RANGE,
         errorCode: 'LATITUDE_OUT_OF_RANGE',
       });
     }
@@ -88,20 +85,20 @@ export class RealTimeLocation extends ValueObject<RealTimeLocationProps> {
       longitudeValue > this.LONGITUDE_MAX
     ) {
       throw new ValueObjectValidationException({
-        entityName: 'RealTimeLocation',
-        reason: RealTimeLocationError.LONGITUDE_OUT_OF_RANGE,
+        entityName: 'Coordinate',
+        reason: CoordinateError.LONGITUDE_OUT_OF_RANGE,
         errorCode: 'LONGITUDE_OUT_OF_RANGE',
       });
     }
 
-    return new RealTimeLocation({
+    return new Coordinate({
       latitude: props.latitude,
       longitude: props.longitude,
       updatedAt: new Date(),
     });
   }
 
-  static unsafeCreate(props: RealTimeLocationProps): RealTimeLocation {
-    return new RealTimeLocation(props);
+  static unsafeCreate(props: CoordinateProps): Coordinate {
+    return new Coordinate(props);
   }
 }

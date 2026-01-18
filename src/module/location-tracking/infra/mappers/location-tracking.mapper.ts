@@ -2,8 +2,8 @@ import {
   Prisma,
   location_trackings as LocationTrackingPrisma,
 } from '@prisma/generated/client';
+import { Coordinate } from '@lib/domain';
 import { LocationTracking } from '../../domain/models';
-import { RealTimeLocation } from '../../domain/models/location-tracking/real-time-location';
 
 /**
  * LocationTrackingMapper
@@ -23,13 +23,13 @@ export class LocationTrackingMapper {
   static toDomain(
     prismaLocationTracking: LocationTrackingPrisma,
   ): LocationTracking {
-    let realTimeLocation: RealTimeLocation | undefined;
+    let coordinate: Coordinate | undefined;
     if (
       prismaLocationTracking.latitude !== null &&
       prismaLocationTracking.longitude !== null &&
       prismaLocationTracking.updated_at !== null
     ) {
-      realTimeLocation = RealTimeLocation.unsafeCreate({
+      coordinate = Coordinate.unsafeCreate({
         latitude: prismaLocationTracking.latitude.toString(),
         longitude: prismaLocationTracking.longitude.toString(),
         updatedAt: prismaLocationTracking.updated_at,
@@ -42,7 +42,7 @@ export class LocationTrackingMapper {
       nickname: prismaLocationTracking.nickname,
       nameTag: prismaLocationTracking.name_tag,
       characterCode: prismaLocationTracking.character_code,
-      realTimeLocation: realTimeLocation,
+      coordinate: coordinate,
     });
   }
 
@@ -59,14 +59,12 @@ export class LocationTrackingMapper {
     let longitude: Prisma.Decimal | null = null;
     let updatedAt: Date | null = null;
 
-    if (domainLocationTracking.realTimeLocation) {
-      latitude = new Prisma.Decimal(
-        domainLocationTracking.realTimeLocation.latitude,
-      );
+    if (domainLocationTracking.coordinate) {
+      latitude = new Prisma.Decimal(domainLocationTracking.coordinate.latitude);
       longitude = new Prisma.Decimal(
-        domainLocationTracking.realTimeLocation.longitude,
+        domainLocationTracking.coordinate.longitude,
       );
-      updatedAt = domainLocationTracking.realTimeLocation.updatedAt;
+      updatedAt = domainLocationTracking.coordinate.updatedAt;
     }
 
     return {
