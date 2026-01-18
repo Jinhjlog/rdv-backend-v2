@@ -53,4 +53,18 @@ export class LocationTrackingRepositoryImpl implements LocationTrackingRepositor
 
     return LocationTrackingMapper.toDomain(raw);
   }
+
+  async findByUserIdAndEventId(
+    userId: string,
+    eventId: string,
+  ): Promise<LocationTracking | undefined> {
+    const raw = await this.prisma.location_trackings.findUnique({
+      where: { event_id_user_id: { event_id: eventId, user_id: userId } },
+    });
+    if (!raw) {
+      return undefined;
+    }
+
+    return LocationTrackingMapper.toDomain(raw);
+  }
 }
