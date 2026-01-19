@@ -53,6 +53,7 @@ export class RegisterUseCase {
       level: PositiveNumber.unsafeCreate(1, 'level'),
       experience: PositiveNumber.unsafeCreate(0, 'experience'),
     });
+    user.register();
 
     // 4. 사용자 저장
     await this.userRepository.save(user);

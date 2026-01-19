@@ -4,11 +4,14 @@ import { UserCharacterController } from './presentation/controllers';
 import {
   FindCharacterListUseCase,
   FindMyCharacterListUseCase,
+  UnlockCharacterUseCase,
 } from './application/usecases';
+import { UserRegisteredEventHandler } from './application/handlers';
 
 const useCases: Provider[] = [
   FindCharacterListUseCase,
   FindMyCharacterListUseCase,
+  UnlockCharacterUseCase,
 ];
 
 /**
@@ -19,6 +22,6 @@ const useCases: Provider[] = [
 @Module({
   imports: [CharacterCoreModule],
   controllers: [UserCharacterController],
-  providers: [...useCases],
+  providers: [...useCases, UserRegisteredEventHandler],
 })
 export class UserCharacterModule {}

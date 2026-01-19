@@ -26,4 +26,15 @@ export class CharacterRepositoryImpl implements CharacterRepository {
 
     return CharacterMapper.toDomain(raw);
   }
+
+  async findIdByCode(code: string): Promise<string | undefined> {
+    const raw = await this.prisma.characters.findUnique({
+      where: { character_code: code },
+    });
+    if (!raw) {
+      return undefined;
+    }
+
+    return raw.id;
+  }
 }
