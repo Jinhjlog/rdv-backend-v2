@@ -14,6 +14,11 @@ export type EnvironmentConfig = {
     accessTokenExpiresIn: number;
     refreshTokenExpiresIn: number;
   };
+  firebase: {
+    projectId: string;
+    privateKey: string;
+    clientEmail: string;
+  };
   logger: {
     level: 'debug' | 'info' | 'warn' | 'error';
     directory: string;
@@ -70,6 +75,11 @@ export default (): EnvironmentConfig => {
         process.env.JWT_REFRESH_TOKEN_EXPIRES_IN || '86400',
         10,
       ),
+    },
+    firebase: {
+      projectId: process.env.FIREBASE_PROJECT_ID || '',
+      privateKey: process.env.FIREBASE_PRIVATE_KEY || '',
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL || '',
     },
     logger: {
       level:

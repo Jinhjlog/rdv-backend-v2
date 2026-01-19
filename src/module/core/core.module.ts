@@ -6,6 +6,7 @@ import { LoggerModule } from './logger';
 import { JwtModule } from './jwt/jwt.module';
 import { RedisModule } from './database/redis.module';
 import { QueueModule } from './queue/queue.module';
+import { FirebaseModule } from './firebase/firebase.module';
 
 @Global()
 @Module({
@@ -19,8 +20,16 @@ import { QueueModule } from './queue/queue.module';
     JwtModule,
     DatabaseModule,
     QueueModule,
+    FirebaseModule,
   ],
   providers: [ConfigService],
-  exports: [ConfigService, RedisModule, DatabaseModule, JwtModule, QueueModule],
+  exports: [
+    ConfigService,
+    RedisModule,
+    DatabaseModule,
+    JwtModule,
+    QueueModule,
+    FirebaseModule,
+  ],
 })
 export class CoreModule {}
