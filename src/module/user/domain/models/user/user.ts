@@ -5,6 +5,7 @@ import {
   UniqueEntityId,
 } from '@lib/domain';
 import { NameTag } from './name-tag';
+import { UserRegisteredEvent } from '../../events';
 
 export interface UserProps {
   id?: string;
@@ -77,6 +78,14 @@ export class User extends AggregateRoot<UserProps> {
   changeThemeColor(color: string): void {
     this.props.preferredThemeColor = color;
     this.props.updatedAt = new Date();
+  }
+
+  register(): void {
+    this.addDomainEvent(
+      new UserRegisteredEvent(this.id, {
+        characterCode: this.characterCode,
+      }),
+    );
   }
 
   /**
