@@ -4,6 +4,7 @@ import {
   FindEventListUseCase,
   FindEventDetailUseCase,
   CreateEventUseCase,
+  JoinEventUseCase,
 } from './application/usecases';
 import { UserEventController } from './presentation/controllers';
 
@@ -11,6 +12,7 @@ const useCases: Provider[] = [
   FindEventListUseCase,
   FindEventDetailUseCase,
   CreateEventUseCase,
+  JoinEventUseCase,
 ];
 
 @Module({

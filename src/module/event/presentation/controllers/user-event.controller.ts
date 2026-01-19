@@ -21,6 +21,7 @@ import {
   FindEventListUseCase,
   FindEventDetailUseCase,
   CreateEventUseCase,
+  JoinEventUseCase,
 } from '../../application/usecases';
 import { User, UserAuth } from 'src/module/auth/decorators';
 import {
@@ -38,6 +39,7 @@ export class UserEventController {
     private readonly findEventListUseCase: FindEventListUseCase,
     private readonly findEventDetailUseCase: FindEventDetailUseCase,
     private readonly createEventUseCase: CreateEventUseCase,
+    private readonly joinEventUseCase: JoinEventUseCase,
   ) {}
 
   @ApiOperation({
@@ -225,6 +227,63 @@ export class UserEventController {
     @Param('eventId', ParseUUIDPipe) eventId: string,
     @User() user: UserInfo,
   ): Promise<EventDetailResponseDto> {
+    const event = await this.findEventDetailUseCase.execute({
+      userId: user.userId,
+      eventId: eventId,
+    });
+
+    return EventTransformer.toDetailResponse(event);
+  }
+
+  @ApiOperation({
+    summary: '사용자 - 일정 참여',
+    description:
+      '모집중인 일정에 참여합니다.<br><br>' +
+      '**검증 순서**<br>' +
+      '1. 일정 존재 여부 확인<br>' +
+      '2. 일정 상태 확인 (RECRUITING 상태만 가능)<br>' +
+      '3. 중복 참여 확인<br>' +
+      '4. 다른 일정과의 시간 충돌 확인 (tracking_start_time ~ end_time)<br><br>' +
+      '**응답 구조**<br>' +
+      '참여 성공 시 해당 일정의 전체 정보를 반환합니다. (생성자, 제목, 설명, 일시, 위치, 참여자 목록 포함)<br><br>' +
+      '**주의사항**<br>' +
+      '- 인증된 사용자만 접근 가능합니다.<br>' +
+      '- eventId는 UUID 형식이어야 합니다.<br>',
+  })
+  @ApiParam({
+    name: 'eventId',
+    description: '일정 ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    required: true,
+  })
+  @ApiCreatedResponse({
+    description: '일정 참여 성공',
+    type: EventDetailResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (도메인 규칙 위반)<br>' +
+      '- 일정 상태가 모집중이 아닌 경우: _**EVENT_NOT_RECRUITING**_<br>' +
+      '- 이미 참여 중인 일정인 경우: _**ALREADY_PARTICIPATING**_<br>' +
+      '- 다른 일정과 시간이 중복되는 경우: _**EVENT_TIME_CONFLICT**_<br>',
+  })
+  @ApiNotFoundResponse({
+    description:
+      '리소스를 찾을 수 없음: _**EVENT_NOT_FOUND**_<br>' +
+      '해당 eventId가 존재하지 않는 경우',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.CREATED)
+  @Post('events/:eventId/participants')
+  async joinEvent(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @User() user: UserInfo,
+  ): Promise<EventDetailResponseDto> {
+    await this.joinEventUseCase.execute({
+      eventId: eventId,
+      userId: user.userId,
+    });
+
     const event = await this.findEventDetailUseCase.execute({
       userId: user.userId,
       eventId: eventId,
