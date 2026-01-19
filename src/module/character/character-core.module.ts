@@ -2,10 +2,14 @@ import { Module } from '@nestjs/common';
 import {
   CharacterRepository,
   CharacterQueryRepository,
+  UserCharacterRepository,
+  UserRepository,
 } from './domain/repositories';
 import {
   CharacterRepositoryImpl,
   CharacterQueryRepositoryImpl,
+  UserCharacterRepositoryImpl,
+  UserRepositoryImpl,
 } from './infra/repositories';
 
 /**
@@ -23,7 +27,20 @@ import {
       provide: CharacterQueryRepository,
       useClass: CharacterQueryRepositoryImpl,
     },
+    {
+      provide: UserCharacterRepository,
+      useClass: UserCharacterRepositoryImpl,
+    },
+    {
+      provide: UserRepository,
+      useClass: UserRepositoryImpl,
+    },
   ],
-  exports: [CharacterRepository, CharacterQueryRepository],
+  exports: [
+    CharacterRepository,
+    CharacterQueryRepository,
+    UserCharacterRepository,
+    UserRepository,
+  ],
 })
 export class CharacterCoreModule {}
