@@ -1,4 +1,5 @@
 import { AggregateRoot, BoundedString, UniqueEntityId } from '@lib/domain';
+import { DomainRuleViolationException } from '@shared/exception';
 import { EventParticipant } from './event-participant';
 import { EventResult } from './event-result';
 import { Location } from './location';
@@ -89,7 +90,21 @@ export class Event extends AggregateRoot<EventProps> {
     return this.props.result;
   }
 
+  /**
+   * 일정 참가자 추가
+   *
+   * @param participant 일정 참가자
+   * @throws {DomainRuleViolationException} ALREADY_PARTICIPATING - 이미 참여 중인 일정인 경우
+   */
   addParticipant(participant: EventParticipant): void {
+    if (this.props.participants.some((p) => p.userId === participant.userId)) {
+      throw new DomainRuleViolationException({
+        entityName: 'EventParticipant',
+        reason: '이미 참여 중인 일정입니다.',
+        errorCode: 'ALREADY_PARTICIPATING',
+      });
+    }
+
     this.props.participants.push(participant);
   }
 }
