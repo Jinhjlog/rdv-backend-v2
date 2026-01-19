@@ -155,4 +155,23 @@ export class EventRepositoryImpl implements EventRepository {
     });
     return count;
   }
+
+  async hasScheduleConflict(
+    userId: string,
+    trackingStartTime: Date,
+    endTime: Date,
+    excludeEventId?: string,
+  ): Promise<boolean> {
+    const result = await this.client.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*)::bigint as count
+      FROM events e
+      JOIN event_participants ep ON e.id = ep.event_id
+      WHERE ep.user_id = ${userId}
+        AND e.status != 'ENDED'
+        ${excludeEventId ? `AND e.id != ${excludeEventId}` : ''}
+        AND NOT (e.end_time <= ${trackingStartTime} OR e.tracking_start_time >= ${endTime})
+    `;
+
+    return Number(result[0].count) > 0;
+  }
 }
