@@ -115,15 +115,31 @@ export class EventRepositoryImpl implements EventRepository {
       );
     }
 
-    // 4. Event Result 저장/업데이트 (있을 경우)
-    if (event.result) {
-      const resultData = EventResultMapper.toPersistence(event.result);
+    // 4. 제거된 결과 삭제 (Orphan 제거)
+    const currentResultIds = event.results.map((result) =>
+      result.id.toString(),
+    );
 
-      await client.event_results.upsert({
-        where: { id: event.result.id.toString() },
-        update: resultData,
-        create: resultData,
-      });
+    await client.event_results.deleteMany({
+      where: {
+        event_id: event.id.toString(),
+        NOT: { id: { in: currentResultIds } },
+      },
+    });
+
+    // 5. Event Results 저장/업데이트
+    if (event.results.length > 0) {
+      await Promise.all(
+        event.results.map((result) => {
+          const resultData = EventResultMapper.toPersistence(result);
+
+          return client.event_results.upsert({
+            where: { id: result.id.toString() },
+            update: resultData,
+            create: resultData,
+          });
+        }),
+      );
     }
   }
 
@@ -143,12 +159,11 @@ export class EventRepositoryImpl implements EventRepository {
       (participant) => EventParticipantMapper.toDomain(participant),
     );
 
-    const eventResult =
-      prismaEvent.event_results.length > 0
-        ? EventResultMapper.toDomain(prismaEvent.event_results[0])
-        : undefined;
+    const eventResults = prismaEvent.event_results.map((result) =>
+      EventResultMapper.toDomain(result),
+    );
 
-    return EventMapper.toDomain(prismaEvent, eventParticipants, eventResult);
+    return EventMapper.toDomain(prismaEvent, eventParticipants, eventResults);
   }
 
   async findRecurringEventCountByGroupId(groupId: string): Promise<number> {

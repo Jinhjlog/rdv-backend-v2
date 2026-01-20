@@ -25,7 +25,7 @@ export class EventMapper {
   static toDomain(
     prismaEvent: EventPrisma,
     eventParticipants: EventParticipant[],
-    eventResults?: EventResult,
+    eventResults: EventResult[] = [],
   ): Event {
     return new Event({
       id: prismaEvent.id,
@@ -48,7 +48,7 @@ export class EventMapper {
       createdAt: prismaEvent.created_at,
       updatedAt: prismaEvent.updated_at,
       participants: eventParticipants,
-      result: eventResults,
+      results: eventResults,
     });
   }
 
