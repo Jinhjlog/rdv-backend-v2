@@ -148,8 +148,8 @@ export class EventDetailResponseDto {
   locationLongitude: string;
 
   @ApiProperty({
-    description: '일정 상태',
-    enum: ['RECRUITING', 'IN_PROGRESS', 'ENDED'],
+    description: '일정 상태 [모집중, 진행중, 종료, 취소]',
+    enum: ['RECRUITING', 'IN_PROGRESS', 'ENDED', 'CANCELLED'],
     example: 'RECRUITING',
   })
   status: string;

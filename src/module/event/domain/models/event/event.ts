@@ -23,6 +23,11 @@ export enum EventStatus {
    * 종료됨
    */
   ENDED = 'ENDED',
+
+  /**
+   * 취소됨 (참여자 부족 등)
+   */
+  CANCELLED = 'CANCELLED',
 }
 
 export interface EventProps {
@@ -106,5 +111,32 @@ export class Event extends AggregateRoot<EventProps> {
     }
 
     this.props.participants.push(participant);
+  }
+
+  /**
+   * 일정 취소 가능 여부 확인
+   *
+   * RECRUITING 상태인 경우에만 취소 가능
+   */
+  canBeCancelled(): boolean {
+    return this.props.status === EventStatus.RECRUITING;
+  }
+
+  /**
+   * 일정 취소
+   *
+   * @throws {DomainRuleViolationException} EVENT_CANNOT_BE_CANCELLED - 취소할 수 없는 상태인 경우
+   */
+  cancel(): void {
+    if (!this.canBeCancelled()) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '모집중인 일정만 취소할 수 있습니다.',
+        errorCode: 'EVENT_CANNOT_BE_CANCELLED',
+      });
+    }
+
+    this.props.status = EventStatus.CANCELLED;
+    this.props.updatedAt = new Date();
   }
 }
