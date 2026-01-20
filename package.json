@@ -115,7 +115,6 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@prisma/generated/(.*)$": "<rootDir>/../prisma/generated/prisma/$1",
       "^@core/(.*)$": "<rootDir>/module/core/$1",
       "^@lib/(.*)$": "<rootDir>/lib/$1",
       "^@shared/(.*)$": "<rootDir>/shared/$1",
