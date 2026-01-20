@@ -25,7 +25,7 @@ export class EventProcessor extends WorkerHost {
           await this.handleParticipantCheck(job.data.eventId);
           break;
         case EVENT_QUEUE.JOBS.LOCATION_SHARING_START:
-          // TODO: 위치 공유 시작 로직 구현
+          await this.handleLocationSharingStart(job.data.eventId);
           break;
         case EVENT_QUEUE.JOBS.END:
           // TODO: 일정 종료 로직 구현
@@ -64,6 +64,40 @@ export class EventProcessor extends WorkerHost {
 
     this.logger.log(
       `참여자 체크 완료: eventId=${eventId}, passed=${passed}, participantCount=${event.participants.length}`,
+    );
+  }
+
+  /**
+   * 일정 시작 처리 (위치 공유 시작)
+   *
+   * Processor → Repository → Domain method → Domain Event 발행
+   * - RECRUITING → IN_PROGRESS 상태 전환
+   * - EventStartedEvent 발행 → EventHandler에서 일정 종료 스케줄링 예약
+   */
+  private async handleLocationSharingStart(eventId: string): Promise<void> {
+    // 1. 조회
+    const event = await this.eventRepository.findById(eventId);
+    if (!event) {
+      this.logger.warn(`일정을 찾을 수 없음: ${eventId}`);
+      return;
+    }
+
+    // 2. 상태 확인 (이미 진행중이면 스킵)
+    if (!event.canStart()) {
+      this.logger.warn(
+        `일정을 시작할 수 없는 상태: eventId=${eventId}, status=${event.status}`,
+      );
+      return;
+    }
+
+    // 3. 도메인 메서드 호출 (Domain Event 자동 발행)
+    event.start();
+
+    // 4. 저장 (Domain Events 발행됨)
+    await this.eventRepository.save(event);
+
+    this.logger.log(
+      `일정 시작 완료: eventId=${eventId}, status=${event.status}`,
     );
   }
 }
