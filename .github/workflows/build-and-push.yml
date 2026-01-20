@@ -94,3 +94,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Deploy to Koyeb
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.KOYEB_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/redeploy"
