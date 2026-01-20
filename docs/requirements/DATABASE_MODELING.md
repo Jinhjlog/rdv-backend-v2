@@ -441,6 +441,7 @@ MEMBER  - 일반 참여자
 RECRUITING   - 모집중
 IN_PROGRESS  - 진행중
 ENDED        - 종료됨
+CANCELLED     - 취소됨
 ```
 
 **인덱스**
@@ -622,7 +623,7 @@ CREATE TYPE group_member_role AS ENUM ('OWNER', 'MEMBER');
 ### EventStatus
 
 ```sql
-CREATE TYPE event_status AS ENUM ('RECRUITING', 'IN_PROGRESS', 'ENDED');
+CREATE TYPE event_status AS ENUM ('RECRUITING', 'IN_PROGRESS', 'ENDED', 'CANCELLED');
 ```
 
 ### ParticipantStatus
