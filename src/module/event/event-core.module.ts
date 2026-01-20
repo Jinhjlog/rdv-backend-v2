@@ -13,7 +13,11 @@ import {
   EventRepository,
   GroupRepository,
 } from './domain/repositories';
-import { ParticipantsCheckPassedEventHandler } from './application/handlers';
+import {
+  ParticipantsCheckPassedEventHandler,
+  EventStartedEventHandler,
+  EventEndedEventHandler,
+} from './application/handlers';
 
 @Module({
   imports: [
@@ -38,6 +42,8 @@ import { ParticipantsCheckPassedEventHandler } from './application/handlers';
     EventProcessor,
     // Event Handlers
     ParticipantsCheckPassedEventHandler,
+    EventStartedEventHandler,
+    EventEndedEventHandler,
   ],
   exports: [
     EventQueryRepository,
