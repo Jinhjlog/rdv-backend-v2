@@ -18,7 +18,7 @@ export abstract class LocationTrackingRepository {
   abstract findById(id: string): Promise<LocationTracking | undefined>;
 
   /**
-   * eventId로 조회
+   * userId + eventId로 조회
    */
   abstract findByUserIdAndEventId(
     userId: string,
