@@ -428,6 +428,7 @@ model public_users {
   created_at                                    DateTime                 @default(now()) @db.Timestamptz(6)
   updated_at                                    DateTime                 @db.Timestamptz(6)
   account_transfer_codes                        account_transfer_codes[]
+  chat_messages                                 chat_messages[]
   event_participants                            event_participants[]
   event_results                                 event_results[]
   events                                        events[]
@@ -560,6 +561,7 @@ model groups {
   is_public     Boolean
   created_at    DateTime        @default(now()) @db.Timestamptz(6)
   updated_at    DateTime        @db.Timestamptz(6)
+  chat_messages chat_messages[]
   events        events[]
   group_members group_members[]
   users         public_users    @relation(fields: [owner_id], references: [id])
@@ -617,6 +619,21 @@ model user_characters {
   users        public_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, character_id], map: "idx_user_character_unique")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model chat_messages {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  group_id   String       @db.Uuid
+  sender_id  String       @db.Uuid
+  content    String
+  created_at DateTime     @default(now()) @db.Timestamptz(6)
+  groups     groups       @relation(fields: [group_id], references: [id], onDelete: Cascade, map: "chat_messages_groupId_fkey")
+  users      public_users @relation(fields: [sender_id], references: [id], onDelete: Cascade, map: "chat_messages_senderId_fkey")
+
+  @@index([group_id, created_at(sort: Desc)], map: "idx_chat_message_group_created")
   @@schema("public")
 }
 

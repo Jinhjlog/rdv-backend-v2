@@ -1,8 +1,15 @@
 import { Module } from '@nestjs/common';
-import { GroupRepository, GroupQueryRepository } from './domain/repositories';
+import {
+  GroupRepository,
+  GroupQueryRepository,
+  ShortTalkSessionRepository,
+  ChatMessageRepository,
+} from './domain/repositories';
 import {
   GroupRepositoryImpl,
   GroupQueryRepositoryImpl,
+  ShortTalkSessionRepositoryImpl,
+  ChatMessageRepositoryImpl,
 } from './infra/repositories';
 
 /**
@@ -20,7 +27,20 @@ import {
       provide: GroupQueryRepository,
       useClass: GroupQueryRepositoryImpl,
     },
+    {
+      provide: ShortTalkSessionRepository,
+      useClass: ShortTalkSessionRepositoryImpl,
+    },
+    {
+      provide: ChatMessageRepository,
+      useClass: ChatMessageRepositoryImpl,
+    },
   ],
-  exports: [GroupRepository, GroupQueryRepository],
+  exports: [
+    GroupRepository,
+    GroupQueryRepository,
+    ShortTalkSessionRepository,
+    ChatMessageRepository,
+  ],
 })
 export class GroupCoreModule {}
