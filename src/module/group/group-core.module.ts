@@ -4,12 +4,14 @@ import {
   GroupQueryRepository,
   ShortTalkSessionRepository,
   ChatMessageRepository,
+  ChatMessageQueryRepository,
 } from './domain/repositories';
 import {
   GroupRepositoryImpl,
   GroupQueryRepositoryImpl,
   ShortTalkSessionRepositoryImpl,
   ChatMessageRepositoryImpl,
+  ChatMessageQueryRepositoryImpl,
 } from './infra/repositories';
 
 /**
@@ -35,12 +37,17 @@ import {
       provide: ChatMessageRepository,
       useClass: ChatMessageRepositoryImpl,
     },
+    {
+      provide: ChatMessageQueryRepository,
+      useClass: ChatMessageQueryRepositoryImpl,
+    },
   ],
   exports: [
     GroupRepository,
     GroupQueryRepository,
     ShortTalkSessionRepository,
     ChatMessageRepository,
+    ChatMessageQueryRepository,
   ],
 })
 export class GroupCoreModule {}
