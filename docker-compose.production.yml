@@ -1,16 +1,47 @@
 version: '3.8'
 
 services:
-  rdv-backend-v2:
-    image: ghcr.io/{organization}/{repository}:latest
-    container_name: { repository-production }
+  app:
+    image: ghcr.io/jinhjlog/rdv-backend-v2:latest
+    container_name: rdv-backend-v2
     ports:
       - '3000:3000'
     env_file:
       - .env.production
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - rdv-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: rdv-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - rdv-network
+
+volumes:
+  redis-data:
+    driver: local
 
 networks:
-  default:
-    name: { repository-production-network }
+  rdv-network:
     driver: bridge
