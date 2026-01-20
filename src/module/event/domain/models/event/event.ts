@@ -8,7 +8,10 @@ import {
   ParticipantsCheckPassedEvent,
   EventCancelledEvent,
   EventStartedEvent,
+  EventEndedEvent,
 } from '../../events';
+import { ParticipantStatus } from './event-participant';
+import { AttendanceResult } from './event-result';
 
 const MIN_PARTICIPANTS_FOR_START = 2;
 
@@ -221,6 +224,68 @@ export class Event extends AggregateRoot<EventProps> {
         participantUserIds: this.props.participants.map((p) => p.userId),
         eventTime: this.props.schedule.eventTime,
         endTime: this.props.schedule.endTime,
+      }),
+    );
+  }
+
+  /**
+   * 일정 종료 가능 여부 확인
+   *
+   * IN_PROGRESS 상태인 경우에만 종료 가능
+   */
+  canEnd(): boolean {
+    return this.props.status === EventStatus.IN_PROGRESS;
+  }
+
+  /**
+   * 참여자 상태를 출석 결과로 변환
+   */
+  private mapParticipantStatusToResult(
+    status: ParticipantStatus,
+  ): AttendanceResult {
+    switch (status) {
+      case ParticipantStatus.ARRIVED:
+        return AttendanceResult.ARRIVED;
+      case ParticipantStatus.DEPARTED:
+        return AttendanceResult.LATE;
+      case ParticipantStatus.PREPARING:
+        return AttendanceResult.ABSENT;
+    }
+  }
+
+  /**
+   * 일정 종료 (IN_PROGRESS → ENDED)
+   *
+   * 참여자 상태에 따라 출석 결과를 생성합니다:
+   * - ARRIVED → ARRIVED (도착)
+   * - DEPARTED → LATE (지각)
+   * - PREPARING → ABSENT (부재)
+   *
+   * @throws {DomainRuleViolationException} EVENT_CANNOT_END - 종료할 수 없는 상태인 경우
+   */
+  end(): void {
+    if (!this.canEnd()) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '진행중인 일정만 종료할 수 있습니다.',
+        errorCode: 'EVENT_CANNOT_END',
+      });
+    }
+
+    this.props.status = EventStatus.ENDED;
+    this.props.updatedAt = new Date();
+
+    // 출석 결과 생성
+    const results = this.props.participants.map((participant) => ({
+      userId: participant.userId,
+      result: this.mapParticipantStatusToResult(participant.status),
+    }));
+
+    this.addDomainEvent(
+      new EventEndedEvent(this.id, {
+        eventId: this.id.toString(),
+        groupId: this.props.groupId,
+        results,
       }),
     );
   }

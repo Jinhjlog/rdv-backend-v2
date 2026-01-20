@@ -16,6 +16,7 @@ import {
 import {
   ParticipantsCheckPassedEventHandler,
   EventStartedEventHandler,
+  EventEndedEventHandler,
 } from './application/handlers';
 
 @Module({
@@ -42,6 +43,7 @@ import {
     // Event Handlers
     ParticipantsCheckPassedEventHandler,
     EventStartedEventHandler,
+    EventEndedEventHandler,
   ],
   exports: [
     EventQueryRepository,
