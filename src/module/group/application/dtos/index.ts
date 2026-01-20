@@ -7,3 +7,5 @@ export * from './join-group.dto';
 export * from './remove-member.dto';
 export * from './leave-group.dto';
 export * from './transfer-ownership.dto';
+export * from './join-short-talk.dto';
+export * from './send-short-talk-message.dto';
