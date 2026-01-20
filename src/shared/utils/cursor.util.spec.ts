@@ -116,7 +116,7 @@ describe('CursorUtil', () => {
     it('인코딩 후 디코딩하면 원본 데이터와 동일합니다.', () => {
       // given
       const originalData = {
-        id: 'test-id-123',
+        id: '691c219d-c165-4395-88a0-8cc7112cfd1a',
         createdAt: new Date('2025-11-13T10:30:00.000Z'),
       };
 

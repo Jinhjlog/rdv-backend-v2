@@ -18,20 +18,40 @@ interface CursorData {
  */
 export class CursorUtil {
   /**
+   * UUID v4 형식을 검증하는 정규식
+   */
+  private static readonly UUID_REGEX =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  /**
    * 타입 가드: 객체가 유효한 커서 데이터인지 확인합니다.
    *
    * @param data - 검증할 데이터
    * @returns 유효한 커서 데이터인지 여부
    */
   private static isCursorData(data: unknown): data is CursorData {
-    return (
-      typeof data === 'object' &&
-      data !== null &&
-      'id' in data &&
-      'createdAt' in data &&
-      typeof (data as Record<string, unknown>).id === 'string' &&
-      typeof (data as Record<string, unknown>).createdAt === 'string'
-    );
+    if (
+      typeof data !== 'object' ||
+      data === null ||
+      !('id' in data) ||
+      !('createdAt' in data)
+    ) {
+      return false;
+    }
+
+    const { id, createdAt } = data as Record<string, unknown>;
+
+    // UUID 형식 검증
+    if (typeof id !== 'string' || !this.UUID_REGEX.test(id)) {
+      return false;
+    }
+
+    // ISO 8601 날짜 형식 검증
+    if (typeof createdAt !== 'string' || isNaN(Date.parse(createdAt))) {
+      return false;
+    }
+
+    return true;
   }
 
   /**

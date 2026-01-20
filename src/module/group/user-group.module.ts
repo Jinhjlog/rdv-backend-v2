@@ -14,6 +14,7 @@ import {
   JoinShortTalkUseCase,
   LeaveShortTalkUseCase,
   SendShortTalkMessageUseCase,
+  GetChatMessageListUseCase,
 } from './application/usecases';
 import {
   UserGroupController,
@@ -35,6 +36,7 @@ const useCases: Provider[] = [
   JoinShortTalkUseCase,
   LeaveShortTalkUseCase,
   SendShortTalkMessageUseCase,
+  GetChatMessageListUseCase,
 ];
 
 @Module({

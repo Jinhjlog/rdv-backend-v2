@@ -1,10 +1,12 @@
 import {
   Controller,
+  Get,
   Req,
   Res,
   Sse,
   Post,
   Body,
+  Query,
   ParseUUIDPipe,
   Param,
   HttpCode,
@@ -29,17 +31,20 @@ import {
   JoinShortTalkUseCase,
   LeaveShortTalkUseCase,
   SendShortTalkMessageUseCase,
+  GetChatMessageListUseCase,
 } from '../../application/usecases';
 import { SseMessageEvent } from '../../domain/models/short-talk/short-talk-event';
 import { SendShortTalkMessageRequestDto } from '../dtos/request/send-short-talk-message.request.dto';
+import { GetChatMessageListRequestDto } from '../dtos/request/get-chat-message-list.request.dto';
 import { SendShortTalkMessageResponseDto } from '../dtos/response/send-short-talk-message.response.dto';
+import { ChatMessageListResponseDto } from '../dtos/response/chat-message-list.response.dto';
 
 /**
  * Short Talk 컨트롤러
  *
  * 그룹 채팅 SSE 연결을 관리합니다.
  */
-@ApiTags('Short Talk - 그룹 채팅')
+@ApiTags('사용자 - 모임 Short Talk')
 @ApiBearerAuth()
 @Controller({
   version: '1',
@@ -51,6 +56,7 @@ export class ShortTalkController {
     private readonly joinShortTalkUseCase: JoinShortTalkUseCase,
     private readonly leaveShortTalkUseCase: LeaveShortTalkUseCase,
     private readonly sendShortTalkMessageUseCase: SendShortTalkMessageUseCase,
+    private readonly getChatMessageListUseCase: GetChatMessageListUseCase,
   ) {}
 
   /**
@@ -172,6 +178,64 @@ export class ShortTalkController {
     return {
       id: result.id,
       createdAt: result.createdAt,
+    };
+  }
+
+  /**
+   * 메시지 히스토리 조회
+   *
+   * 그룹 채팅의 과거 메시지를 조회합니다.
+   */
+  @ApiOperation({
+    summary: '메시지 히스토리 조회',
+    description:
+      '그룹 채팅의 과거 메시지를 조회합니다.<br><br>' +
+      '**페이지네이션**<br>' +
+      '- 커서 기반 페이지네이션 (최신순 정렬)<br>' +
+      '- 첫 요청: cursor 없이 호출<br>' +
+      '- 다음 페이지: 응답의 nextCursor 값 사용<br><br>' +
+      '**주의사항**<br>' +
+      '- 기본 조회 개수: 30개<br>' +
+      '- 최대 조회 개수: 50개<br>',
+  })
+  @ApiParam({
+    name: 'groupId',
+    description: '그룹 ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiOkResponse({
+    description: '메시지 히스토리 조회 성공',
+    type: ChatMessageListResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청<br>' +
+      '- 유효하지 않은 커서: _**INVALID_CURSOR**_<br>' +
+      '- 유효하지 않은 limit: _**INVALID_LIMIT**_<br>',
+  })
+  @ApiForbiddenResponse({
+    description: '모임 참여자가 아님: _**NOT_GROUP_MEMBER**_',
+  })
+  @ApiUnauthorizedResponse({
+    description: '인증 실패',
+  })
+  @Get('messages')
+  async getMessageList(
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Query() query: GetChatMessageListRequestDto,
+    @User() user: UserInfo,
+  ): Promise<ChatMessageListResponseDto> {
+    const result = await this.getChatMessageListUseCase.execute({
+      groupId,
+      userId: user.userId,
+      cursor: query.cursor,
+      limit: query.limit ?? 30,
+    });
+
+    return {
+      items: result.items,
+      nextCursor: result.nextCursor ?? null,
+      hasMore: result.hasMore,
     };
   }
 }
