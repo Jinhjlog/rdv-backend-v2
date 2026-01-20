@@ -6,7 +6,10 @@ import { Job } from 'bullmq';
 import { EventRepository } from '../../domain/repositories';
 
 @Injectable()
-@Processor(EVENT_QUEUE.NAME)
+@Processor(EVENT_QUEUE.NAME, {
+  drainDelay: 60000, // 60초 polling 간격 (기본 5초) - Upstash 무료 티어 최적화
+  stalledInterval: 60000, // 60초 stalled 체크 간격 (기본 30초)
+})
 export class EventProcessor extends WorkerHost {
   private readonly logger = new Logger(EventProcessor.name);
 
