@@ -9,6 +9,7 @@ import {
   EventCancelledEvent,
   EventStartedEvent,
   EventEndedEvent,
+  ParticipantDepartedEvent,
 } from '../../events';
 import { ParticipantStatus } from './event-participant';
 import { AttendanceResult } from './event-result';
@@ -251,6 +252,79 @@ export class Event extends AggregateRoot<EventProps> {
       case ParticipantStatus.PREPARING:
         return AttendanceResult.ABSENT;
     }
+  }
+
+  /**
+   * 참여자 찾기
+   *
+   * @param userId 사용자 ID
+   * @returns 참여자
+   * @throws {DomainRuleViolationException} PARTICIPANT_NOT_FOUND - 참여자를 찾을 수 없는 경우
+   */
+  private findParticipant(userId: string): EventParticipant {
+    const participant = this.props.participants.find(
+      (p) => p.userId === userId,
+    );
+    if (!participant) {
+      throw new DomainRuleViolationException({
+        entityName: 'EventParticipant',
+        reason: '참여자를 찾을 수 없습니다.',
+        errorCode: 'PARTICIPANT_NOT_FOUND',
+      });
+    }
+    return participant;
+  }
+
+  /**
+   * 참여자 출발 처리
+   *
+   * @param userId 사용자 ID
+   * @throws {DomainRuleViolationException} EVENT_NOT_IN_PROGRESS - 일정이 진행중이 아닌 경우
+   * @throws {DomainRuleViolationException} PARTICIPANT_NOT_FOUND - 참여자를 찾을 수 없는 경우
+   * @throws {DomainRuleViolationException} PARTICIPANT_CANNOT_DEPART - 출발할 수 없는 상태인 경우
+   */
+  departParticipant(userId: string): void {
+    if (this.props.status !== EventStatus.IN_PROGRESS) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '진행중인 일정에서만 출발할 수 있습니다.',
+        errorCode: 'EVENT_NOT_IN_PROGRESS',
+      });
+    }
+
+    const participant = this.findParticipant(userId);
+    participant.depart();
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(
+      new ParticipantDepartedEvent(this.id, {
+        eventId: this.id.toString(),
+        groupId: this.props.groupId,
+        userId,
+      }),
+    );
+  }
+
+  /**
+   * 참여자 도착 처리
+   *
+   * @param userId 사용자 ID
+   * @throws {DomainRuleViolationException} EVENT_NOT_IN_PROGRESS - 일정이 진행중이 아닌 경우
+   * @throws {DomainRuleViolationException} PARTICIPANT_NOT_FOUND - 참여자를 찾을 수 없는 경우
+   * @throws {DomainRuleViolationException} PARTICIPANT_CANNOT_ARRIVE - 도착할 수 없는 상태인 경우
+   */
+  arriveParticipant(userId: string): void {
+    if (this.props.status !== EventStatus.IN_PROGRESS) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '진행중인 일정에서만 도착 처리할 수 있습니다.',
+        errorCode: 'EVENT_NOT_IN_PROGRESS',
+      });
+    }
+
+    const participant = this.findParticipant(userId);
+    participant.arrive();
+    this.props.updatedAt = new Date();
   }
 
   /**

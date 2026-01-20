@@ -16,18 +16,22 @@ import {
   ApiNotFoundResponse,
   ApiCreatedResponse,
   ApiBadRequestResponse,
+  ApiNoContentResponse,
 } from '@nestjs/swagger';
 import {
   FindEventListUseCase,
   FindEventDetailUseCase,
   CreateEventUseCase,
   JoinEventUseCase,
+  DepartEventUseCase,
+  ArriveEventUseCase,
 } from '../../application/usecases';
 import { User, UserAuth } from 'src/module/auth/decorators';
 import {
   EventListResponseDto,
   EventDetailResponseDto,
   CreateEventRequestDto,
+  ArriveEventRequestDto,
 } from '../dtos';
 import { UserInfo } from 'src/module/auth/interfaces';
 import { EventTransformer } from '../transformers';
@@ -40,6 +44,8 @@ export class UserEventController {
     private readonly findEventDetailUseCase: FindEventDetailUseCase,
     private readonly createEventUseCase: CreateEventUseCase,
     private readonly joinEventUseCase: JoinEventUseCase,
+    private readonly departEventUseCase: DepartEventUseCase,
+    private readonly arriveEventUseCase: ArriveEventUseCase,
   ) {}
 
   @ApiOperation({
@@ -290,5 +296,106 @@ export class UserEventController {
     });
 
     return EventTransformer.toDetailResponse(event);
+  }
+
+  @ApiOperation({
+    summary: '[사용자] - 일정 출발 상태 변경',
+    description:
+      '진행중인 일정에서 참여자의 상태를 출발(DEPARTED)로 변경합니다.<br><br>' +
+      '**주의사항**<br>' +
+      '- 일정이 진행중(IN_PROGRESS) 상태여야 합니다.<br>' +
+      '- 참여자의 상태가 준비중(PREPARING)이어야 출발할 수 있습니다.<br>',
+  })
+  @ApiParam({
+    name: 'eventId',
+    description: '일정 ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    required: true,
+  })
+  @ApiNoContentResponse({
+    description: '출발 상태 변경 성공',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (도메인 규칙 위반)<br>' +
+      '**일정 상태**<br>' +
+      '- 일정이 진행중이 아닌 경우: _**EVENT_NOT_IN_PROGRESS**_<br>' +
+      '<br>' +
+      '**참여자**<br>' +
+      '- 참여자를 찾을 수 없는 경우: _**PARTICIPANT_NOT_FOUND**_<br>' +
+      '- 참여자가 준비중 상태가 아닌 경우: _**PARTICIPANT_CANNOT_DEPART**_<br>',
+  })
+  @ApiNotFoundResponse({
+    description: '일정을 찾을 수 없음: _**EVENT_NOT_FOUND**_',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Post('events/:eventId/depart')
+  async departEvent(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @User() user: UserInfo,
+  ): Promise<void> {
+    await this.departEventUseCase.execute({
+      eventId: eventId,
+      userId: user.userId,
+    });
+  }
+
+  @ApiOperation({
+    summary: '[사용자] - 일정 도착 처리',
+    description:
+      '진행중인 일정에서 참여자의 상태를 도착(ARRIVED)으로 변경합니다. 도착 지점으로부터 50m 이내에 있어야 도착 처리가 가능합니다.<br><br>' +
+      '**필수 항목**<br>' +
+      '위치 좌표 (위도, 경도)<br><br>' +
+      '**주의사항**<br>' +
+      '- 일정이 진행중(IN_PROGRESS) 상태여야 합니다.<br>' +
+      '- 참여자의 상태가 출발(DEPARTED)이어야 도착 처리할 수 있습니다.<br>' +
+      '- 도착 지점으로부터 50m 이내에 있어야 합니다.<br>',
+  })
+  @ApiParam({
+    name: 'eventId',
+    description: '일정 ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    required: true,
+  })
+  @ApiNoContentResponse({
+    description: '도착 처리 성공',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (필드 검증 실패 또는 도메인 규칙 위반)<br>' +
+      '**위치 좌표**<br>' +
+      '- 위도 형식이 유효하지 않은 경우 (소수점 6~8자리): _**LATITUDE_FORMAT_INVALID**_<br>' +
+      '- 위도가 범위를 벗어난 경우 (-90 ~ 90): _**LATITUDE_OUT_OF_RANGE**_<br>' +
+      '- 경도 형식이 유효하지 않은 경우 (소수점 6~8자리): _**LONGITUDE_FORMAT_INVALID**_<br>' +
+      '- 경도가 범위를 벗어난 경우 (-180 ~ 180): _**LONGITUDE_OUT_OF_RANGE**_<br>' +
+      '<br>' +
+      '**일정 상태**<br>' +
+      '- 일정이 진행중이 아닌 경우: _**EVENT_NOT_IN_PROGRESS**_<br>' +
+      '<br>' +
+      '**위치 검증**<br>' +
+      '- 도착 지점으로부터 50m 이상 떨어진 경우: _**ARRIVAL_LOCATION_TOO_FAR**_<br>' +
+      '<br>' +
+      '**참여자**<br>' +
+      '- 참여자를 찾을 수 없는 경우: _**PARTICIPANT_NOT_FOUND**_<br>' +
+      '- 참여자가 출발 상태가 아닌 경우: _**PARTICIPANT_CANNOT_ARRIVE**_<br>',
+  })
+  @ApiNotFoundResponse({
+    description: '일정을 찾을 수 없음: _**EVENT_NOT_FOUND**_',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Post('events/:eventId/arrive')
+  async arriveEvent(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @User() user: UserInfo,
+    @Body() dto: ArriveEventRequestDto,
+  ): Promise<void> {
+    await this.arriveEventUseCase.execute({
+      eventId: eventId,
+      userId: user.userId,
+      latitude: dto.latitude,
+      longitude: dto.longitude,
+    });
   }
 }
