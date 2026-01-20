@@ -7,6 +7,7 @@ import { EventSchedule } from './event-schedule';
 import {
   ParticipantsCheckPassedEvent,
   EventCancelledEvent,
+  EventStartedEvent,
 } from '../../events';
 
 const MIN_PARTICIPANTS_FOR_START = 2;
@@ -185,5 +186,42 @@ export class Event extends AggregateRoot<EventProps> {
       );
       return false;
     }
+  }
+
+  /**
+   * 일정 시작 가능 여부 확인
+   *
+   * RECRUITING 상태인 경우에만 시작 가능
+   */
+  canStart(): boolean {
+    return this.props.status === EventStatus.RECRUITING;
+  }
+
+  /**
+   * 일정 시작 (RECRUITING → IN_PROGRESS)
+   *
+   * @throws {DomainRuleViolationException} EVENT_CANNOT_START - 시작할 수 없는 상태인 경우
+   */
+  start(): void {
+    if (!this.canStart()) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '모집중인 일정만 시작할 수 있습니다.',
+        errorCode: 'EVENT_CANNOT_START',
+      });
+    }
+
+    this.props.status = EventStatus.IN_PROGRESS;
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(
+      new EventStartedEvent(this.id, {
+        eventId: this.id.toString(),
+        groupId: this.props.groupId,
+        participantUserIds: this.props.participants.map((p) => p.userId),
+        eventTime: this.props.schedule.eventTime,
+        endTime: this.props.schedule.endTime,
+      }),
+    );
   }
 }
