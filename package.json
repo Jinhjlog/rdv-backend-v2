@@ -12,7 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "start:docker": "npx prisma migrate deploy && node dist/main",
+    "start:docker": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -26,7 +26,11 @@
     "prisma:reset:dev": "dotenv -e .env.development -- prisma migrate reset",
     "prisma:reset:prod": "dotenv -e .env.production -- prisma migrate reset",
     "prisma:pull:dev": "dotenv -e .env.development -- prisma db pull && node scripts/fix-schema.js",
-    "prisma:sync:dev": "npm run prisma:pull:dev && npm run prisma:generate:dev"
+    "prisma:sync:dev": "npm run prisma:pull:dev && npm run prisma:generate:dev",
+    "supabase:setup": "./scripts/setup-supabase-link.sh",
+    "supabase:sync": "./scripts/sync-to-production.sh",
+    "supabase:diff": "npx supabase db diff --use-migra",
+    "supabase:push": "npx supabase db push"
   },
   "dependencies": {
     "@nestjs-modules/ioredis": "^2.0.2",
