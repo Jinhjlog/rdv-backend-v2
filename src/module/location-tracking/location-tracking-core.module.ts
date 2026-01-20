@@ -31,6 +31,11 @@ import {
       useClass: EventRepositoryImpl,
     },
   ],
-  exports: [LocationTrackingRepository, LocationTrackingQueryRepository],
+  exports: [
+    LocationTrackingRepository,
+    LocationTrackingQueryRepository,
+    UserRepository,
+    EventRepository,
+  ],
 })
 export class LocationTrackingCoreModule {}
