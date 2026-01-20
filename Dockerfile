@@ -34,6 +34,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
+# Prisma generated 폴더에 CommonJS 설정 추가
+RUN echo '{"type": "commonjs"}' > ./dist/prisma/generated/prisma/package.json
+
 EXPOSE 3000
 
 CMD ["npm", "run", "start:docker"]
