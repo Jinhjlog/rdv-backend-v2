@@ -24,9 +24,10 @@
 
 ### 핵심 개념
 
-- **일정 상태**: 모집중, 진행중, 종료됨
+- **일정 상태**: 모집중, 진행중, 종료됨, 취소됨
 - **참여자 상태**: 준비중, 출발, 도착 (진행중 일정에만 해당)
 - **출석 결과**: 도착, 지각, 부재 (종료됨 일정에만 해당)
+- **참여자 체크 시간**: 일정 시간 -20분 (최소 2명 필요)
 - **위치 공유 시작 시간**: 일정 시간 -15분
 - **도착 체크 범위**: 목적지로부터 50m 이내
 
@@ -36,22 +37,22 @@
 
 ### Event 엔티티
 
-| 필드명            | 타입     | 설명                                       | 필수 여부 | 기본값          |
-| ----------------- | -------- | ------------------------------------------ | --------- | --------------- |
-| id                | UUID     | 일정 고유 식별자                           | 필수      | 자동 생성       |
-| groupId           | UUID     | 모임 ID (FK)                               | 필수      | -               |
-| createdBy         | UUID     | 생성자 사용자 ID (FK)                      | 필수      | -               |
-| title             | String   | 일정 제목                                  | 필수      | -               |
-| description       | String   | 일정 설명                                  | 필수      | -               |
-| eventTime         | DateTime | 일정 시작 시간                             | 필수      | -               |
-| trackingStartTime | DateTime | 위치 공유 시작 시간                        | 필수      | eventTime -15분 |
-| endTime           | DateTime | 일정 종료 시간                             | 필수      | eventTime +1분  |
-| locationAddress   | String   | 도로명 주소                                | 필수      | -               |
-| locationLatitude  | Decimal  | 위도                                       | 필수      | -               |
-| locationLongitude | Decimal  | 경도                                       | 필수      | -               |
-| status            | Enum     | 일정 상태 (RECRUITING, IN_PROGRESS, ENDED) | 필수      | RECRUITING      |
-| createdAt         | DateTime | 생성일                                     | 필수      | 자동 생성       |
-| updatedAt         | DateTime | 수정일                                     | 필수      | 자동 갱신       |
+| 필드명            | 타입     | 설명                                                  | 필수 여부 | 기본값          |
+| ----------------- | -------- | ----------------------------------------------------- | --------- | --------------- |
+| id                | UUID     | 일정 고유 식별자                                      | 필수      | 자동 생성       |
+| groupId           | UUID     | 모임 ID (FK)                                          | 필수      | -               |
+| createdBy         | UUID     | 생성자 사용자 ID (FK)                                 | 필수      | -               |
+| title             | String   | 일정 제목                                             | 필수      | -               |
+| description       | String   | 일정 설명                                             | 필수      | -               |
+| eventTime         | DateTime | 일정 시작 시간                                        | 필수      | -               |
+| trackingStartTime | DateTime | 위치 공유 시작 시간                                   | 필수      | eventTime -15분 |
+| endTime           | DateTime | 일정 종료 시간                                        | 필수      | eventTime +1분  |
+| locationAddress   | String   | 도로명 주소                                           | 필수      | -               |
+| locationLatitude  | Decimal  | 위도                                                  | 필수      | -               |
+| locationLongitude | Decimal  | 경도                                                  | 필수      | -               |
+| status            | Enum     | 일정 상태 (RECRUITING, IN_PROGRESS, ENDED, CANCELLED) | 필수      | RECRUITING      |
+| createdAt         | DateTime | 생성일                                                | 필수      | 자동 생성       |
+| updatedAt         | DateTime | 수정일                                                | 필수      | 자동 갱신       |
 
 ### EventParticipant 엔티티
 
@@ -105,9 +106,10 @@ flowchart TD
     ValidateTime -->|중복 시간대| ErrorDuplicate[에러: 시간 중복]
     ValidateTime -->|유효| CreateEvent[일정 생성]
 
-    CreateEvent --> SetTimes[시간 자동 설정<br/>- trackingStart: -15분<br/>- endTime: +1분]
+    CreateEvent --> SetTimes[시간 자동 설정<br/>- participantCheck: -20분<br/>- trackingStart: -15분<br/>- endTime: +1분]
     SetTimes --> EventCreated[일정 생성 완료<br/>상태: 모집중]
-    EventCreated --> End([완료])
+    EventCreated --> ScheduleCheck[참여자 체크 스케줄링<br/>일정 시간 -20분]
+    ScheduleCheck --> End([완료])
 
     ErrorMax --> End
     ErrorTime --> End
@@ -320,10 +322,37 @@ B모임 1번 일정 참여 시도:
 
 ### 4. 일정 진행 (자동 상태 전환)
 
-#### 4.1 모집중 → 진행중
+#### 4.1 참여자 체크 (일정 시간 -20분)
 
-- **트리거**: trackingStartTime 도달 (BullMQ 스케줄링)
+- **트리거**: participantCheckTime 도달 (BullMQ 스케줄링)
+- **시점**: 일정 시간 -20분
+- **목적**: 최소 참여 인원(2명) 충족 여부 확인
+- **처리**:
+  1. 현재 참여자 수 확인
+  2. **2명 이상**: 위치 공유 시작 스케줄링 예약 (trackingStartTime에 실행)
+  3. **1명 이하**: Event.status = CANCELLED로 업데이트 (일정 취소)
+
+**예시**
+
+```
+일정 시간: 2026-01-17 14:00
+participantCheckTime: 2026-01-17 13:40
+
+Case 1: 참여자 3명
+13:40:00 → 참여자 체크: 3명 ≥ 2명 ✅
+         → 위치 공유 시작 스케줄링 예약 (13:45에 실행)
+
+Case 2: 참여자 1명
+13:40:00 → 참여자 체크: 1명 < 2명 ❌
+         → Event.status = CANCELLED
+         → 참여자에게 취소 알림 발송
+```
+
+#### 4.2 모집중 → 진행중
+
+- **트리거**: trackingStartTime 도달 (참여자 체크 통과 후 스케줄링)
 - **시점**: 일정 시간 -15분
+- **전제조건**: 참여자 체크 통과 (2명 이상)
 - **처리**:
   1. Event.status = IN_PROGRESS로 업데이트
   2. 참여자들에게 푸시 알림
@@ -341,7 +370,29 @@ trackingStartTime: 2026-01-17 13:45
          → 참여자 알림 발송
 ```
 
-#### 4.2 진행중 상태에서 참여자 상태 변경
+#### 4.3 모집중 → 취소됨
+
+- **트리거**: 참여자 체크 실패 (participantCheckTime 도달 시)
+- **시점**: 일정 시간 -20분
+- **조건**: 참여자 수 < 2명
+- **처리**:
+  1. Event.status = CANCELLED로 업데이트
+  2. 참여자들에게 푸시 알림
+     - "참여 인원 부족으로 일정이 취소되었습니다"
+
+**예시**
+
+```
+일정 시간: 2026-01-17 14:00
+participantCheckTime: 2026-01-17 13:40
+참여자: 1명 (생성자만)
+
+13:40:00 → 참여자 체크 실패 (1명 < 2명)
+         → Event.status = CANCELLED
+         → 참여자 취소 알림 발송
+```
+
+#### 4.4 진행중 상태에서 참여자 상태 변경
 
 **상태 전환 흐름**
 
@@ -533,9 +584,11 @@ endTime: 2026-01-17 14:01
 
 ### 일정 상태 전환 규칙
 
-1. **모집중 → 진행중**: trackingStartTime (일정 시간 -15분) 자동 전환
-2. **진행중 → 종료됨**: endTime (일정 시간 +1분) 자동 전환
-3. **자동 전환**: BullMQ 스케줄링으로 자동 처리
+1. **참여자 체크**: participantCheckTime (일정 시간 -20분) 참여자 수 확인
+2. **모집중 → 진행중**: trackingStartTime (일정 시간 -15분) 참여자 체크 통과 시 자동 전환
+3. **모집중 → 취소됨**: participantCheckTime에 참여자 2명 미만 시 자동 전환
+4. **진행중 → 종료됨**: endTime (일정 시간 +1분) 자동 전환
+5. **자동 전환**: BullMQ 스케줄링으로 자동 처리
 
 ### 참여자 상태 규칙
 
@@ -564,9 +617,11 @@ endTime: 2026-01-17 14:01
 ```mermaid
 stateDiagram-v2
     [*] --> RECRUITING: 일정 생성
-    RECRUITING --> IN_PROGRESS: trackingStartTime 도달
+    RECRUITING --> IN_PROGRESS: 참여자 체크 통과 + trackingStartTime 도달
+    RECRUITING --> CANCELLED: 참여자 체크 실패 (2명 미만)
     IN_PROGRESS --> ENDED: endTime 도달
     RECRUITING --> [*]: 삭제 (생성자)
+    CANCELLED --> [*]
     ENDED --> [*]
 
     note right of RECRUITING
@@ -579,6 +634,12 @@ stateDiagram-v2
         진행 중
         위치 공유 활성
         도착 체크 가능
+    end note
+
+    note right of CANCELLED
+        취소됨
+        참여자 부족
+        (2명 미만)
     end note
 
     note right of ENDED
@@ -728,16 +789,21 @@ gantt
     사용자B 참여                 :done, join2, 2026-01-16 14:00, 1m
     사용자C 참여                 :done, join3, 2026-01-16 16:00, 1m
 
+    section 일정 당일 - 참여자 체크
+    참여자 체크 시간 도달        :milestone, m2, 2026-01-17 13:40, 0m
+    참여자 수 확인 (3명 ≥ 2명)   :done, check1, 2026-01-17 13:40, 1m
+    위치 공유 시작 스케줄링      :done, schedule1, 2026-01-17 13:40, 1m
+
     section 일정 당일 - 진행중
     위치 공유 시작               :crit, track1, 2026-01-17 13:45, 16m
-    일정 상태 → 진행중           :milestone, m2, 2026-01-17 13:45, 0m
+    일정 상태 → 진행중           :milestone, m3, 2026-01-17 13:45, 0m
     사용자A 출발                 :done, depart1, 2026-01-17 13:47, 1m
     사용자B 출발                 :done, depart2, 2026-01-17 13:50, 1m
     사용자A 도착 체크            :done, arrive1, 2026-01-17 13:58, 1m
-    일정 시간 도달               :milestone, m3, 2026-01-17 14:00, 0m
+    일정 시간 도달               :milestone, m4, 2026-01-17 14:00, 0m
 
     section 일정 종료
-    일정 상태 → 종료             :milestone, m4, 2026-01-17 14:01, 0m
+    일정 상태 → 종료             :milestone, m5, 2026-01-17 14:01, 0m
     출석 결과 생성               :crit, result1, 2026-01-17 14:01, 1m
     참여자 알림 발송             :done, notif1, 2026-01-17 14:02, 1m
 ```
