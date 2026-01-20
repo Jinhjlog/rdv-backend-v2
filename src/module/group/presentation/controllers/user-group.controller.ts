@@ -8,7 +8,6 @@ import {
   Param,
   HttpCode,
   HttpStatus,
-  NotImplementedException,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import {
@@ -102,14 +101,18 @@ export class UserGroupController {
     @Body() dto: CreateGroupRequestDto,
     @User() user: UserInfo,
   ): Promise<GroupDetailResponseDto> {
-    await this.createGroupUseCase.execute({
+    const { groupId } = await this.createGroupUseCase.execute({
       userId: user.userId,
       name: dto.name,
       description: dto.description,
       iconCode: dto.iconCode,
     });
 
-    throw new NotImplementedException();
+    const group = await this.findGroupDetailUseCase.execute({
+      groupId,
+      userId: user.userId,
+    });
+    return GroupTransformer.toDetailResponse(group);
   }
 
   @ApiOperation({
