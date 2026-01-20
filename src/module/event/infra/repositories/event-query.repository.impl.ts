@@ -9,7 +9,7 @@ import {
   EventListItemQueryModel,
   EventDetailQueryModel,
 } from '../../domain/models';
-import { event_status, Prisma } from '@prisma/generated/client';
+import { event_status, Prisma } from '@prisma/client';
 
 @Injectable()
 export class EventQueryRepositoryImpl implements EventQueryRepository {

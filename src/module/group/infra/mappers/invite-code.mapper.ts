@@ -1,7 +1,7 @@
 import {
   invite_codes as InviteCodePrisma,
   Prisma,
-} from '@prisma/generated/client';
+} from '@prisma/client';
 import { InviteAccessCode, InviteCode } from '../../domain/models';
 
 /**

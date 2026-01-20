@@ -1,7 +1,7 @@
 import {
   event_participants as EventParticipantPrisma,
   Prisma,
-} from '@prisma/generated/client';
+} from '@prisma/client';
 import { EventParticipant, ParticipantStatus } from '../../domain/models';
 
 /**

@@ -1,7 +1,7 @@
 import {
   event_results as EventResultPrisma,
   Prisma,
-} from '@prisma/generated/client';
+} from '@prisma/client';
 import { AttendanceResult, EventResult } from '../../domain/models';
 
 /**

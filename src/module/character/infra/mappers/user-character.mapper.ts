@@ -1,7 +1,7 @@
 import {
   Prisma,
   user_characters as UserCharacterPrisma,
-} from '@prisma/generated/client';
+} from '@prisma/client';
 import { UserCharacter } from '../../domain/models';
 
 /**

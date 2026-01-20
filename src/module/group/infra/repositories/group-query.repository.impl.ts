@@ -9,7 +9,7 @@ import {
   GroupListItemQueryModel,
 } from '../../domain/models';
 import { PrismaService } from '@core/database/prisma.service';
-import { Prisma } from '@prisma/generated/client';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class GroupQueryRepositoryImpl implements GroupQueryRepository {
