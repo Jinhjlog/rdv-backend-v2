@@ -1,7 +1,7 @@
 import {
   group_members as GroupMemberPrisma,
   Prisma,
-} from '@prisma/generated/client';
+} from '@prisma/client';
 import { GroupMember, GroupMemberRole } from '../../domain';
 
 /**

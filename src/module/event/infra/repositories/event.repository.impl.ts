@@ -9,7 +9,7 @@ import {
 } from '../mappers';
 import { TransactionContextService } from '@lib/infra/unit-of-work';
 import { PrismaTransactionClient } from '@core/database';
-import { event_status } from '@prisma/generated/enums';
+import { event_status } from '@prisma/client';
 import { DomainEvents } from '@lib/domain/events/domain-events';
 
 @Injectable()

@@ -1,4 +1,4 @@
-import { chat_messages as ChatMessagePrisma } from '@prisma/generated/client';
+import { chat_messages as ChatMessagePrisma } from '@prisma/client';
 import { ChatMessage } from '../../domain/models/chat-message/chat-message';
 
 /**

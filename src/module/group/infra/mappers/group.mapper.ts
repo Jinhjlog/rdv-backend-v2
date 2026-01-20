@@ -1,4 +1,4 @@
-import { Prisma, groups as GroupPrisma } from '@prisma/generated/client';
+import { Prisma, groups as GroupPrisma } from '@prisma/client';
 import { Group, GroupMember } from '../../domain/models';
 import { BoundedString } from '@lib/domain';
 

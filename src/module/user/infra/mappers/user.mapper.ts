@@ -1,4 +1,4 @@
-import { Prisma, public_users as UserPrisma } from '@prisma/generated/client';
+import { Prisma, public_users as UserPrisma } from '@prisma/client';
 import { NameTag, User } from '../../domain/models';
 import { BoundedString, PositiveNumber } from '@lib/domain';
 

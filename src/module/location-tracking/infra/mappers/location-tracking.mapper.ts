@@ -1,7 +1,7 @@
 import {
   Prisma,
   location_trackings as LocationTrackingPrisma,
-} from '@prisma/generated/client';
+} from '@prisma/client';
 import { Coordinate } from '@lib/domain';
 import { LocationTracking } from '../../domain/models';
 

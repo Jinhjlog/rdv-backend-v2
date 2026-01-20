@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventRepository } from '../../domain/repositories';
 import { PrismaService } from '@core/database';
-import { event_status } from '@prisma/generated/enums';
+import { event_status } from '@prisma/client';
 
 @Injectable()
 export class EventRepositoryImpl implements EventRepository {

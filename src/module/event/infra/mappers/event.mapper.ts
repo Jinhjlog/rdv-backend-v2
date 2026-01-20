@@ -1,4 +1,4 @@
-import { Prisma, events as EventPrisma } from '@prisma/generated/client';
+import { Prisma, events as EventPrisma } from '@prisma/client';
 import {
   Event,
   EventParticipant,

@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/generated/client';
+import { Prisma } from '@prisma/client';
 
 export class PrismaJsonUtil {
   static serialize<T>(value: T): Prisma.InputJsonValue {

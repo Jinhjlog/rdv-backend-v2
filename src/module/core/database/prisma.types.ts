@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/generated/client';
+import { PrismaClient } from '@prisma/client';
 
 /**
  * Prisma 트랜잭션 클라이언트 타입
