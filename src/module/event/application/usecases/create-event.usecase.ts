@@ -88,6 +88,7 @@ export class CreateEventUseCase {
       createdAt: new Date(),
       updatedAt: new Date(),
       participants: [],
+      results: [],
     });
     const participant = EventParticipant.create({
       eventId: event.id.toString(),
