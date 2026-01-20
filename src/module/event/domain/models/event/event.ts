@@ -54,7 +54,7 @@ export interface EventProps {
   updatedAt: Date;
 
   participants: EventParticipant[];
-  result?: EventResult;
+  results: EventResult[];
 }
 
 export class Event extends AggregateRoot<EventProps> {
@@ -102,8 +102,8 @@ export class Event extends AggregateRoot<EventProps> {
     return this.props.participants;
   }
 
-  get result(): EventResult | undefined {
-    return this.props.result;
+  get results(): EventResult[] {
+    return this.props.results;
   }
 
   /**
@@ -349,17 +349,23 @@ export class Event extends AggregateRoot<EventProps> {
     this.props.status = EventStatus.ENDED;
     this.props.updatedAt = new Date();
 
-    // 출석 결과 생성
-    const results = this.props.participants.map((participant) => ({
-      userId: participant.userId,
-      result: this.mapParticipantStatusToResult(participant.status),
-    }));
+    // 출석 결과 엔티티 생성
+    this.props.results = this.props.participants.map((participant) =>
+      EventResult.create({
+        eventId: this.id.toString(),
+        userId: participant.userId,
+        result: this.mapParticipantStatusToResult(participant.status),
+      }),
+    );
 
     this.addDomainEvent(
       new EventEndedEvent(this.id, {
         eventId: this.id.toString(),
         groupId: this.props.groupId,
-        results,
+        results: this.props.results.map((r) => ({
+          userId: r.userId,
+          result: r.result,
+        })),
       }),
     );
   }
