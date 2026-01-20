@@ -10,6 +10,7 @@ import {
 import { TransactionContextService } from '@lib/infra/unit-of-work';
 import { PrismaTransactionClient } from '@core/database';
 import { event_status } from '@prisma/generated/enums';
+import { DomainEvents } from '@lib/domain/events/domain-events';
 
 @Injectable()
 export class EventRepositoryImpl implements EventRepository {
@@ -46,6 +47,10 @@ export class EventRepositoryImpl implements EventRepository {
     await this.prisma.$transaction(async (tx) => {
       await this._saveWithClient(tx, event);
     });
+
+    if (event.domainEvents.length > 0) {
+      DomainEvents.dispatchEventsForAggregate(event.id);
+    }
   }
 
   /**
