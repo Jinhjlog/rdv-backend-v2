@@ -4,6 +4,12 @@ import { EventParticipant } from './event-participant';
 import { EventResult } from './event-result';
 import { Location } from './location';
 import { EventSchedule } from './event-schedule';
+import {
+  ParticipantsCheckPassedEvent,
+  EventCancelledEvent,
+} from '../../events';
+
+const MIN_PARTICIPANTS_FOR_START = 2;
 
 /**
  * 일정 상태 Enum
@@ -125,9 +131,10 @@ export class Event extends AggregateRoot<EventProps> {
   /**
    * 일정 취소
    *
+   * @param reason 취소 사유
    * @throws {DomainRuleViolationException} EVENT_CANNOT_BE_CANCELLED - 취소할 수 없는 상태인 경우
    */
-  cancel(): void {
+  cancel(reason: string): void {
     if (!this.canBeCancelled()) {
       throw new DomainRuleViolationException({
         entityName: 'Event',
@@ -138,5 +145,45 @@ export class Event extends AggregateRoot<EventProps> {
 
     this.props.status = EventStatus.CANCELLED;
     this.props.updatedAt = new Date();
+
+    this.addDomainEvent(
+      new EventCancelledEvent(this.id, {
+        eventId: this.id.toString(),
+        reason,
+        participantCount: this.props.participants.length,
+      }),
+    );
+  }
+
+  /**
+   * 참여자 수 체크 후 시작 가능 여부 결정
+   *
+   * - 참여자 2명 이상: ParticipantsCheckPassedEvent 발행
+   * - 참여자 1명 이하: 일정 취소 (EventCancelledEvent 발행)
+   *
+   * @returns 참여자 체크 통과 여부
+   */
+  checkParticipantsForStart(): boolean {
+    if (this.props.status !== EventStatus.RECRUITING) {
+      return false;
+    }
+
+    const participantCount = this.props.participants.length;
+
+    if (participantCount >= MIN_PARTICIPANTS_FOR_START) {
+      this.addDomainEvent(
+        new ParticipantsCheckPassedEvent(this.id, {
+          eventId: this.id.toString(),
+          participantCount,
+          trackingStartTime: this.props.schedule.trackingStartTime,
+        }),
+      );
+      return true;
+    } else {
+      this.cancel(
+        `참여자 ${participantCount}명, 최소 인원(${MIN_PARTICIPANTS_FOR_START}명) 미달`,
+      );
+      return false;
+    }
   }
 }
