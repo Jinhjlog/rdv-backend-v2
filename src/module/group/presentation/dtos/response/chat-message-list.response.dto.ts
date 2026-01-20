@@ -18,7 +18,7 @@ class ChatMessageSenderResponseDto {
   @ApiProperty({
     type: String,
     description: '네임태그',
-    example: '1234',
+    example: '#1234',
   })
   nameTag: string;
 
