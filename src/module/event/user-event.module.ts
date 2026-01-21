@@ -7,6 +7,9 @@ import {
   JoinEventUseCase,
   DepartEventUseCase,
   ArriveEventUseCase,
+  WithdrawEventUseCase,
+  UpdateEventUseCase,
+  DeleteEventUseCase,
 } from './application/usecases';
 import { UserEventController } from './presentation/controllers';
 
@@ -17,6 +20,9 @@ const useCases: Provider[] = [
   JoinEventUseCase,
   DepartEventUseCase,
   ArriveEventUseCase,
+  WithdrawEventUseCase,
+  UpdateEventUseCase,
+  DeleteEventUseCase,
 ];
 
 @Module({

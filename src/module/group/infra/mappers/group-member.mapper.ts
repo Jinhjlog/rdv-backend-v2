@@ -1,7 +1,4 @@
-import {
-  group_members as GroupMemberPrisma,
-  Prisma,
-} from '@prisma/client';
+import { group_members as GroupMemberPrisma, Prisma } from '@prisma/client';
 import { GroupMember, GroupMemberRole } from '../../domain';
 
 /**

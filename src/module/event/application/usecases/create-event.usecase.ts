@@ -85,6 +85,7 @@ export class CreateEventUseCase {
       schedule,
       location,
       status: EventStatus.RECRUITING,
+      isParticipantChecked: false,
       createdAt: new Date(),
       updatedAt: new Date(),
       participants: [],

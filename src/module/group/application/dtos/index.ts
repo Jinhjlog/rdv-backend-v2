@@ -10,3 +10,4 @@ export * from './transfer-ownership.dto';
 export * from './join-short-talk.dto';
 export * from './send-short-talk-message.dto';
 export * from './get-chat-message-list.dto';
+export * from './get-group-member-attendance-statistics.dto';

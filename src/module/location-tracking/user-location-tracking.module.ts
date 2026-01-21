@@ -4,7 +4,10 @@ import {
   FindLocationsByEventUseCase,
   UpdateLocationUseCase,
 } from './application/usecases';
-import { ParticipantDepartedEventHandler } from './application/handlers';
+import {
+  ParticipantDepartedEventHandler,
+  EventEndedEventHandler,
+} from './application/handlers';
 import { LocationTrackingController } from './presentation';
 import { LocationTrackingCoreModule } from './location-tracking-core.module';
 
@@ -14,11 +17,14 @@ const useCases: Provider[] = [
   UpdateLocationUseCase,
 ];
 
-const eventHandlers: Provider[] = [ParticipantDepartedEventHandler];
+const eventHandlers: Provider[] = [
+  ParticipantDepartedEventHandler,
+  EventEndedEventHandler,
+];
 
 @Module({
   imports: [LocationTrackingCoreModule],
   controllers: [LocationTrackingController],
   providers: [...useCases, ...eventHandlers],
 })
-export class UserLocationTrackingCoreModule {}
+export class UserLocationTrackingModule {}

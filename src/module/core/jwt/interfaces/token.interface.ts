@@ -1,3 +1,5 @@
+export const REFRESH_TOKEN_NOT_IMPLEMENTED = 'not implement';
+
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;

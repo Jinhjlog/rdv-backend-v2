@@ -1,10 +1,18 @@
-import { GroupListItemQueryModel, GroupDetailQueryModel } from '../models';
+import {
+  GroupListItemQueryModel,
+  GroupDetailQueryModel,
+  GroupMemberAttendanceStatisticsQueryModel,
+} from '../models';
 
 export interface FindGroupListParams {
   contextUserId?: string;
 }
 
 export interface FindGroupDetailParams {
+  groupId: string;
+}
+
+export interface FindMemberAttendanceStatisticsParams {
   groupId: string;
 }
 
@@ -21,4 +29,8 @@ export abstract class GroupQueryRepository {
   abstract findDetail(
     params: FindGroupDetailParams,
   ): Promise<GroupDetailQueryModel | undefined>;
+
+  abstract findMemberAttendanceStatistics(
+    params: FindMemberAttendanceStatisticsParams,
+  ): Promise<GroupMemberAttendanceStatisticsQueryModel>;
 }

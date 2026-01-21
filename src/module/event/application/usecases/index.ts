@@ -4,3 +4,6 @@ export * from './find-event-list.usecase';
 export * from './join-event.usecase';
 export * from './depart-event.usecase';
 export * from './arrive-event.usecase';
+export * from './withdraw-event.usecase';
+export * from './update-event.usecase';
+export * from './delete-event.usecase';

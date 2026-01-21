@@ -1,5 +1,8 @@
 import { AggregateRoot, BoundedString, UniqueEntityId } from '@lib/domain';
-import { DomainRuleViolationException } from '@shared/exception';
+import {
+  DomainRuleViolationException,
+  EntityNotFoundException,
+} from '@shared/exception';
 import { EventParticipant } from './event-participant';
 import { EventResult } from './event-result';
 import { Location } from './location';
@@ -50,6 +53,7 @@ export interface EventProps {
   schedule: EventSchedule;
   location: Location;
   status: EventStatus;
+  isParticipantChecked: boolean;
   createdAt: Date;
   updatedAt: Date;
 
@@ -90,6 +94,10 @@ export class Event extends AggregateRoot<EventProps> {
     return this.props.status;
   }
 
+  get isParticipantChecked(): boolean {
+    return this.props.isParticipantChecked;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
@@ -110,9 +118,18 @@ export class Event extends AggregateRoot<EventProps> {
    * 일정 참가자 추가
    *
    * @param participant 일정 참가자
+   * @throws {DomainRuleViolationException} PARTICIPANT_CHECK_ALREADY_DONE - 참여자 체크가 완료된 경우
    * @throws {DomainRuleViolationException} ALREADY_PARTICIPATING - 이미 참여 중인 일정인 경우
    */
   addParticipant(participant: EventParticipant): void {
+    if (this.props.isParticipantChecked) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '참여자 체크가 완료된 일정에는 참여할 수 없습니다.',
+        errorCode: 'PARTICIPANT_CHECK_ALREADY_DONE',
+      });
+    }
+
     if (this.props.participants.some((p) => p.userId === participant.userId)) {
       throw new DomainRuleViolationException({
         entityName: 'EventParticipant',
@@ -125,16 +142,136 @@ export class Event extends AggregateRoot<EventProps> {
   }
 
   /**
-   * 일정 취소 가능 여부 확인
+   * 일정 참여 철회 (참가자 제거)
    *
-   * RECRUITING 상태인 경우에만 취소 가능
+   * @param userId 사용자 ID
+   * @throws {DomainRuleViolationException} EVENT_NOT_RECRUITING - 모집중 상태가 아닌 경우
+   * @throws {DomainRuleViolationException} PARTICIPANT_CHECK_ALREADY_DONE - 참여자 체크가 완료된 경우
+   * @throws {DomainRuleViolationException} CREATOR_CANNOT_WITHDRAW - 일정 생성자인 경우
+   * @throws {EntityNotFoundException} PARTICIPANT_NOT_FOUND - 참여자를 찾을 수 없는 경우
    */
-  canBeCancelled(): boolean {
-    return this.props.status === EventStatus.RECRUITING;
+  removeParticipant(userId: string): void {
+    if (this.props.status !== EventStatus.RECRUITING) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '모집중인 일정에서만 참여를 철회할 수 있습니다.',
+        errorCode: 'EVENT_NOT_RECRUITING',
+      });
+    }
+
+    if (this.props.isParticipantChecked) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '참여자 체크가 완료된 일정에서는 참여를 철회할 수 없습니다.',
+        errorCode: 'PARTICIPANT_CHECK_ALREADY_DONE',
+      });
+    }
+
+    if (this.props.createdBy === userId) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '일정 생성자는 참여를 철회할 수 없습니다.',
+        errorCode: 'CREATOR_CANNOT_WITHDRAW',
+      });
+    }
+
+    const participantIndex = this.props.participants.findIndex(
+      (p) => p.userId === userId,
+    );
+
+    if (participantIndex === -1) {
+      throw new EntityNotFoundException({
+        entityName: 'EventParticipant',
+        errorCode: 'PARTICIPANT_NOT_FOUND',
+        id: userId,
+      });
+    }
+
+    this.props.participants.splice(participantIndex, 1);
+    this.props.updatedAt = new Date();
   }
 
   /**
-   * 일정 취소
+   * 일정 수정 가능 여부 확인
+   *
+   * RECRUITING 상태이고 참여자 체크가 완료되지 않은 경우에만 수정 가능
+   */
+  canBeUpdated(): boolean {
+    return (
+      this.props.status === EventStatus.RECRUITING &&
+      !this.props.isParticipantChecked
+    );
+  }
+
+  /**
+   * 일정 수정
+   *
+   * 시간(schedule) 변경 시 생성자를 제외한 모든 참여자가 제거됩니다.
+   *
+   * @param userId 수정 요청자 ID
+   * @param params 수정할 필드들
+   * @throws {DomainRuleViolationException} EVENT_NOT_RECRUITING - 모집중 상태가 아닌 경우
+   * @throws {DomainRuleViolationException} NOT_EVENT_CREATOR - 일정 생성자가 아닌 경우
+   */
+  update(
+    userId: string,
+    params: {
+      title?: BoundedString;
+      description?: BoundedString;
+      schedule?: EventSchedule;
+    },
+  ): void {
+    if (!this.canBeUpdated()) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason:
+          '모집중이고 참여자 체크가 완료되지 않은 일정만 수정할 수 있습니다.',
+        errorCode: 'EVENT_CANNOT_BE_UPDATED',
+      });
+    }
+
+    if (this.props.createdBy !== userId) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '일정 생성자만 수정할 수 있습니다.',
+        errorCode: 'NOT_EVENT_CREATOR',
+      });
+    }
+
+    if (params.title) {
+      this.props.title = params.title;
+    }
+
+    if (params.description) {
+      this.props.description = params.description;
+    }
+
+    // 시간 변경 시 생성자를 제외한 모든 참여자 제거
+    if (params.schedule) {
+      this.props.schedule = params.schedule;
+      this.props.participants = this.props.participants.filter(
+        (p) => p.userId === this.props.createdBy,
+      );
+    }
+
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * 일정 취소 가능 여부 확인
+   *
+   * RECRUITING 상태이고 참여자 체크가 완료되지 않은 경우에만 취소 가능
+   * (시스템에 의한 취소는 checkParticipantsForStart()에서 별도 처리)
+   */
+  canBeCancelled(): boolean {
+    return (
+      this.props.status === EventStatus.RECRUITING &&
+      !this.props.isParticipantChecked
+    );
+  }
+
+  /**
+   * 일정 취소 (사용자에 의한 수동 취소)
    *
    * @param reason 취소 사유
    * @throws {DomainRuleViolationException} EVENT_CANNOT_BE_CANCELLED - 취소할 수 없는 상태인 경우
@@ -143,7 +280,8 @@ export class Event extends AggregateRoot<EventProps> {
     if (!this.canBeCancelled()) {
       throw new DomainRuleViolationException({
         entityName: 'Event',
-        reason: '모집중인 일정만 취소할 수 있습니다.',
+        reason:
+          '모집중이고 참여자 체크가 완료되지 않은 일정만 취소할 수 있습니다.',
         errorCode: 'EVENT_CANNOT_BE_CANCELLED',
       });
     }
@@ -161,6 +299,44 @@ export class Event extends AggregateRoot<EventProps> {
   }
 
   /**
+   * 일정 삭제 가능 여부 확인
+   *
+   * RECRUITING 상태이고 참여자 체크가 완료되지 않은 경우에만 삭제 가능
+   */
+  canBeDeleted(): boolean {
+    return (
+      this.props.status === EventStatus.RECRUITING &&
+      !this.props.isParticipantChecked
+    );
+  }
+
+  /**
+   * 일정 삭제 검증
+   *
+   * @param userId 삭제 요청자 ID
+   * @throws {DomainRuleViolationException} EVENT_CANNOT_BE_DELETED - 삭제할 수 없는 상태인 경우
+   * @throws {DomainRuleViolationException} NOT_EVENT_CREATOR - 일정 생성자가 아닌 경우
+   */
+  validateDeletion(userId: string): void {
+    if (!this.canBeDeleted()) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason:
+          '모집중이고 참여자 체크가 완료되지 않은 일정만 삭제할 수 있습니다.',
+        errorCode: 'EVENT_CANNOT_BE_DELETED',
+      });
+    }
+
+    if (this.props.createdBy !== userId) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '일정 생성자만 삭제할 수 있습니다.',
+        errorCode: 'NOT_EVENT_CREATOR',
+      });
+    }
+  }
+
+  /**
    * 참여자 수 체크 후 시작 가능 여부 결정
    *
    * - 참여자 2명 이상: ParticipantsCheckPassedEvent 발행
@@ -172,6 +348,10 @@ export class Event extends AggregateRoot<EventProps> {
     if (this.props.status !== EventStatus.RECRUITING) {
       return false;
     }
+
+    // 참여자 체크 완료 플래그 설정
+    this.props.isParticipantChecked = true;
+    this.props.updatedAt = new Date();
 
     const participantCount = this.props.participants.length;
 
@@ -185,11 +365,32 @@ export class Event extends AggregateRoot<EventProps> {
       );
       return true;
     } else {
-      this.cancel(
+      // 시스템에 의한 자동 취소 (참여자 부족)
+      this.cancelBySystem(
         `참여자 ${participantCount}명, 최소 인원(${MIN_PARTICIPANTS_FOR_START}명) 미달`,
       );
       return false;
     }
+  }
+
+  /**
+   * 시스템에 의한 일정 취소 (참여자 부족 등)
+   *
+   * 참여자 체크 완료 후에도 시스템에 의해 취소될 수 있음
+   *
+   * @param reason 취소 사유
+   */
+  private cancelBySystem(reason: string): void {
+    this.props.status = EventStatus.CANCELLED;
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(
+      new EventCancelledEvent(this.id, {
+        eventId: this.id.toString(),
+        reason,
+        participantCount: this.props.participants.length,
+      }),
+    );
   }
 
   /**

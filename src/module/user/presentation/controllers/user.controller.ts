@@ -1,4 +1,11 @@
-import { Controller, Patch, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Patch,
+  Get,
+  Body,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -10,8 +17,10 @@ import {
 import { UserAuth, User } from '../../../auth/decorators';
 import { UserInfo } from '../../../auth/interfaces';
 import { ChangeCharacterUseCase } from '../../application/usecases/change-character.usecase';
+import { GetUserAttendanceStatisticsUseCase } from '../../application/usecases/get-user-attendance-statistics.usecase';
 import { ChangeCharacterRequestDto } from '../dtos/request/change-character.request.dto';
 import { UserResponseDto } from '../dtos/response/user.response.dto';
+import { AttendanceStatisticsResponseDto } from '../dtos/response/attendance-statistics.response.dto';
 import { FindUserUseCase } from '../../application/usecases';
 import { UserTransformer } from '../transformers';
 
@@ -21,6 +30,7 @@ export class UserController {
   constructor(
     private readonly changeCharacterUseCase: ChangeCharacterUseCase,
     private readonly findUserUseCase: FindUserUseCase,
+    private readonly getUserAttendanceStatisticsUseCase: GetUserAttendanceStatisticsUseCase,
   ) {}
 
   @ApiOperation({
@@ -77,5 +87,48 @@ export class UserController {
       userId: user.userId,
     });
     return UserTransformer.toDetailResponse(userModel);
+  }
+
+  @ApiOperation({
+    summary: '인증 사용자 - 출석 통계 조회',
+    description:
+      '현재 로그인한 사용자의 출석 통계를 조회합니다.<br><br>' +
+      '**목적**<br>' +
+      '사용자의 일정 참여 기록을 바탕으로 출석률을 계산하여 제공합니다.<br><br>' +
+      '**동작**<br>' +
+      '- 사용자의 모든 출석 결과(도착/지각/부재) 집계<br>' +
+      '- 출석률 계산: (도착 횟수 / 전체 참여 횟수) × 100%<br><br>' +
+      '**반환 정보**<br>' +
+      '- 도착/지각/부재 횟수<br>' +
+      '- 전체 참여 횟수<br>' +
+      '- 출석률 (소수점 2자리까지)<br>',
+  })
+  @ApiOkResponse({
+    description: '출석 통계 조회 성공',
+    type: AttendanceStatisticsResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      '인증 실패<br>' +
+      '- 유효하지 않은 토큰 또는 만료된 토큰: _**AUTHENTICATION_FAILED**_<br>',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.OK)
+  @Get('attendance-statistics')
+  async getAttendanceStatistics(
+    @User() user: UserInfo,
+  ): Promise<AttendanceStatisticsResponseDto> {
+    const result = await this.getUserAttendanceStatisticsUseCase.execute({
+      userId: user.userId,
+    });
+
+    return {
+      userId: result.userId,
+      arrivedCount: result.arrivedCount,
+      lateCount: result.lateCount,
+      absentCount: result.absentCount,
+      totalCount: result.totalCount,
+      attendanceRate: result.attendanceRate,
+    };
   }
 }

@@ -2,11 +2,14 @@ import { Injectable } from '@nestjs/common';
 import {
   FindGroupDetailParams,
   FindGroupListParams,
+  FindMemberAttendanceStatisticsParams,
   GroupQueryRepository,
 } from '../../domain/repositories';
 import {
   GroupDetailQueryModel,
   GroupListItemQueryModel,
+  GroupMemberAttendanceStatisticsQueryModel,
+  MemberAttendanceStatisticsQueryModel,
 } from '../../domain/models';
 import { PrismaService } from '@core/database/prisma.service';
 import { Prisma } from '@prisma/client';
@@ -100,5 +103,59 @@ export class GroupQueryRepositoryImpl implements GroupQueryRepository {
         joinedAt: member.joined_at,
       })),
     };
+  }
+
+  async findMemberAttendanceStatistics(
+    params: FindMemberAttendanceStatisticsParams,
+  ): Promise<GroupMemberAttendanceStatisticsQueryModel> {
+    const { groupId } = params;
+
+    // 단일 Raw SQL 쿼리로 멤버 정보 + 출석 통계 조회
+    const rawResults = await this.prisma.$queryRaw<
+      {
+        user_id: string;
+        nickname: string;
+        arrived_count: bigint;
+        late_count: bigint;
+        absent_count: bigint;
+      }[]
+    >`
+      SELECT
+        gm.user_id,
+        u.nickname,
+        COALESCE(SUM(CASE WHEN er.result = 'ARRIVED' THEN 1 ELSE 0 END), 0) as arrived_count,
+        COALESCE(SUM(CASE WHEN er.result = 'LATE' THEN 1 ELSE 0 END), 0) as late_count,
+        COALESCE(SUM(CASE WHEN er.result = 'ABSENT' THEN 1 ELSE 0 END), 0) as absent_count
+      FROM group_members gm
+      INNER JOIN public_users u ON gm.user_id = u.id
+      LEFT JOIN events e ON e.group_id = gm.group_id
+      LEFT JOIN event_results er ON er.event_id = e.id AND er.user_id = gm.user_id
+      WHERE gm.group_id = ${groupId}::uuid
+      GROUP BY gm.user_id, u.nickname
+    `;
+
+    const members: MemberAttendanceStatisticsQueryModel[] = rawResults.map(
+      (row) => {
+        const arrivedCount = Number(row.arrived_count);
+        const lateCount = Number(row.late_count);
+        const absentCount = Number(row.absent_count);
+        const totalCount = arrivedCount + lateCount + absentCount;
+
+        return {
+          userId: row.user_id,
+          nickname: row.nickname,
+          arrivedCount,
+          lateCount,
+          absentCount,
+          totalCount,
+          attendanceRate:
+            totalCount > 0
+              ? ((arrivedCount / totalCount) * 100).toFixed(2)
+              : '0.00',
+        };
+      },
+    );
+
+    return { groupId, members };
   }
 }
