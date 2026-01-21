@@ -13,6 +13,8 @@ export type EnvironmentConfig = {
     secret: string;
     accessTokenExpiresIn: number;
     refreshTokenExpiresIn: number;
+    enableRefreshToken: boolean;
+    enableBlacklist: boolean;
   };
   firebase: {
     projectId: string;
@@ -75,10 +77,15 @@ export default (): EnvironmentConfig => {
         process.env.JWT_REFRESH_TOKEN_EXPIRES_IN || '86400',
         10,
       ),
+      enableRefreshToken: process.env.ENABLE_REFRESH_TOKEN !== 'false',
+      enableBlacklist: process.env.ENABLE_BLACKLIST !== 'false',
     },
     firebase: {
       projectId: process.env.FIREBASE_PROJECT_ID || '',
-      privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+      privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(
+        /\\n/g,
+        '\n',
+      ),
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL || '',
     },
     logger: {

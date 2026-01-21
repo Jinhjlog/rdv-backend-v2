@@ -15,6 +15,7 @@ import {
   GetTokenErrorStatus,
   InvalidateTokenErrorStatus,
   RefreshAccessTokenErrorStatus,
+  REFRESH_TOKEN_NOT_IMPLEMENTED,
   StoreTokenErrorStatus,
   TokenPair,
   TokenPayload,
@@ -34,7 +35,9 @@ const KEY_PATTERNS = {
 export class RedisJwtService implements JwtService {
   private readonly logger = new Logger(RedisJwtService.name);
   private readonly helper: JwtHelpers;
-  private refreshTokenExpiresIn: number;
+  private readonly refreshTokenExpiresIn: number;
+  private readonly enableRefreshToken: boolean;
+  private readonly enableBlacklist: boolean;
 
   constructor(
     @InjectAuthRedis() private readonly redis: Redis,
@@ -48,6 +51,8 @@ export class RedisJwtService implements JwtService {
     }
 
     this.refreshTokenExpiresIn = jwtConfig.refreshTokenExpiresIn;
+    this.enableRefreshToken = jwtConfig.enableRefreshToken ?? true;
+    this.enableBlacklist = jwtConfig.enableBlacklist ?? true;
     this.helper = new JwtHelpers(this.logger);
   }
 
@@ -59,7 +64,9 @@ export class RedisJwtService implements JwtService {
         payload,
       });
 
-      const refreshToken = crypto.randomBytes(64).toString('hex');
+      const refreshToken = this.enableRefreshToken
+        ? crypto.randomBytes(64).toString('hex')
+        : REFRESH_TOKEN_NOT_IMPLEMENTED;
 
       return this.helper.success({
         accessToken,
@@ -74,6 +81,11 @@ export class RedisJwtService implements JwtService {
     tokens: TokenPair,
     identifier: string,
   ): Promise<AuthResult<void, StoreTokenErrorStatus>> {
+    // 리프레시 토큰 비활성화 시 Redis 저장 건너뛰기
+    if (!this.enableRefreshToken) {
+      return this.helper.successVoid();
+    }
+
     try {
       const identifierKey = KEY_PATTERNS.identifier(identifier);
       const refreshKey = KEY_PATTERNS.refresh(tokens.refreshToken);
@@ -123,14 +135,17 @@ export class RedisJwtService implements JwtService {
     AuthResult<TokenPayload<CustomTokenPayload>, VerifyAccessTokenErrorStatus>
   > {
     try {
-      const blacklistKey = KEY_PATTERNS.blacklistAccess(accessToken);
-      const isBlacklisted = await this.redis.get(blacklistKey);
+      // 블랙리스트 활성화 시에만 Redis 확인
+      if (this.enableBlacklist) {
+        const blacklistKey = KEY_PATTERNS.blacklistAccess(accessToken);
+        const isBlacklisted = await this.redis.get(blacklistKey);
 
-      if (isBlacklisted) {
-        return this.helper.failure(
-          AuthResultStatus.BLACKLISTED_ACCESS_TOKEN,
-          '블랙리스트에 등록된 액세스 토큰입니다.',
-        );
+        if (isBlacklisted) {
+          return this.helper.failure(
+            AuthResultStatus.BLACKLISTED_ACCESS_TOKEN,
+            '블랙리스트에 등록된 액세스 토큰입니다.',
+          );
+        }
       }
 
       const decoded =
@@ -168,6 +183,14 @@ export class RedisJwtService implements JwtService {
   async verifyRefreshToken(
     refreshToken: string,
   ): Promise<AuthResult<void, VerifyRefreshTokenErrorStatus>> {
+    // 리프레시 토큰 비활성화 상태에서 호출 시 에러 반환
+    if (!this.enableRefreshToken) {
+      return this.helper.failure(
+        AuthResultStatus.INVALID_REFRESH_TOKEN,
+        '리프레시 토큰 기능이 비활성화되어 있습니다.',
+      );
+    }
+
     const isExists = await this.redis.exists(
       KEY_PATTERNS.refresh(refreshToken),
     );
@@ -187,57 +210,71 @@ export class RedisJwtService implements JwtService {
     identifier: string,
     isForce: boolean,
   ): Promise<AuthResult<void, InvalidateTokenErrorStatus>> {
+    // 블랙리스트와 리프레시 토큰 모두 비활성화 시 Redis 작업 건너뛰기
+    if (!this.enableBlacklist && !this.enableRefreshToken) {
+      return this.helper.successVoid();
+    }
+
     try {
       const { accessToken, refreshToken } = tokens;
 
       const tokenKey = KEY_PATTERNS.refresh(refreshToken);
       const identifierKey = KEY_PATTERNS.identifier(identifier);
 
-      const identifierExists = await this.redis.exists(identifierKey);
-      if (!identifierExists) {
-        return this.helper.failure(
-          AuthResultStatus.IDENTIFIER_NOT_FOUND,
-          '식별자를 찾을 수 없습니다.',
-          identifier,
-        );
-      }
-
-      const decodedToken =
-        this.nestJwtService.decode<TokenPayload<CustomTokenPayload>>(
-          accessToken,
-        );
-
-      if (!decodedToken) {
-        return this.helper.failure(
-          AuthResultStatus.INVALID_ACCESS_TOKEN,
-          '유효하지 않은 토큰입니다.',
-          identifier,
-        );
-      }
-
-      const currentTimestamp = Math.floor(Date.now() / 1000);
-      const blacklistTokenExpiresIn = decodedToken.exp - currentTimestamp;
-
-      const multi = this.redis.multi();
-
-      if (blacklistTokenExpiresIn > 0) {
-        const blacklistKey = KEY_PATTERNS.blacklistAccess(accessToken);
-        multi.setex(blacklistKey, blacklistTokenExpiresIn, '1');
-      }
-
-      if (isForce) {
-        const tokenTtl = await this.redis.ttl(tokenKey);
-
-        if (tokenTtl > 0) {
-          const refreshBlacklistKey =
-            KEY_PATTERNS.blacklistRefresh(refreshToken);
-
-          multi.setex(refreshBlacklistKey, tokenTtl, '1');
+      // 리프레시 토큰 활성화 시에만 identifier 존재 확인
+      if (this.enableRefreshToken) {
+        const identifierExists = await this.redis.exists(identifierKey);
+        if (!identifierExists) {
+          return this.helper.failure(
+            AuthResultStatus.IDENTIFIER_NOT_FOUND,
+            '식별자를 찾을 수 없습니다.',
+            identifier,
+          );
         }
       }
 
-      multi.del(identifierKey);
-      multi.del(tokenKey);
+      const multi = this.redis.multi();
+
+      // 블랙리스트 활성화 시에만 블랙리스트 저장
+      if (this.enableBlacklist) {
+        const decodedToken =
+          this.nestJwtService.decode<TokenPayload<CustomTokenPayload>>(
+            accessToken,
+          );
+
+        if (!decodedToken) {
+          return this.helper.failure(
+            AuthResultStatus.INVALID_ACCESS_TOKEN,
+            '유효하지 않은 토큰입니다.',
+            identifier,
+          );
+        }
+
+        const currentTimestamp = Math.floor(Date.now() / 1000);
+        const blacklistTokenExpiresIn = decodedToken.exp - currentTimestamp;
+
+        if (blacklistTokenExpiresIn > 0) {
+          const blacklistKey = KEY_PATTERNS.blacklistAccess(accessToken);
+          multi.setex(blacklistKey, blacklistTokenExpiresIn, '1');
+        }
+
+        if (isForce) {
+          const tokenTtl = await this.redis.ttl(tokenKey);
+
+          if (tokenTtl > 0) {
+            const refreshBlacklistKey =
+              KEY_PATTERNS.blacklistRefresh(refreshToken);
+
+            multi.setex(refreshBlacklistKey, tokenTtl, '1');
+          }
+        }
+      }
+
+      // 리프레시 토큰 활성화 시에만 키 삭제
+      if (this.enableRefreshToken) {
+        multi.del(identifierKey);
+        multi.del(tokenKey);
+      }
 
       await multi.exec();
 
@@ -253,6 +290,11 @@ export class RedisJwtService implements JwtService {
   async isAccessTokenBlacklisted(
     accessToken: string,
   ): Promise<AuthResult<void, AuthResultStatus.BLACKLISTED_ACCESS_TOKEN>> {
+    // 블랙리스트 비활성화 시 항상 성공 반환
+    if (!this.enableBlacklist) {
+      return this.helper.successVoid();
+    }
+
     const key = KEY_PATTERNS.blacklistAccess(accessToken);
     const isBlacklisted = await this.redis.exists(key);
 
@@ -269,6 +311,11 @@ export class RedisJwtService implements JwtService {
   async isRefreshTokenBlacklisted(
     refreshToken: string,
   ): Promise<AuthResult<void, AuthResultStatus.BLACKLISTED_REFRESH_TOKEN>> {
+    // 블랙리스트 비활성화 시 항상 성공 반환
+    if (!this.enableBlacklist) {
+      return this.helper.successVoid();
+    }
+
     const key = KEY_PATTERNS.blacklistRefresh(refreshToken);
 
     const isBlacklisted = await this.redis.exists(key);
@@ -285,6 +332,14 @@ export class RedisJwtService implements JwtService {
   async refreshAccessToken(
     refreshToken: string,
   ): Promise<AuthResult<string, RefreshAccessTokenErrorStatus>> {
+    // 리프레시 토큰 비활성화 상태에서 호출 시 에러 반환
+    if (!this.enableRefreshToken) {
+      return this.helper.failure(
+        AuthResultStatus.INVALID_REFRESH_TOKEN,
+        '리프레시 토큰 기능이 비활성화되어 있습니다.',
+      );
+    }
+
     try {
       const tokenKey = KEY_PATTERNS.refresh(refreshToken);
       const identifier = await this.redis.get(tokenKey);
