@@ -3,6 +3,7 @@ import {
   CharactersRepositoryImpl,
   UserQueryRepositoryImpl,
   UserRepositoryImpl,
+  AttendanceStatisticsQueryRepositoryImpl,
 } from './infra/repositories';
 import {
   ChangeCharacterUseCase,
@@ -10,12 +11,14 @@ import {
   FindUserUseCase,
   LoginUseCase,
   RegisterUseCase,
+  GetUserAttendanceStatisticsUseCase,
 } from './application/usecases';
 import { AuthController, UserController } from './presentation/controllers';
 import {
   CharactersRepository,
   UserQueryRepository,
   UserRepository,
+  AttendanceStatisticsQueryRepository,
 } from './domain/repositories';
 import { JwtModule } from '@core/jwt/jwt.module';
 import { AuthService } from './domain/services/auth.service';
@@ -26,6 +29,7 @@ const useCases: Provider[] = [
   LoginUseCase,
   RegisterUseCase,
   FindUserUseCase,
+  GetUserAttendanceStatisticsUseCase,
 ];
 
 @Module({
@@ -43,6 +47,10 @@ const useCases: Provider[] = [
     {
       provide: UserQueryRepository,
       useClass: UserQueryRepositoryImpl,
+    },
+    {
+      provide: AttendanceStatisticsQueryRepository,
+      useClass: AttendanceStatisticsQueryRepositoryImpl,
     },
     AuthService,
     ...useCases,
