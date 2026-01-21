@@ -6,3 +6,4 @@ export * from './depart-event.dto';
 export * from './arrive-event.dto';
 export * from './withdraw-event.dto';
 export * from './update-event.dto';
+export * from './delete-event.dto';

@@ -29,6 +29,7 @@ import {
   ArriveEventUseCase,
   WithdrawEventUseCase,
   UpdateEventUseCase,
+  DeleteEventUseCase,
 } from '../../application/usecases';
 import { User, UserAuth } from 'src/module/auth/decorators';
 import {
@@ -53,6 +54,7 @@ export class UserEventController {
     private readonly arriveEventUseCase: ArriveEventUseCase,
     private readonly withdrawEventUseCase: WithdrawEventUseCase,
     private readonly updateEventUseCase: UpdateEventUseCase,
+    private readonly deleteEventUseCase: DeleteEventUseCase,
   ) {}
 
   @ApiOperation({
@@ -324,6 +326,54 @@ export class UserEventController {
     });
 
     return EventTransformer.toDetailResponse(event);
+  }
+
+  @ApiOperation({
+    summary: '사용자 - 일정 삭제',
+    description:
+      '모집중인 일정을 삭제합니다.<br><br>' +
+      '**검증 순서**<br>' +
+      '1. 일정 존재 여부 확인<br>' +
+      '2. 일정 상태 확인 (RECRUITING 상태만 가능)<br>' +
+      '3. 생성자 확인<br><br>' +
+      '**주의사항**<br>' +
+      '- 인증된 사용자만 접근 가능합니다.<br>' +
+      '- eventId는 UUID 형식이어야 합니다.<br>' +
+      '- 모집중(RECRUITING) 상태의 일정만 삭제할 수 있습니다.<br>' +
+      '- 일정 생성자만 삭제할 수 있습니다.<br>' +
+      '- 삭제 시 참여자, 결과 데이터가 모두 함께 삭제됩니다.<br>',
+  })
+  @ApiParam({
+    name: 'eventId',
+    description: '일정 ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    required: true,
+  })
+  @ApiNoContentResponse({
+    description: '일정 삭제 성공',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (도메인 규칙 위반)<br>' +
+      '- 일정 상태가 모집중이 아닌 경우: _**EVENT_NOT_RECRUITING**_<br>' +
+      '- 일정 생성자가 아닌 경우: _**NOT_EVENT_CREATOR**_<br>',
+  })
+  @ApiNotFoundResponse({
+    description:
+      '리소스를 찾을 수 없음: _**EVENT_NOT_FOUND**_<br>' +
+      '해당 eventId가 존재하지 않는 경우',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete('events/:eventId')
+  async deleteEvent(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @User() user: UserInfo,
+  ): Promise<void> {
+    await this.deleteEventUseCase.execute({
+      eventId: eventId,
+      userId: user.userId,
+    });
   }
 
   @ApiOperation({
