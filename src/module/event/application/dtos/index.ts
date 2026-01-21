@@ -5,3 +5,4 @@ export * from './join-event.dto';
 export * from './depart-event.dto';
 export * from './arrive-event.dto';
 export * from './withdraw-event.dto';
+export * from './update-event.dto';

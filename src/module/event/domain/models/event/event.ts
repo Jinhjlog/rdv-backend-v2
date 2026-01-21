@@ -169,6 +169,68 @@ export class Event extends AggregateRoot<EventProps> {
   }
 
   /**
+   * 일정 수정 가능 여부 확인
+   *
+   * RECRUITING 상태인 경우에만 수정 가능
+   */
+  canBeUpdated(): boolean {
+    return this.props.status === EventStatus.RECRUITING;
+  }
+
+  /**
+   * 일정 수정
+   *
+   * 시간(schedule) 변경 시 생성자를 제외한 모든 참여자가 제거됩니다.
+   *
+   * @param userId 수정 요청자 ID
+   * @param params 수정할 필드들
+   * @throws {DomainRuleViolationException} EVENT_NOT_RECRUITING - 모집중 상태가 아닌 경우
+   * @throws {DomainRuleViolationException} NOT_EVENT_CREATOR - 일정 생성자가 아닌 경우
+   */
+  update(
+    userId: string,
+    params: {
+      title?: BoundedString;
+      description?: BoundedString;
+      schedule?: EventSchedule;
+    },
+  ): void {
+    if (!this.canBeUpdated()) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '모집중인 일정만 수정할 수 있습니다.',
+        errorCode: 'EVENT_NOT_RECRUITING',
+      });
+    }
+
+    if (this.props.createdBy !== userId) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '일정 생성자만 수정할 수 있습니다.',
+        errorCode: 'NOT_EVENT_CREATOR',
+      });
+    }
+
+    if (params.title) {
+      this.props.title = params.title;
+    }
+
+    if (params.description) {
+      this.props.description = params.description;
+    }
+
+    // 시간 변경 시 생성자를 제외한 모든 참여자 제거
+    if (params.schedule) {
+      this.props.schedule = params.schedule;
+      this.props.participants = this.props.participants.filter(
+        (p) => p.userId === this.props.createdBy,
+      );
+    }
+
+    this.props.updatedAt = new Date();
+  }
+
+  /**
    * 일정 취소 가능 여부 확인
    *
    * RECRUITING 상태인 경우에만 취소 가능
