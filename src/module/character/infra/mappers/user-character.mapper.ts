@@ -1,7 +1,4 @@
-import {
-  Prisma,
-  user_characters as UserCharacterPrisma,
-} from '@prisma/client';
+import { Prisma, user_characters as UserCharacterPrisma } from '@prisma/client';
 import { UserCharacter } from '../../domain/models';
 
 /**
