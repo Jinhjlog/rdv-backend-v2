@@ -267,6 +267,40 @@ export class Event extends AggregateRoot<EventProps> {
   }
 
   /**
+   * 일정 삭제 가능 여부 확인
+   *
+   * RECRUITING 상태인 경우에만 삭제 가능
+   */
+  canBeDeleted(): boolean {
+    return this.props.status === EventStatus.RECRUITING;
+  }
+
+  /**
+   * 일정 삭제 검증
+   *
+   * @param userId 삭제 요청자 ID
+   * @throws {DomainRuleViolationException} EVENT_NOT_RECRUITING - 모집중 상태가 아닌 경우
+   * @throws {DomainRuleViolationException} NOT_EVENT_CREATOR - 일정 생성자가 아닌 경우
+   */
+  validateDeletion(userId: string): void {
+    if (!this.canBeDeleted()) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '모집중인 일정만 삭제할 수 있습니다.',
+        errorCode: 'EVENT_NOT_RECRUITING',
+      });
+    }
+
+    if (this.props.createdBy !== userId) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '일정 생성자만 삭제할 수 있습니다.',
+        errorCode: 'NOT_EVENT_CREATOR',
+      });
+    }
+  }
+
+  /**
    * 참여자 수 체크 후 시작 가능 여부 결정
    *
    * - 참여자 2명 이상: ParticipantsCheckPassedEvent 발행
