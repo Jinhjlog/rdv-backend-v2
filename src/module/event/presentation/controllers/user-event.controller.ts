@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   HttpCode,
   HttpStatus,
@@ -25,6 +26,7 @@ import {
   JoinEventUseCase,
   DepartEventUseCase,
   ArriveEventUseCase,
+  WithdrawEventUseCase,
 } from '../../application/usecases';
 import { User, UserAuth } from 'src/module/auth/decorators';
 import {
@@ -46,6 +48,7 @@ export class UserEventController {
     private readonly joinEventUseCase: JoinEventUseCase,
     private readonly departEventUseCase: DepartEventUseCase,
     private readonly arriveEventUseCase: ArriveEventUseCase,
+    private readonly withdrawEventUseCase: WithdrawEventUseCase,
   ) {}
 
   @ApiOperation({
@@ -296,6 +299,56 @@ export class UserEventController {
     });
 
     return EventTransformer.toDetailResponse(event);
+  }
+
+  @ApiOperation({
+    summary: '사용자 - 일정 참여 철회',
+    description:
+      '모집중인 일정에서 참여를 철회합니다.<br><br>' +
+      '**검증 순서**<br>' +
+      '1. 일정 존재 여부 확인<br>' +
+      '2. 일정 상태 확인 (RECRUITING 상태만 가능)<br>' +
+      '3. 일정 생성자 여부 확인<br>' +
+      '4. 참여자 확인<br><br>' +
+      '**주의사항**<br>' +
+      '- 인증된 사용자만 접근 가능합니다.<br>' +
+      '- eventId는 UUID 형식이어야 합니다.<br>' +
+      '- 모집중(RECRUITING) 상태의 일정에서만 철회할 수 있습니다.<br>' +
+      '- 진행중(IN_PROGRESS) 또는 종료된(ENDED) 일정에서는 철회할 수 없습니다.<br>' +
+      '- 일정 생성자는 참여를 철회할 수 없습니다.<br>',
+  })
+  @ApiParam({
+    name: 'eventId',
+    description: '일정 ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    required: true,
+  })
+  @ApiNoContentResponse({
+    description: '참여 철회 성공',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (도메인 규칙 위반)<br>' +
+      '- 일정 상태가 모집중이 아닌 경우: _**EVENT_NOT_RECRUITING**_<br>' +
+      '- 일정 생성자인 경우: _**CREATOR_CANNOT_WITHDRAW**_<br>',
+  })
+  @ApiNotFoundResponse({
+    description:
+      '리소스를 찾을 수 없음<br>' +
+      '- 일정이 존재하지 않는 경우: _**EVENT_NOT_FOUND**_<br>' +
+      '- 참여자를 찾을 수 없는 경우: _**PARTICIPANT_NOT_FOUND**_<br>',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete('events/:eventId/participants')
+  async withdrawEvent(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @User() user: UserInfo,
+  ): Promise<void> {
+    await this.withdrawEventUseCase.execute({
+      eventId: eventId,
+      userId: user.userId,
+    });
   }
 
   @ApiOperation({
