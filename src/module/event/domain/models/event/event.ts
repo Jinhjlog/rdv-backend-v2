@@ -1,5 +1,8 @@
 import { AggregateRoot, BoundedString, UniqueEntityId } from '@lib/domain';
-import { DomainRuleViolationException } from '@shared/exception';
+import {
+  DomainRuleViolationException,
+  EntityNotFoundException,
+} from '@shared/exception';
 import { EventParticipant } from './event-participant';
 import { EventResult } from './event-result';
 import { Location } from './location';
@@ -122,6 +125,47 @@ export class Event extends AggregateRoot<EventProps> {
     }
 
     this.props.participants.push(participant);
+  }
+
+  /**
+   * 일정 참여 철회 (참가자 제거)
+   *
+   * @param userId 사용자 ID
+   * @throws {DomainRuleViolationException} EVENT_NOT_RECRUITING - 모집중 상태가 아닌 경우
+   * @throws {DomainRuleViolationException} CREATOR_CANNOT_WITHDRAW - 일정 생성자인 경우
+   * @throws {EntityNotFoundException} PARTICIPANT_NOT_FOUND - 참여자를 찾을 수 없는 경우
+   */
+  removeParticipant(userId: string): void {
+    if (this.props.status !== EventStatus.RECRUITING) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '모집중인 일정에서만 참여를 철회할 수 있습니다.',
+        errorCode: 'EVENT_NOT_RECRUITING',
+      });
+    }
+
+    if (this.props.createdBy === userId) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '일정 생성자는 참여를 철회할 수 없습니다.',
+        errorCode: 'CREATOR_CANNOT_WITHDRAW',
+      });
+    }
+
+    const participantIndex = this.props.participants.findIndex(
+      (p) => p.userId === userId,
+    );
+
+    if (participantIndex === -1) {
+      throw new EntityNotFoundException({
+        entityName: 'EventParticipant',
+        errorCode: 'PARTICIPANT_NOT_FOUND',
+        id: userId,
+      });
+    }
+
+    this.props.participants.splice(participantIndex, 1);
+    this.props.updatedAt = new Date();
   }
 
   /**
