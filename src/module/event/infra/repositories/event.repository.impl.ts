@@ -215,15 +215,28 @@ export class EventRepositoryImpl implements EventRepository {
     endTime: Date,
     excludeEventId?: string,
   ): Promise<boolean> {
-    const result = await this.client.$queryRaw<{ count: bigint }[]>`
-      SELECT COUNT(*)::bigint as count
-      FROM events e
-      JOIN event_participants ep ON e.id = ep.event_id
-      WHERE ep.user_id = ${userId}
-        AND e.status != 'ENDED'
-        ${excludeEventId ? `AND e.id != ${excludeEventId}` : ''}
-        AND NOT (e.end_time <= ${trackingStartTime} OR e.tracking_start_time >= ${endTime})
-    `;
+    let result: { count: bigint }[];
+
+    if (excludeEventId) {
+      result = await this.client.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(*)::bigint as count
+        FROM public.events e
+        JOIN public.event_participants ep ON e.id = ep.event_id
+        WHERE ep.user_id = ${userId}::uuid
+          AND e.status IN ('RECRUITING', 'IN_PROGRESS')
+          AND e.id != ${excludeEventId}::uuid
+          AND NOT (e.end_time <= ${trackingStartTime} OR e.tracking_start_time >= ${endTime})
+      `;
+    } else {
+      result = await this.client.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(*)::bigint as count
+        FROM public.events e
+        JOIN public.event_participants ep ON e.id = ep.event_id
+        WHERE ep.user_id = ${userId}::uuid
+          AND e.status IN ('RECRUITING', 'IN_PROGRESS')
+          AND NOT (e.end_time <= ${trackingStartTime} OR e.tracking_start_time >= ${endTime})
+      `;
+    }
 
     return Number(result[0].count) > 0;
   }

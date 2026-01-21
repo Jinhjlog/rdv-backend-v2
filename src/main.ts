@@ -45,8 +45,8 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('safety-edu API')
-    .setDescription('safety-edu restful api')
+    .setTitle('RDV API')
+    .setDescription('RDV Backend RESTful API')
     .setVersion('1.0')
     .addBearerAuth(
       {

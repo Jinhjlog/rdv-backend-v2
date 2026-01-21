@@ -126,10 +126,10 @@ export class GroupQueryRepositoryImpl implements GroupQueryRepository {
         COALESCE(SUM(CASE WHEN er.result = 'ARRIVED' THEN 1 ELSE 0 END), 0) as arrived_count,
         COALESCE(SUM(CASE WHEN er.result = 'LATE' THEN 1 ELSE 0 END), 0) as late_count,
         COALESCE(SUM(CASE WHEN er.result = 'ABSENT' THEN 1 ELSE 0 END), 0) as absent_count
-      FROM group_members gm
-      INNER JOIN public_users u ON gm.user_id = u.id
-      LEFT JOIN events e ON e.group_id = gm.group_id
-      LEFT JOIN event_results er ON er.event_id = e.id AND er.user_id = gm.user_id
+      FROM public.group_members gm
+      INNER JOIN public.users u ON gm.user_id = u.id
+      LEFT JOIN public.events e ON e.group_id = gm.group_id
+      LEFT JOIN public.event_results er ON er.event_id = e.id AND er.user_id = gm.user_id
       WHERE gm.group_id = ${groupId}::uuid
       GROUP BY gm.user_id, u.nickname
     `;

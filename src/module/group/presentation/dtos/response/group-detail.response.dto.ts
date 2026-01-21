@@ -91,5 +91,9 @@ export class GroupDetailResponseDto {
   })
   updatedAt: Date;
 
+  @ApiProperty({
+    description: '모임원 목록',
+    type: [GroupDetailMemberResponseDto],
+  })
   members: GroupDetailMemberResponseDto[];
 }

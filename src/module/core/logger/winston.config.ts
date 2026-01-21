@@ -23,7 +23,7 @@ export const createWinstonConfig = (
 
   const devFormat = winston.format.combine(
     baseFormat,
-    nestWinstonModuleUtilities.format.nestLike('SafetyEdu', {
+    nestWinstonModuleUtilities.format.nestLike('RDV', {
       prettyPrint: true,
       colors: true,
     }),
