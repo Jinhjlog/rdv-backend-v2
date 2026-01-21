@@ -53,6 +53,39 @@ export class EventRepositoryImpl implements EventRepository {
     }
   }
 
+  async delete(id: string): Promise<void> {
+    // 이미 트랜잭션 컨텍스트 내부라면 현재 트랜잭션 재사용
+    if (this.txContext.isInTransaction()) {
+      await this._deleteWithClient(this.client, id);
+      return;
+    }
+
+    // 트랜잭션이 없으면 새로 시작
+    await this.prisma.$transaction(async (tx) => {
+      await this._deleteWithClient(tx, id);
+    });
+  }
+
+  private async _deleteWithClient(
+    client: PrismaService | PrismaTransactionClient,
+    id: string,
+  ): Promise<void> {
+    // 참여자 삭제
+    await client.event_participants.deleteMany({
+      where: { event_id: id },
+    });
+
+    // 결과 삭제
+    await client.event_results.deleteMany({
+      where: { event_id: id },
+    });
+
+    // 이벤트 삭제
+    await client.events.delete({
+      where: { id },
+    });
+  }
+
   /**
    * 실제 저장 로직 (트랜잭션 클라이언트 사용)
    */
