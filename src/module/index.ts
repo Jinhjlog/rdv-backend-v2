@@ -6,7 +6,7 @@ import { UserModule } from './user/user.module';
 import { UserGroupModule } from './group/user-group.module';
 import { UserCharacterModule } from './character/user-character.module';
 import { UserEventModule } from './event/user-event.module';
-import { UserLocationTrackingCoreModule } from './location-tracking/user-location-tracking-core.module';
+import { UserLocationTrackingModule } from './location-tracking/user-location-tracking.module';
 
 export const modules: Type<any>[] = [
   CoreModule,
@@ -16,5 +16,5 @@ export const modules: Type<any>[] = [
   UserCharacterModule,
   UserGroupModule,
   UserEventModule,
-  UserLocationTrackingCoreModule,
+  UserLocationTrackingModule,
 ];
