@@ -34,6 +34,7 @@ import {
   RemoveMemberUseCase,
   LeaveGroupUseCase,
   TransferOwnershipUseCase,
+  GetGroupMemberAttendanceStatisticsUseCase,
 } from '../../application/usecases';
 import {
   CreateGroupRequestDto,
@@ -43,6 +44,7 @@ import {
   GroupListResponseDto,
   GroupDetailResponseDto,
   CreateInviteCodeResponseDto,
+  GroupMemberAttendanceStatisticsResponseDto,
 } from '../dtos';
 import { GroupTransformer } from '../transformers';
 
@@ -60,6 +62,7 @@ export class UserGroupController {
     private readonly removeMemberUseCase: RemoveMemberUseCase,
     private readonly leaveGroupUseCase: LeaveGroupUseCase,
     private readonly transferOwnershipUseCase: TransferOwnershipUseCase,
+    private readonly getGroupMemberAttendanceStatisticsUseCase: GetGroupMemberAttendanceStatisticsUseCase,
   ) {}
 
   @ApiOperation({
@@ -534,5 +537,59 @@ export class UserGroupController {
       userId: user.userId,
     });
     return GroupTransformer.toDetailResponse(group);
+  }
+
+  @ApiOperation({
+    summary: '[모임 멤버] - 모임 참여자 출석 통계 조회',
+    description:
+      '모임에 속한 모든 멤버들의 출석 통계를 조회합니다.<br><br>' +
+      '**목적**<br>' +
+      '모임 내 멤버들의 일정 참여 기록을 바탕으로 출석률을 계산하여 제공합니다.<br><br>' +
+      '**동작**<br>' +
+      '- 모임의 모든 일정에서 발생한 출석 결과(도착/지각/부재) 집계<br>' +
+      '- 출석률 계산: (도착 횟수 / 전체 참여 횟수) × 100%<br><br>' +
+      '**반환 정보**<br>' +
+      '- 멤버별 도착/지각/부재 횟수<br>' +
+      '- 멤버별 전체 참여 횟수<br>' +
+      '- 멤버별 출석률 (소수점 2자리까지)<br>',
+  })
+  @ApiParam({
+    name: 'groupId',
+    description: '모임 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiOkResponse({
+    description: '모임 참여자 출석 통계 조회 성공',
+    type: GroupMemberAttendanceStatisticsResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: '모임을 찾을 수 없음: _**GROUP_NOT_FOUND**_',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.OK)
+  @Get(':groupId/attendance-statistics')
+  async getGroupMemberAttendanceStatistics(
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @User() user: UserInfo,
+  ): Promise<GroupMemberAttendanceStatisticsResponseDto> {
+    const result = await this.getGroupMemberAttendanceStatisticsUseCase.execute(
+      {
+        groupId,
+        userId: user.userId,
+      },
+    );
+
+    return {
+      groupId: result.groupId,
+      members: result.members.map((member) => ({
+        userId: member.userId,
+        nickname: member.nickname,
+        arrivedCount: member.arrivedCount,
+        lateCount: member.lateCount,
+        absentCount: member.absentCount,
+        totalCount: member.totalCount,
+        attendanceRate: member.attendanceRate,
+      })),
+    };
   }
 }
