@@ -257,13 +257,14 @@ export class UserEventController {
       '**검증 순서**<br>' +
       '1. 일정 존재 여부 확인<br>' +
       '2. 일정 상태 확인 (RECRUITING 상태만 가능)<br>' +
-      '3. 생성자 확인<br><br>' +
+      '3. 참여자 체크 완료 여부 확인<br>' +
+      '4. 생성자 확인<br><br>' +
       '**수정 가능 항목**<br>' +
       '- 제목, 설명, 일정 시간, 위치 정보<br><br>' +
       '**주의사항**<br>' +
       '- 인증된 사용자만 접근 가능합니다.<br>' +
       '- eventId는 UUID 형식이어야 합니다.<br>' +
-      '- 모집중(RECRUITING) 상태의 일정만 수정할 수 있습니다.<br>' +
+      '- 모집중(RECRUITING) 상태이고 참여자 체크가 완료되지 않은 일정만 수정할 수 있습니다.<br>' +
       '- 일정 생성자만 수정할 수 있습니다.<br>' +
       '- **일정 시간 변경 시 생성자를 제외한 모든 참여자가 자동으로 제거됩니다.**<br>',
   })
@@ -296,7 +297,7 @@ export class UserEventController {
       '- 경도가 -180 ~ 180 범위를 벗어나는 경우: _**LONGITUDE_OUT_OF_RANGE**_<br>' +
       '<br>' +
       '**도메인 규칙**<br>' +
-      '- 일정 상태가 모집중이 아닌 경우: _**EVENT_NOT_RECRUITING**_<br>' +
+      '- 일정 상태가 모집중이 아니거나 참여자 체크가 완료된 경우: _**EVENT_CANNOT_BE_UPDATED**_<br>' +
       '- 일정 생성자가 아닌 경우: _**NOT_EVENT_CREATOR**_<br>',
   })
   @ApiNotFoundResponse({
@@ -335,11 +336,12 @@ export class UserEventController {
       '**검증 순서**<br>' +
       '1. 일정 존재 여부 확인<br>' +
       '2. 일정 상태 확인 (RECRUITING 상태만 가능)<br>' +
-      '3. 생성자 확인<br><br>' +
+      '3. 참여자 체크 완료 여부 확인<br>' +
+      '4. 생성자 확인<br><br>' +
       '**주의사항**<br>' +
       '- 인증된 사용자만 접근 가능합니다.<br>' +
       '- eventId는 UUID 형식이어야 합니다.<br>' +
-      '- 모집중(RECRUITING) 상태의 일정만 삭제할 수 있습니다.<br>' +
+      '- 모집중(RECRUITING) 상태이고 참여자 체크가 완료되지 않은 일정만 삭제할 수 있습니다.<br>' +
       '- 일정 생성자만 삭제할 수 있습니다.<br>' +
       '- 삭제 시 참여자, 결과 데이터가 모두 함께 삭제됩니다.<br>',
   })
@@ -355,7 +357,7 @@ export class UserEventController {
   @ApiBadRequestResponse({
     description:
       '잘못된 요청 (도메인 규칙 위반)<br>' +
-      '- 일정 상태가 모집중이 아닌 경우: _**EVENT_NOT_RECRUITING**_<br>' +
+      '- 일정 상태가 모집중이 아니거나 참여자 체크가 완료된 경우: _**EVENT_CANNOT_BE_DELETED**_<br>' +
       '- 일정 생성자가 아닌 경우: _**NOT_EVENT_CREATOR**_<br>',
   })
   @ApiNotFoundResponse({
@@ -383,13 +385,15 @@ export class UserEventController {
       '**검증 순서**<br>' +
       '1. 일정 존재 여부 확인<br>' +
       '2. 일정 상태 확인 (RECRUITING 상태만 가능)<br>' +
-      '3. 중복 참여 확인<br>' +
-      '4. 다른 일정과의 시간 충돌 확인 (tracking_start_time ~ end_time)<br><br>' +
+      '3. 참여자 체크 완료 여부 확인<br>' +
+      '4. 중복 참여 확인<br>' +
+      '5. 다른 일정과의 시간 충돌 확인 (tracking_start_time ~ end_time)<br><br>' +
       '**응답 구조**<br>' +
       '참여 성공 시 해당 일정의 전체 정보를 반환합니다. (생성자, 제목, 설명, 일시, 위치, 참여자 목록 포함)<br><br>' +
       '**주의사항**<br>' +
       '- 인증된 사용자만 접근 가능합니다.<br>' +
-      '- eventId는 UUID 형식이어야 합니다.<br>',
+      '- eventId는 UUID 형식이어야 합니다.<br>' +
+      '- 참여자 체크가 완료된 일정에는 참여할 수 없습니다.<br>',
   })
   @ApiParam({
     name: 'eventId',
@@ -405,6 +409,7 @@ export class UserEventController {
     description:
       '잘못된 요청 (도메인 규칙 위반)<br>' +
       '- 일정 상태가 모집중이 아닌 경우: _**EVENT_NOT_RECRUITING**_<br>' +
+      '- 참여자 체크가 완료된 일정인 경우: _**PARTICIPANT_CHECK_ALREADY_DONE**_<br>' +
       '- 이미 참여 중인 일정인 경우: _**ALREADY_PARTICIPATING**_<br>' +
       '- 다른 일정과 시간이 중복되는 경우: _**EVENT_TIME_CONFLICT**_<br>',
   })
@@ -440,12 +445,13 @@ export class UserEventController {
       '**검증 순서**<br>' +
       '1. 일정 존재 여부 확인<br>' +
       '2. 일정 상태 확인 (RECRUITING 상태만 가능)<br>' +
-      '3. 일정 생성자 여부 확인<br>' +
-      '4. 참여자 확인<br><br>' +
+      '3. 참여자 체크 완료 여부 확인<br>' +
+      '4. 일정 생성자 여부 확인<br>' +
+      '5. 참여자 확인<br><br>' +
       '**주의사항**<br>' +
       '- 인증된 사용자만 접근 가능합니다.<br>' +
       '- eventId는 UUID 형식이어야 합니다.<br>' +
-      '- 모집중(RECRUITING) 상태의 일정에서만 철회할 수 있습니다.<br>' +
+      '- 모집중(RECRUITING) 상태이고 참여자 체크가 완료되지 않은 일정에서만 철회할 수 있습니다.<br>' +
       '- 진행중(IN_PROGRESS) 또는 종료된(ENDED) 일정에서는 철회할 수 없습니다.<br>' +
       '- 일정 생성자는 참여를 철회할 수 없습니다.<br>',
   })
@@ -462,6 +468,7 @@ export class UserEventController {
     description:
       '잘못된 요청 (도메인 규칙 위반)<br>' +
       '- 일정 상태가 모집중이 아닌 경우: _**EVENT_NOT_RECRUITING**_<br>' +
+      '- 참여자 체크가 완료된 일정인 경우: _**PARTICIPANT_CHECK_ALREADY_DONE**_<br>' +
       '- 일정 생성자인 경우: _**CREATOR_CANNOT_WITHDRAW**_<br>',
   })
   @ApiNotFoundResponse({
