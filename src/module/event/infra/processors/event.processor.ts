@@ -33,7 +33,6 @@ import { EventRepository } from '../../domain/repositories';
    * - 작업 실패 시 자동 복구 안 됨 → 수동 모니터링 필요
    */
   skipStalledCheck: true,
-  stalledInterval: 0,
 
   /**
    * Lock 갱신 비활성화
