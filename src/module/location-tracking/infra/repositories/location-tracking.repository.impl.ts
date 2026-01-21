@@ -67,4 +67,14 @@ export class LocationTrackingRepositoryImpl implements LocationTrackingRepositor
 
     return LocationTrackingMapper.toDomain(raw);
   }
+
+  /**
+   * 일정에 해당하는 모든 위치 추적 데이터 삭제
+   * 일정 종료 시 호출됩니다.
+   */
+  async deleteByEventId(eventId: string): Promise<void> {
+    await this.prisma.location_trackings.deleteMany({
+      where: { event_id: eventId },
+    });
+  }
 }
