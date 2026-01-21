@@ -1,7 +1,4 @@
-import {
-  event_results as EventResultPrisma,
-  Prisma,
-} from '@prisma/client';
+import { event_results as EventResultPrisma, Prisma } from '@prisma/client';
 import { AttendanceResult, EventResult } from '../../domain/models';
 
 /**

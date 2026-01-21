@@ -1,7 +1,4 @@
-import {
-  Prisma,
-  characters as CharacterPrisma,
-} from '@prisma/client';
+import { Prisma, characters as CharacterPrisma } from '@prisma/client';
 import { Character } from '../../domain/models';
 import { PrismaJsonUtil } from '@core/database/prisma-json.util';
 

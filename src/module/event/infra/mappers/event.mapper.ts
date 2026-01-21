@@ -45,6 +45,7 @@ export class EventMapper {
         longitude: prismaEvent.location_longitude.toString(),
       }),
       status: EventStatus[prismaEvent.status],
+      isParticipantChecked: prismaEvent.is_participant_checked,
       createdAt: prismaEvent.created_at,
       updatedAt: prismaEvent.updated_at,
       participants: eventParticipants,
@@ -73,6 +74,7 @@ export class EventMapper {
       location_latitude: domainEvent.location.latitude,
       location_longitude: domainEvent.location.longitude,
       status: domainEvent.status,
+      is_participant_checked: domainEvent.isParticipantChecked,
       created_at: domainEvent.createdAt,
       updated_at: domainEvent.updatedAt,
     };
