@@ -7,8 +7,53 @@ import { EventRepository } from '../../domain/repositories';
 
 @Injectable()
 @Processor(EVENT_QUEUE.NAME, {
-  drainDelay: 60000, // 60초 polling 간격 (기본 5초) - Upstash 무료 티어 최적화
-  stalledInterval: 60000, // 60초 stalled 체크 간격 (기본 30초)
+  /**
+   * 큐가 비어있을 때 다음 작업을 기다리는 long polling 시간 (초 단위)
+   * - 기본값: 5초 → 시간당 720회, 일일 17,280회 Redis 요청 발생
+   * - 300초 설정 시: 시간당 12회, 일일 약 288회로 감소 (약 98% 감소)
+   * - Upstash 무료 티어(일일 10,000 요청)에서 비용 최적화를 위해 증가
+   */
+  drainDelay: 300,
+
+  /**
+   * Stalled Job 체크 비활성화 (stalledInterval: 0과 함께 사용)
+   *
+   * [Stalled Job이란?]
+   * - 워커가 작업을 가져갔지만 처리 완료하지 못하고 멈춘 상태
+   * - 원인: 워커 크래시, CPU 과부하, 메모리 부족, 네트워크 끊김
+   * - BullMQ는 주기적으로 이런 작업을 감지하여 다시 큐에 넣음
+   *
+   * [비활성화 사유]
+   * - 단일 워커 환경: 다른 워커가 stalled 작업을 가져갈 일 없음
+   * - 작업이 단순하고 빠름: 크래시 가능성 낮음
+   * - 일일 약 2,880회 Redis 요청 절감 (stalledInterval 60초 기준)
+   *
+   * [주의사항]
+   * - 멀티 워커 환경에서는 절대 비활성화 금지
+   * - 작업 실패 시 자동 복구 안 됨 → 수동 모니터링 필요
+   */
+  skipStalledCheck: true,
+  stalledInterval: 0,
+
+  /**
+   * Lock 갱신 비활성화
+   *
+   * [Lock이란?]
+   * - 워커가 작업 처리 중 다른 워커가 같은 작업을 가져가지 못하도록 잠금
+   * - 기본적으로 lockDuration(30초)의 절반인 15초마다 갱신
+   * - 갱신마다 Redis 요청 발생
+   *
+   * [비활성화 사유]
+   * - 단일 워커 환경: 락 경쟁 없음
+   * - lockDuration을 충분히 길게 설정하면 갱신 불필요
+   * - 일일 약 5,760회 Redis 요청 절감 (15초 갱신 기준)
+   *
+   * [주의사항]
+   * - lockDuration 내에 작업이 완료되어야 함
+   * - 초과 시 작업이 stalled로 판정될 수 있음 (단, skipStalledCheck로 무시됨)
+   */
+  skipLockRenewal: true,
+  lockDuration: 3600000, // 1시간 (충분히 길게 설정)
 })
 export class EventProcessor extends WorkerHost {
   private readonly logger = new Logger(EventProcessor.name);
