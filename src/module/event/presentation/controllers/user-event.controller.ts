@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   HttpCode,
@@ -27,6 +28,7 @@ import {
   DepartEventUseCase,
   ArriveEventUseCase,
   WithdrawEventUseCase,
+  UpdateEventUseCase,
 } from '../../application/usecases';
 import { User, UserAuth } from 'src/module/auth/decorators';
 import {
@@ -34,6 +36,7 @@ import {
   EventDetailResponseDto,
   CreateEventRequestDto,
   ArriveEventRequestDto,
+  UpdateEventRequestDto,
 } from '../dtos';
 import { UserInfo } from 'src/module/auth/interfaces';
 import { EventTransformer } from '../transformers';
@@ -49,6 +52,7 @@ export class UserEventController {
     private readonly departEventUseCase: DepartEventUseCase,
     private readonly arriveEventUseCase: ArriveEventUseCase,
     private readonly withdrawEventUseCase: WithdrawEventUseCase,
+    private readonly updateEventUseCase: UpdateEventUseCase,
   ) {}
 
   @ApiOperation({
@@ -236,6 +240,84 @@ export class UserEventController {
     @Param('eventId', ParseUUIDPipe) eventId: string,
     @User() user: UserInfo,
   ): Promise<EventDetailResponseDto> {
+    const event = await this.findEventDetailUseCase.execute({
+      userId: user.userId,
+      eventId: eventId,
+    });
+
+    return EventTransformer.toDetailResponse(event);
+  }
+
+  @ApiOperation({
+    summary: '사용자 - 일정 수정',
+    description:
+      '모집중인 일정을 수정합니다. (부분 수정 지원)<br><br>' +
+      '**검증 순서**<br>' +
+      '1. 일정 존재 여부 확인<br>' +
+      '2. 일정 상태 확인 (RECRUITING 상태만 가능)<br>' +
+      '3. 생성자 확인<br><br>' +
+      '**수정 가능 항목**<br>' +
+      '- 제목, 설명, 일정 시간, 위치 정보<br><br>' +
+      '**주의사항**<br>' +
+      '- 인증된 사용자만 접근 가능합니다.<br>' +
+      '- eventId는 UUID 형식이어야 합니다.<br>' +
+      '- 모집중(RECRUITING) 상태의 일정만 수정할 수 있습니다.<br>' +
+      '- 일정 생성자만 수정할 수 있습니다.<br>' +
+      '- **일정 시간 변경 시 생성자를 제외한 모든 참여자가 자동으로 제거됩니다.**<br>',
+  })
+  @ApiParam({
+    name: 'eventId',
+    description: '일정 ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    required: true,
+  })
+  @ApiOkResponse({
+    description: '일정 수정 성공',
+    type: EventDetailResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (필드 검증 실패 또는 도메인 규칙 위반)<br>' +
+      '**제목**<br>' +
+      '- 제목이 20자를 초과하는 경우: _**TITLE_TOO_LONG**_<br>' +
+      '<br>' +
+      '**설명**<br>' +
+      '- 설명이 200자를 초과하는 경우: _**DESCRIPTION_TOO_LONG**_<br>' +
+      '<br>' +
+      '**일정 시간**<br>' +
+      '- 날짜 형식이 ISO 8601 형식이 아닌 경우: _**EVENT_TIME_FORMAT_INVALID**_<br>' +
+      '- 유효하지 않은 날짜인 경우: _**EVENT_TIME_INVALID**_<br>' +
+      '- 현재 시간으로부터 20분 이내인 경우: _**EVENT_TIME_TOO_SOON**_<br>' +
+      '<br>' +
+      '**위치**<br>' +
+      '- 위도가 -90 ~ 90 범위를 벗어나는 경우: _**LATITUDE_OUT_OF_RANGE**_<br>' +
+      '- 경도가 -180 ~ 180 범위를 벗어나는 경우: _**LONGITUDE_OUT_OF_RANGE**_<br>' +
+      '<br>' +
+      '**도메인 규칙**<br>' +
+      '- 일정 상태가 모집중이 아닌 경우: _**EVENT_NOT_RECRUITING**_<br>' +
+      '- 일정 생성자가 아닌 경우: _**NOT_EVENT_CREATOR**_<br>',
+  })
+  @ApiNotFoundResponse({
+    description:
+      '리소스를 찾을 수 없음: _**EVENT_NOT_FOUND**_<br>' +
+      '해당 eventId가 존재하지 않는 경우',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.OK)
+  @Patch('events/:eventId')
+  async updateEvent(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @User() user: UserInfo,
+    @Body() dto: UpdateEventRequestDto,
+  ): Promise<EventDetailResponseDto> {
+    await this.updateEventUseCase.execute({
+      eventId: eventId,
+      userId: user.userId,
+      title: dto.title,
+      description: dto.description,
+      eventTime: dto.eventTime,
+    });
+
     const event = await this.findEventDetailUseCase.execute({
       userId: user.userId,
       eventId: eventId,
