@@ -4,6 +4,11 @@
  * - 설명: 사용자가 속한 그룹 목록 및 상세 정보 조회
  * - 사용자: 인증된 사용자
  */
+export interface LastEndedEventQueryModel {
+  eventTime: Date;
+  locationDetail: string;
+}
+
 export interface GroupListItemQueryModel {
   id: string;
   name: string;
@@ -14,6 +19,8 @@ export interface GroupListItemQueryModel {
   isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
+  memberCount: number;
+  lastEndedEvent: LastEndedEventQueryModel | undefined;
 }
 
 export interface GroupDetailQueryModel {
