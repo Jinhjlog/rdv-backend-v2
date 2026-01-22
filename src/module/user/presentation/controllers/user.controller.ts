@@ -34,6 +34,39 @@ export class UserController {
   ) {}
 
   @ApiOperation({
+    summary: '인증 사용자 - 내 프로필 조회',
+    description:
+      '현재 로그인한 사용자의 프로필 정보를 조회합니다.<br><br>' +
+      '**목적**<br>' +
+      '사용자의 기본 정보(닉네임, 네임태그, 캐릭터, 레벨 등)를 조회합니다.<br><br>' +
+      '**반환 정보**<br>' +
+      '- 사용자 ID<br>' +
+      '- 닉네임, 네임태그<br>' +
+      '- 선호 테마 색상<br>' +
+      '- 현재 캐릭터 코드<br>' +
+      '- 레벨, 경험치<br>',
+  })
+  @ApiOkResponse({
+    description: '프로필 조회 성공',
+    type: UserResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description:
+      '리소스를 찾을 수 없음<br>' +
+      '- 사용자를 찾을 수 없는 경우: _**USER_NOT_FOUND**_<br>',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.OK)
+  @Get('me')
+  async getMyProfile(@User() user: UserInfo): Promise<UserResponseDto> {
+    const userModel = await this.findUserUseCase.execute({
+      userId: user.userId,
+    });
+
+    return UserTransformer.toDetailResponse(userModel);
+  }
+
+  @ApiOperation({
     summary: '인증 사용자 - 캐릭터 변경',
     description:
       '사용자의 현재 보유 캐릭터를 변경합니다.<br><br>' +
