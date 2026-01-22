@@ -18,10 +18,17 @@ export class GroupTransformer {
         description: model.description,
         iconCode: model.iconCode,
         ownerId: model.ownerId,
+        memberCount: model.memberCount,
         maxMembers: model.maxMembers,
         isPublic: model.isPublic,
         createdAt: model.createdAt,
         updatedAt: model.updatedAt,
+        lastEndedEvent: model.lastEndedEvent
+          ? {
+              eventTime: model.lastEndedEvent.eventTime,
+              locationDetail: model.lastEndedEvent.locationDetail,
+            }
+          : null,
       })),
     };
   }
