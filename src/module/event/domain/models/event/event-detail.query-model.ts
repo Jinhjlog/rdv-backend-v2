@@ -4,6 +4,7 @@ interface EventParticipantQueryModel {
   nameTag: string;
   characterCode: string;
   preferredThemeColor: string;
+  status: string;
 }
 
 /**
