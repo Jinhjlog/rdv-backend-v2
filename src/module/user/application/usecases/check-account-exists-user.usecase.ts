@@ -22,7 +22,7 @@ export class CheckAccountExistsUseCase {
 
     // 3. 존재 여부 반환
     return {
-      exists: user !== null,
+      exists: !!user,
     };
   }
 }
