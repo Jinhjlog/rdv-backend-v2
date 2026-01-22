@@ -101,6 +101,7 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
         },
         event_participants: {
           select: {
+            status: true,
             users: {
               select: {
                 id: true,
@@ -146,6 +147,7 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
         nameTag: participant.users.name_tag,
         characterCode: participant.users.character_code,
         preferredThemeColor: participant.users.preferred_theme_color,
+        status: participant.status,
       })),
     };
   }
