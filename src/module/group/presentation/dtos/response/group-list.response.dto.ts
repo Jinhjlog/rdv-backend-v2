@@ -1,5 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class LastEndedEventResponseDto {
+  @ApiProperty({
+    description: '일정 시간',
+    example: '2025-01-15T14:00:00.000Z',
+  })
+  eventTime: Date;
+
+  @ApiProperty({
+    description: '주소 상세',
+    example: '2층 스타벅스 앞',
+  })
+  locationDetail: string;
+}
+
 export class GroupListItemResponseDto {
   @ApiProperty({
     description: '모임 ID',
@@ -32,6 +46,12 @@ export class GroupListItemResponseDto {
   ownerId: string;
 
   @ApiProperty({
+    description: '현재 참여 인원',
+    example: 5,
+  })
+  memberCount: number;
+
+  @ApiProperty({
     description: '최대 참여 인원',
     example: 50,
   })
@@ -54,6 +74,13 @@ export class GroupListItemResponseDto {
     example: '2025-01-01T00:00:00.000Z',
   })
   updatedAt: Date;
+
+  @ApiProperty({
+    description: '최근 종료된 일정',
+    type: () => LastEndedEventResponseDto,
+    nullable: true,
+  })
+  lastEndedEvent: LastEndedEventResponseDto | null;
 }
 
 export class GroupListResponseDto {
