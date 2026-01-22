@@ -30,6 +30,13 @@ class EventDetailParticipantResponseDto {
     example: 'BEAR',
   })
   characterCode: string;
+
+  @ApiProperty({
+    description: '참여자 상태 [준비중, 출발, 도착]',
+    enum: ['PREPARING', 'DEPARTED', 'ARRIVED'],
+    example: 'PREPARING',
+  })
+  status: string;
 }
 
 /**
