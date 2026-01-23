@@ -24,7 +24,7 @@ export class GroupQueryRepositoryImpl implements GroupQueryRepository {
     const { contextUserId } = params;
     const whereClause: Prisma.groupsWhereInput = {};
 
-    if (!contextUserId) {
+    if (contextUserId) {
       whereClause.group_members = {
         some: { user_id: contextUserId },
       };
@@ -42,20 +42,49 @@ export class GroupQueryRepositoryImpl implements GroupQueryRepository {
         is_public: true,
         created_at: true,
         updated_at: true,
+        _count: {
+          select: {
+            group_members: true,
+          },
+        },
+        events: {
+          where: {
+            status: 'ENDED',
+          },
+          orderBy: {
+            event_time: 'desc',
+          },
+          take: 1,
+          select: {
+            event_time: true,
+            location_detail: true,
+          },
+        },
       },
     });
 
-    return groups.map((group) => ({
-      id: group.id,
-      name: group.name,
-      description: group.description,
-      iconCode: group.icon_code,
-      ownerId: group.owner_id,
-      maxMembers: group.max_members,
-      isPublic: group.is_public,
-      createdAt: group.created_at,
-      updatedAt: group.updated_at,
-    }));
+    return groups.map((group) => {
+      const lastEndedEvent = group.events[0];
+
+      return {
+        id: group.id,
+        name: group.name,
+        description: group.description,
+        iconCode: group.icon_code,
+        ownerId: group.owner_id,
+        maxMembers: group.max_members,
+        isPublic: group.is_public,
+        createdAt: group.created_at,
+        updatedAt: group.updated_at,
+        memberCount: group._count.group_members,
+        lastEndedEvent: lastEndedEvent
+          ? {
+              eventTime: lastEndedEvent.event_time,
+              locationDetail: lastEndedEvent.location_detail,
+            }
+          : undefined,
+      };
+    });
   }
 
   async findDetail(
