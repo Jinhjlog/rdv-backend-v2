@@ -23,6 +23,7 @@ import {
 import {
   FindEventListUseCase,
   FindEventDetailUseCase,
+  FindActiveEventUseCase,
   CreateEventUseCase,
   JoinEventUseCase,
   DepartEventUseCase,
@@ -35,6 +36,7 @@ import { User, UserAuth } from 'src/module/auth/decorators';
 import {
   EventListResponseDto,
   EventDetailResponseDto,
+  ActiveEventResponseDto,
   CreateEventRequestDto,
   ArriveEventRequestDto,
   UpdateEventRequestDto,
@@ -48,6 +50,7 @@ export class UserEventController {
   constructor(
     private readonly findEventListUseCase: FindEventListUseCase,
     private readonly findEventDetailUseCase: FindEventDetailUseCase,
+    private readonly findActiveEventUseCase: FindActiveEventUseCase,
     private readonly createEventUseCase: CreateEventUseCase,
     private readonly joinEventUseCase: JoinEventUseCase,
     private readonly departEventUseCase: DepartEventUseCase,
@@ -103,6 +106,38 @@ export class UserEventController {
     });
 
     return EventTransformer.toListResponse(events);
+  }
+
+  @ApiOperation({
+    summary: '사용자 - 모임 진행중인 일정 조회',
+    description:
+      '특정 모임의 현재 진행중인 일정을 조회합니다.<br><br>' +
+      '**주의사항**<br>' +
+      '- 해당 모임에 참여한 사용자만 조회할 수 있습니다.<br>',
+  })
+  @ApiParam({
+    name: 'groupId',
+    description: '모임 ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    required: true,
+  })
+  @ApiOkResponse({
+    description: '진행중인 일정 조회 성공',
+    type: ActiveEventResponseDto,
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.OK)
+  @Get('groups/:groupId/events/active')
+  async getActiveEvent(
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @User() user: UserInfo,
+  ): Promise<ActiveEventResponseDto> {
+    const result = await this.findActiveEventUseCase.execute({
+      userId: user.userId,
+      groupId: groupId,
+    });
+
+    return EventTransformer.toActiveEventResponse(result);
   }
 
   @ApiOperation({
