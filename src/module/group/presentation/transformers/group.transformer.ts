@@ -52,8 +52,11 @@ export class GroupTransformer {
       members: queryModel.members.map((member) => ({
         id: member.id,
         userId: member.userId,
+        nickname: member.nickname,
+        nameTag: member.nameTag,
+        preferredThemeColor: member.preferredThemeColor,
+        characterCode: member.characterCode,
         role: member.role,
-        invitedBy: member.invitedBy !== undefined ? member.invitedBy : null,
         joinedAt: member.joinedAt,
       })),
     };
