@@ -1,6 +1,7 @@
 export * from './create-event.dto';
 export * from './find-event-list.dto';
 export * from './find-event-detail.dto';
+export * from './find-active-event.dto';
 export * from './join-event.dto';
 export * from './depart-event.dto';
 export * from './arrive-event.dto';
