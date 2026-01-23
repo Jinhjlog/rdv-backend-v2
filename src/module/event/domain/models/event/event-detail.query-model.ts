@@ -8,6 +8,17 @@ interface EventParticipantQueryModel {
 }
 
 /**
+ * 진행중인 일정 조회용 간소화된 Query Model
+ */
+export interface ActiveEventQueryModel {
+  id: string;
+  groupId: string;
+  eventTime: Date;
+  trackingStartTime: Date;
+  endTime: Date;
+}
+
+/**
  * Event 상세 조회 메인 Query Model
  */
 export interface EventDetailQueryModel {
