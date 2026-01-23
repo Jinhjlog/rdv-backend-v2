@@ -2,7 +2,12 @@ import {
   EventListItemQueryModel,
   EventDetailQueryModel,
 } from '../../domain/models';
-import { EventListResponseDto, EventDetailResponseDto } from '../dtos/response';
+import {
+  EventListResponseDto,
+  EventDetailResponseDto,
+  ActiveEventResponseDto,
+} from '../dtos/response';
+import { FindActiveEventResult } from '../../application/usecases/find-active-event.usecase';
 
 export class EventTransformer {
   /**
@@ -50,6 +55,18 @@ export class EventTransformer {
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
       participants: event.participants,
+    };
+  }
+
+  /**
+   * 진행중인 일정 조회 결과를 Response DTO로 변환합니다
+   */
+  static toActiveEventResponse(
+    result: FindActiveEventResult,
+  ): ActiveEventResponseDto {
+    return {
+      hasActiveEvent: result.hasActiveEvent,
+      event: result.event ?? null,
     };
   }
 }

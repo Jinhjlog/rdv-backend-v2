@@ -3,11 +3,13 @@ import {
   EventQueryRepository,
   FindEventListParams,
   FindEventDetailParams,
+  FindActiveEventParams,
 } from '../../domain/repositories';
 import { PrismaService } from '@core/database';
 import {
   EventListItemQueryModel,
   EventDetailQueryModel,
+  ActiveEventQueryModel,
 } from '../../domain/models';
 import { event_status, Prisma } from '@prisma/client';
 
@@ -149,6 +151,48 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
         preferredThemeColor: participant.users.preferred_theme_color,
         status: participant.status,
       })),
+    };
+  }
+
+  async findActiveEventByGroupId(
+    params: FindActiveEventParams,
+  ): Promise<ActiveEventQueryModel | undefined> {
+    const { groupId, contextUserId } = params;
+
+    const whereClause: Prisma.eventsWhereInput = {
+      group_id: groupId,
+      status: event_status.IN_PROGRESS,
+    };
+
+    if (contextUserId) {
+      whereClause.groups = {
+        group_members: {
+          some: { user_id: contextUserId },
+        },
+      };
+    }
+
+    const event = await this.prisma.events.findFirst({
+      where: whereClause,
+      select: {
+        id: true,
+        group_id: true,
+        event_time: true,
+        tracking_start_time: true,
+        end_time: true,
+      },
+    });
+
+    if (!event) {
+      return undefined;
+    }
+
+    return {
+      id: event.id,
+      groupId: event.group_id,
+      eventTime: event.event_time,
+      trackingStartTime: event.tracking_start_time,
+      endTime: event.end_time,
     };
   }
 }
