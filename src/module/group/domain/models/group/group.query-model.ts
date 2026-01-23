@@ -46,7 +46,10 @@ export interface GroupMemberQueryModel {
   id: string;
   groupId: string;
   userId: string;
+  nickname: string;
+  nameTag: string;
+  preferredThemeColor: string;
+  characterCode: string;
   role: string; // 'OWNER' | 'MEMBER'
-  invitedBy: string | undefined;
   joinedAt: Date;
 }
