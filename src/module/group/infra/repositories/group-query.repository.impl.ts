@@ -106,7 +106,23 @@ export class GroupQueryRepositoryImpl implements GroupQueryRepository {
         is_public: true,
         created_at: true,
         updated_at: true,
-        group_members: true,
+        group_members: {
+          select: {
+            id: true,
+            group_id: true,
+            user_id: true,
+            role: true,
+            joined_at: true,
+            users_group_members_user_idTousers: {
+              select: {
+                nickname: true,
+                name_tag: true,
+                preferred_theme_color: true,
+                character_code: true,
+              },
+            },
+          },
+        },
       },
     });
     if (!group) {
@@ -127,8 +143,12 @@ export class GroupQueryRepositoryImpl implements GroupQueryRepository {
         id: member.id,
         groupId: member.group_id,
         userId: member.user_id,
+        nickname: member.users_group_members_user_idTousers.nickname,
+        nameTag: member.users_group_members_user_idTousers.name_tag,
+        preferredThemeColor:
+          member.users_group_members_user_idTousers.preferred_theme_color,
+        characterCode: member.users_group_members_user_idTousers.character_code,
         role: member.role,
-        invitedBy: member.invited_by || undefined,
         joinedAt: member.joined_at,
       })),
     };
