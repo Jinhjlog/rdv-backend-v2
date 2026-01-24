@@ -68,6 +68,9 @@ export class SendShortTalkMessageUseCase {
     // 4. SSE 브로드캐스트 (세션이 있는 경우에만)
     const session = this.shortTalkSessionRepository.findById(dto.groupId);
     if (session) {
+      // 세션에서 sender 리스너 조회 (Join 시점에 저장된 정보 활용)
+      const senderListener = session.getListener(dto.senderId);
+
       session.broadcastToAll({
         type: 'message',
         id: chatMessage.id.toString(),
@@ -76,6 +79,7 @@ export class SendShortTalkMessageUseCase {
         content: chatMessage.content,
         createdAt: chatMessage.createdAt.toISOString(),
         timestamp: new Date().toISOString(),
+        sender: senderListener?.senderInfo,
       });
     }
 
