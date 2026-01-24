@@ -66,17 +66,106 @@ export class ShortTalkController {
    */
   @ApiOperation({
     summary: 'SSE 연결 (채팅방 입장)',
-    description:
-      '그룹 채팅에 참여하여 실시간 메시지를 수신합니다.<br><br>' +
-      '**SSE 이벤트 타입 (data.type)**<br>' +
-      '- `connected`: 연결 성공 (groupId, timestamp)<br>' +
-      '- `message`: 새 메시지 (id, groupId, senderId, content, createdAt, timestamp)<br>' +
-      '- `ping`: 30초 간격 Heartbeat (timestamp)<br>' +
-      '- `error`: 연결 오류 (message, timestamp)<br><br>' +
-      '**주의사항**<br>' +
-      '- 클라이언트 연결 종료 시 자동으로 리스너 제거됩니다<br>' +
-      '- 동일 사용자가 재연결 시 기존 연결은 자동 종료됩니다<br>' +
-      '- 리스너 0명 시 세션이 자동 삭제됩니다<br>',
+    description: `그룹 채팅에 참여하여 실시간 메시지를 수신합니다.
+
+## 이벤트 타입별 응답 형식
+
+### 1. connected (연결 성공)
+SSE 연결이 성공하면 즉시 전송됩니다.
+\`\`\`json
+{
+  "type": "connected",
+  "groupId": "123e4567-e89b-12d3-a456-426614174000",
+  "timestamp": "2025-01-24T12:00:00.000Z"
+}
+\`\`\`
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| type | string | 이벤트 타입 (connected) |
+| groupId | string | 연결된 그룹 ID |
+| timestamp | string | 연결 시각 (ISO 8601) |
+
+---
+
+### 2. message (새 메시지)
+다른 사용자가 메시지를 전송하면 브로드캐스트됩니다.
+\`\`\`json
+{
+  "type": "message",
+  "id": "msg-uuid-1234",
+  "groupId": "123e4567-e89b-12d3-a456-426614174000",
+  "senderId": "user-uuid-5678",
+  "content": "안녕하세요!",
+  "createdAt": "2025-01-24T12:00:00.000Z",
+  "timestamp": "2025-01-24T12:00:00.000Z",
+  "sender": {
+    "id": "user-uuid-5678",
+    "nickname": "홍길동",
+    "nameTag": "#1234",
+    "characterCode": "brown_dog",
+    "preferredThemeColor": "#FFD700"
+  }
+}
+\`\`\`
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| type | string | 이벤트 타입 (message) |
+| id | string | 메시지 ID |
+| groupId | string | 그룹 ID |
+| senderId | string | 발신자 ID |
+| content | string | 메시지 내용 |
+| createdAt | string | 메시지 생성 시각 (ISO 8601) |
+| timestamp | string | 이벤트 전송 시각 (ISO 8601) |
+| sender | object | 발신자 정보 |
+| sender.id | string | 발신자 ID |
+| sender.nickname | string | 발신자 닉네임 |
+| sender.nameTag | string | 발신자 태그 |
+| sender.characterCode | string | 캐릭터 코드 |
+| sender.preferredThemeColor | string | 선호 테마 색상 (HEX) |
+
+---
+
+### 3. ping (Heartbeat)
+30초 간격으로 연결 유지를 위해 전송됩니다.
+\`\`\`json
+{
+  "type": "ping",
+  "timestamp": "2025-01-24T12:00:30.000Z"
+}
+\`\`\`
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| type | string | 이벤트 타입 (ping) |
+| timestamp | string | 전송 시각 (ISO 8601) |
+
+---
+
+### 4. error (연결 오류)
+연결 중 오류 발생 시 전송됩니다.
+\`\`\`json
+{
+  "type": "error",
+  "message": "연결 오류가 발생했습니다",
+  "timestamp": "2025-01-24T12:00:00.000Z"
+}
+\`\`\`
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| type | string | 이벤트 타입 (error) |
+| message | string | 오류 메시지 |
+| timestamp | string | 오류 발생 시각 (ISO 8601) |
+
+---
+
+## 주의사항
+- 클라이언트 연결 종료 시 자동으로 리스너 제거됩니다
+- 동일 사용자가 재연결 시 기존 연결은 자동 종료됩니다
+- 리스너 0명 시 세션이 자동 삭제됩니다
+`,
   })
   @ApiParam({
     name: 'groupId',
@@ -84,12 +173,7 @@ export class ShortTalkController {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @ApiOkResponse({
-    description:
-      'SSE 연결 성공 (text/event-stream)<br><br>' +
-      '**connected 이벤트 예시**<br>' +
-      '`{ type: "connected", groupId: "...", timestamp: "..." }`<br><br>' +
-      '**message 이벤트 예시**<br>' +
-      '`{ type: "message", id: "...", groupId: "...", senderId: "...", content: "...", createdAt: "...", timestamp: "..." }`',
+    description: 'SSE 연결 성공 (Content-Type: text/event-stream)',
   })
   @ApiForbiddenResponse({
     description: '모임 참여자가 아님: _**NOT_GROUP_MEMBER**_',

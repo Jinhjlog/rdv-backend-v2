@@ -5,6 +5,7 @@ import {
   ShortTalkSessionRepository,
   ChatMessageRepository,
   ChatMessageQueryRepository,
+  ShortTalkUserQueryRepository,
 } from './domain/repositories';
 import {
   GroupRepositoryImpl,
@@ -12,6 +13,7 @@ import {
   ShortTalkSessionRepositoryImpl,
   ChatMessageRepositoryImpl,
   ChatMessageQueryRepositoryImpl,
+  ShortTalkUserQueryRepositoryImpl,
 } from './infra/repositories';
 
 /**
@@ -41,6 +43,10 @@ import {
       provide: ChatMessageQueryRepository,
       useClass: ChatMessageQueryRepositoryImpl,
     },
+    {
+      provide: ShortTalkUserQueryRepository,
+      useClass: ShortTalkUserQueryRepositoryImpl,
+    },
   ],
   exports: [
     GroupRepository,
@@ -48,6 +54,7 @@ import {
     ShortTalkSessionRepository,
     ChatMessageRepository,
     ChatMessageQueryRepository,
+    ShortTalkUserQueryRepository,
   ],
 })
 export class GroupCoreModule {}
