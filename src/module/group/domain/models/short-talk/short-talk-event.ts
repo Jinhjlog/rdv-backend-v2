@@ -1,4 +1,15 @@
 /**
+ * Short Talk 발신자 정보
+ */
+export interface ShortTalkSenderInfo {
+  id: string;
+  nickname: string;
+  nameTag: string;
+  characterCode: string;
+  preferredThemeColor: string;
+}
+
+/**
  * SSE 이벤트 데이터 타입
  *
  * Short Talk에서 전송되는 모든 이벤트의 공통 타입입니다.
@@ -11,13 +22,7 @@ export interface ShortTalkEventData {
   content?: string;
   senderId?: string;
   message?: string; // 에러 메시지용
-  sender?: {
-    id: string;
-    nickname: string;
-    nameTag: string;
-    characterCode: string;
-    preferred_theme_color: string;
-  };
+  sender?: ShortTalkSenderInfo;
   [key: string]: unknown;
 }
 

@@ -1,12 +1,13 @@
 import { EntityClass, UniqueEntityId } from '@lib/domain';
 import { Subject } from 'rxjs';
-import { ShortTalkEventData } from './short-talk-event';
+import { ShortTalkEventData, ShortTalkSenderInfo } from './short-talk-event';
 
 export interface ShortTalkListenerProps {
   id?: string;
   userId: string;
   subject: Subject<ShortTalkEventData>;
   connectedAt: Date;
+  senderInfo: ShortTalkSenderInfo;
 }
 
 /**
@@ -30,6 +31,10 @@ export class ShortTalkListener extends EntityClass<ShortTalkListenerProps> {
 
   get connectedAt(): Date {
     return this.props.connectedAt;
+  }
+
+  get senderInfo(): ShortTalkSenderInfo {
+    return this.props.senderInfo;
   }
 
   /**
