@@ -45,7 +45,7 @@ class CalendarEventListItemResponseDto {
 
   @ApiProperty({
     description: '일정 상태',
-    enum: ['RECRUITING', 'IN_PROGRESS'],
+    enum: ['RECRUITING', 'IN_PROGRESS', 'ENDED'],
     example: 'RECRUITING',
   })
   status: string;
