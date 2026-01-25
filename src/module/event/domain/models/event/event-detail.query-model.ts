@@ -8,6 +8,31 @@ interface EventParticipantQueryModel {
 }
 
 /**
+ * 일정 결과 항목 Query Model
+ */
+export interface EventResultItemQueryModel {
+  userId: string;
+  nickname: string;
+  nameTag: string;
+  characterCode: string;
+  preferredThemeColor: string;
+  result: string; // ARRIVED, LATE, ABSENT
+}
+
+/**
+ * 일정 결과 조회 Query Model
+ */
+export interface EventResultQueryModel {
+  eventId: string;
+  groupId: string;
+  title: string;
+  eventTime: Date;
+  locationAddress: string;
+  locationDetail: string;
+  results: EventResultItemQueryModel[];
+}
+
+/**
  * 진행중인 일정 조회용 간소화된 Query Model
  */
 export interface ActiveEventQueryModel {
