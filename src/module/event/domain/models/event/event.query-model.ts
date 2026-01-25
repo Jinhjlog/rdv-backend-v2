@@ -9,6 +9,11 @@ export interface EventListItemQueryModel {
     userId: string;
   }[];
   maxParticipants: number;
+  createdBy: {
+    nickname: string;
+    level: number;
+    characterCode: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }

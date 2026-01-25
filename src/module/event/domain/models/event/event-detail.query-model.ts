@@ -56,6 +56,7 @@ export interface EventDetailQueryModel {
     nameTag: string;
     characterCode: string;
     preferredThemeColor: string;
+    level: number;
   };
   title: string;
   description: string;
@@ -67,6 +68,7 @@ export interface EventDetailQueryModel {
   locationLatitude: string;
   locationLongitude: string;
   status: string;
+  maxParticipants: number;
   createdAt: Date;
   updatedAt: Date;
 
