@@ -4,6 +4,7 @@ import {
   FindEventListParams,
   FindEventDetailParams,
   FindActiveEventParams,
+  FindCalendarMarkedDatesParams,
 } from '../../domain/repositories';
 import { PrismaService } from '@core/database';
 import {
@@ -194,5 +195,45 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
       trackingStartTime: event.tracking_start_time,
       endTime: event.end_time,
     };
+  }
+
+  async findCalendarMarkedDates(
+    params: FindCalendarMarkedDatesParams,
+  ): Promise<string[]> {
+    const { userId, year, month } = params;
+
+    // 해당 월의 시작일과 종료일 계산
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const events = await this.prisma.events.findMany({
+      where: {
+        event_time: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: {
+          in: [event_status.RECRUITING, event_status.IN_PROGRESS],
+        },
+        // 사용자가 소속된 그룹의 일정
+        groups: {
+          group_members: {
+            some: { user_id: userId },
+          },
+        },
+      },
+      select: {
+        event_time: true,
+      },
+    });
+
+    // 날짜만 추출하여 중복 제거
+    const dateSet = new Set<string>();
+    events.forEach((event) => {
+      const dateStr = event.event_time.toISOString().split('T')[0];
+      dateSet.add(dateStr);
+    });
+
+    return Array.from(dateSet).sort();
   }
 }
