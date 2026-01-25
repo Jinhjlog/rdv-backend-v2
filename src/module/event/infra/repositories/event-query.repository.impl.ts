@@ -5,12 +5,14 @@ import {
   FindEventDetailParams,
   FindActiveEventParams,
   FindCalendarMarkedDatesParams,
+  FindCalendarEventListParams,
 } from '../../domain/repositories';
 import { PrismaService } from '@core/database';
 import {
   EventListItemQueryModel,
   EventDetailQueryModel,
   ActiveEventQueryModel,
+  CalendarEventListItemQueryModel,
 } from '../../domain/models';
 import { event_status, Prisma } from '@prisma/client';
 
@@ -202,9 +204,13 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
   ): Promise<string[]> {
     const { userId, year, month } = params;
 
-    // 해당 월의 시작일과 종료일 계산
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    // KST(+09:00) 기준으로 해당 월의 시작일과 종료일 계산
+    const monthStr = String(month).padStart(2, '0');
+    const lastDay = new Date(year, month, 0).getDate(); // 해당 월의 마지막 날
+    const startDate = new Date(`${year}-${monthStr}-01T00:00:00+09:00`);
+    const endDate = new Date(
+      `${year}-${monthStr}-${String(lastDay).padStart(2, '0')}T23:59:59.999+09:00`,
+    );
 
     const events = await this.prisma.events.findMany({
       where: {
@@ -227,13 +233,77 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
       },
     });
 
-    // 날짜만 추출하여 중복 제거
+    // KST 기준으로 날짜 추출하여 중복 제거
     const dateSet = new Set<string>();
+    const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
     events.forEach((event) => {
-      const dateStr = event.event_time.toISOString().split('T')[0];
+      // UTC 시간에 9시간 더해서 KST로 변환 후 날짜 추출
+      const kstTime = new Date(event.event_time.getTime() + KST_OFFSET_MS);
+      const dateStr = kstTime.toISOString().split('T')[0];
       dateSet.add(dateStr);
     });
 
     return Array.from(dateSet).sort();
+  }
+
+  async findCalendarEventList(
+    params: FindCalendarEventListParams,
+  ): Promise<CalendarEventListItemQueryModel[]> {
+    const { userId, date } = params;
+
+    // KST(+09:00) 기준으로 해당 날짜의 시작과 끝 계산
+    // 예: 2026-01-23 입력 시
+    // startDate: KST 2026-01-23 00:00:00 = UTC 2026-01-22 15:00:00
+    // endDate: KST 2026-01-23 23:59:59 = UTC 2026-01-23 14:59:59
+    const startDate = new Date(`${date}T00:00:00+09:00`);
+    const endDate = new Date(`${date}T23:59:59.999+09:00`);
+
+    const events = await this.prisma.events.findMany({
+      where: {
+        event_time: {
+          gte: startDate,
+          lte: endDate,
+        },
+        status: {
+          in: [event_status.RECRUITING, event_status.IN_PROGRESS],
+        },
+        // 사용자가 소속된 그룹의 일정
+        groups: {
+          group_members: {
+            some: { user_id: userId },
+          },
+        },
+      },
+      include: {
+        groups: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        event_participants: {
+          select: {
+            user_id: true,
+          },
+        },
+      },
+      orderBy: {
+        event_time: 'asc',
+      },
+    });
+
+    return events.map((event) => ({
+      id: event.id,
+      groupId: event.groups.id,
+      groupName: event.groups.name,
+      title: event.title,
+      eventTime: event.event_time,
+      locationAddress: event.location_address,
+      locationDetail: event.location_detail,
+      status: event.status,
+      isParticipant: event.event_participants.some(
+        (participant) => participant.user_id === userId,
+      ),
+    }));
   }
 }
