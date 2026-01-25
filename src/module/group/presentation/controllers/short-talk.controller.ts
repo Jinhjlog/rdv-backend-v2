@@ -278,9 +278,14 @@ SSE 연결이 성공하면 즉시 전송됩니다.
       '- 커서 기반 페이지네이션 (최신순 정렬)<br>' +
       '- 첫 요청: cursor 없이 호출<br>' +
       '- 다음 페이지: 응답의 nextCursor 값 사용<br><br>' +
+      '**놓친 메시지 동기화 (sinceId)**<br>' +
+      '- 백그라운드에서 복귀 시 SSE 연결 끊김으로 놓친 메시지 조회용<br>' +
+      '- sinceId: 마지막으로 받은 메시지 ID (해당 ID 이후 메시지만 반환)<br>' +
+      '- 예시: `?sinceId=550e8400-e29b-41d4-a716-446655440000`<br><br>' +
       '**주의사항**<br>' +
       '- 기본 조회 개수: 30개<br>' +
-      '- 최대 조회 개수: 50개<br>',
+      '- 최대 조회 개수: 50개<br>' +
+      '- cursor와 sinceId는 동시 사용 불가 (sinceId 우선)<br>',
   })
   @ApiParam({
     name: 'groupId',
@@ -312,7 +317,8 @@ SSE 연결이 성공하면 즉시 전송됩니다.
     const result = await this.getChatMessageListUseCase.execute({
       groupId,
       userId: user.userId,
-      cursor: query.cursor,
+      cursor: query.sinceId ? undefined : query.cursor, // sinceId 사용 시 cursor 무시
+      sinceId: query.sinceId,
       limit: query.limit ?? 30,
     });
 

@@ -48,6 +48,7 @@ export class GetChatMessageListUseCase {
     const messages = await this.chatMessageQueryRepository.findList({
       groupId: dto.groupId,
       cursor: decodedCursor,
+      sinceId: dto.sinceId,
       limit: dto.limit + 1,
     });
 
