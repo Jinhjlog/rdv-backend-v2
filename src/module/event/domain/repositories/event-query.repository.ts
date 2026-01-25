@@ -3,6 +3,7 @@ import {
   EventDetailQueryModel,
   ActiveEventQueryModel,
   CalendarEventListItemQueryModel,
+  EventResultQueryModel,
 } from '../models';
 
 export interface FindEventListParams {
@@ -41,6 +42,14 @@ export interface FindCalendarEventListParams {
   date: string; // YYYY-MM-DD 형식
 }
 
+export interface FindEventResultParams {
+  eventId: string;
+  /**
+   * contextUserId를 전달할 경우, 해당 사용자가 소속된 그룹에 한정하여 조회합니다.
+   */
+  contextUserId?: string;
+}
+
 export abstract class EventQueryRepository {
   abstract findList(
     params: FindEventListParams,
@@ -72,4 +81,12 @@ export abstract class EventQueryRepository {
   abstract findCalendarEventList(
     params: FindCalendarEventListParams,
   ): Promise<CalendarEventListItemQueryModel[]>;
+
+  /**
+   * 특정 일정의 출석 결과를 조회합니다.
+   * 종료된(ENDED) 일정만 조회 가능합니다.
+   */
+  abstract findEventResult(
+    params: FindEventResultParams,
+  ): Promise<EventResultQueryModel | undefined>;
 }
