@@ -26,6 +26,7 @@ import {
   FindEventDetailUseCase,
   FindActiveEventUseCase,
   FindCalendarMarkedDatesUseCase,
+  FindCalendarEventListUseCase,
   CreateEventUseCase,
   JoinEventUseCase,
   DepartEventUseCase,
@@ -40,10 +41,12 @@ import {
   EventDetailResponseDto,
   ActiveEventResponseDto,
   CalendarMarkedDatesResponseDto,
+  CalendarEventListResponseDto,
   CreateEventRequestDto,
   ArriveEventRequestDto,
   UpdateEventRequestDto,
   GetCalendarMarkedDatesRequestDto,
+  GetCalendarEventListParamDto,
 } from '../dtos';
 import { UserInfo } from 'src/module/auth/interfaces';
 import { EventTransformer } from '../transformers';
@@ -56,6 +59,7 @@ export class UserEventController {
     private readonly findEventDetailUseCase: FindEventDetailUseCase,
     private readonly findActiveEventUseCase: FindActiveEventUseCase,
     private readonly findCalendarMarkedDatesUseCase: FindCalendarMarkedDatesUseCase,
+    private readonly findCalendarEventListUseCase: FindCalendarEventListUseCase,
     private readonly createEventUseCase: CreateEventUseCase,
     private readonly joinEventUseCase: JoinEventUseCase,
     private readonly departEventUseCase: DepartEventUseCase,
@@ -111,6 +115,62 @@ export class UserEventController {
     });
 
     return { dates };
+  }
+
+  @ApiOperation({
+    summary: '사용자 - 날짜별 소속 모임 일정 목록 조회',
+    description:
+      '특정 날짜의 사용자 소속 모임 일정 목록을 조회합니다.<br><br>' +
+      '**목적**<br>' +
+      '캘린더 UI에서 날짜 선택 시 해당 날짜의 일정 목록을 표시하기 위한 API입니다.<br><br>' +
+      '**조회 조건**<br>' +
+      '- 해당 날짜(00:00:00 ~ 23:59:59)의 일정<br>' +
+      '- 사용자가 소속된 모임의 일정<br>' +
+      '- 모집중(RECRUITING) 또는 진행중(IN_PROGRESS) 상태인 일정<br>' +
+      '- eventTime 기준 오름차순 정렬<br><br>' +
+      '**응답 구조**<br>' +
+      '- items: 일정 배열<br>' +
+      '  - id: 일정 고유 ID<br>' +
+      '  - groupId: 모임 ID<br>' +
+      '  - groupName: 모임 이름<br>' +
+      '  - title: 일정 제목<br>' +
+      '  - eventTime: 일정 날짜/시간<br>' +
+      '  - locationAddress: 도로명 주소<br>' +
+      '  - locationDetail: 상세 주소<br>' +
+      '  - status: 일정 상태 (RECRUITING/IN_PROGRESS)<br>' +
+      '  - isParticipant: 현재 사용자의 참여 여부<br><br>' +
+      '**주의사항**<br>' +
+      '- 인증된 사용자만 접근 가능합니다.<br>' +
+      '- date는 YYYY-MM-DD 형식이어야 합니다.<br>',
+  })
+  @ApiParam({
+    name: 'date',
+    description: '조회할 날짜 (YYYY-MM-DD)',
+    example: '2026-01-15',
+    required: true,
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (필드 검증 실패)<br>' +
+      '- 날짜 형식이 YYYY-MM-DD가 아닌 경우',
+  })
+  @ApiOkResponse({
+    description: '날짜별 일정 목록 조회 성공',
+    type: CalendarEventListResponseDto,
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.OK)
+  @Get('users/me/calendar/events/:date')
+  async getCalendarEventList(
+    @Param() param: GetCalendarEventListParamDto,
+    @User() user: UserInfo,
+  ): Promise<CalendarEventListResponseDto> {
+    const events = await this.findCalendarEventListUseCase.execute({
+      userId: user.userId,
+      date: param.date,
+    });
+
+    return { items: events };
   }
 
   @ApiOperation({
