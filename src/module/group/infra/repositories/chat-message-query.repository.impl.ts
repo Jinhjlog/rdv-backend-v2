@@ -16,7 +16,7 @@ export class ChatMessageQueryRepositoryImpl implements ChatMessageQueryRepositor
     const messages = await this.prisma.chat_messages.findMany({
       where: {
         group_id: params.groupId,
-        // 커서 기반 필터링 (createdAt + id tie-breaker)
+        // 커서 기반 필터링 (createdAt + id tie-breaker) - 과거 방향
         ...(params.cursor && {
           OR: [
             // createdAt이 커서보다 이전인 경우
@@ -33,6 +33,12 @@ export class ChatMessageQueryRepositoryImpl implements ChatMessageQueryRepositor
               },
             },
           ],
+        }),
+        // sinceId 기반 필터링 - 미래 방향 (해당 ID 이후 메시지)
+        ...(params.sinceId && {
+          id: {
+            gt: params.sinceId,
+          },
         }),
       },
       include: {
