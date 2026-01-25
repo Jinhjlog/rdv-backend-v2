@@ -72,6 +72,12 @@ class CreatedByResponseDto {
     example: 'BEAR',
   })
   characterCode: string;
+
+  @ApiProperty({
+    description: '호스트 레벨',
+    example: 5,
+  })
+  level: number;
 }
 
 /**
@@ -160,6 +166,12 @@ export class EventDetailResponseDto {
     example: 'RECRUITING',
   })
   status: string;
+
+  @ApiProperty({
+    description: '최대 참여자 수',
+    example: 10,
+  })
+  maxParticipants: number;
 
   @ApiProperty({
     description: '생성일',

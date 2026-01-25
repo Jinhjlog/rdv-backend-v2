@@ -1,5 +1,28 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+/**
+ * 목록 조회용 생성자(호스트) 정보
+ */
+class EventListCreatedByResponseDto {
+  @ApiProperty({
+    description: '닉네임',
+    example: '홍길동',
+  })
+  nickname: string;
+
+  @ApiProperty({
+    description: '호스트 레벨',
+    example: 5,
+  })
+  level: number;
+
+  @ApiProperty({
+    description: '캐릭터 코드',
+    example: 'BEAR',
+  })
+  characterCode: string;
+}
+
 class EventListItemResponseDto {
   @ApiProperty({
     description: '일정 ID',
@@ -49,6 +72,12 @@ class EventListItemResponseDto {
     example: 10,
   })
   maxParticipants: number;
+
+  @ApiProperty({
+    description: '호스트(생성자) 정보',
+    type: EventListCreatedByResponseDto,
+  })
+  createdBy: EventListCreatedByResponseDto;
 
   @ApiProperty({
     description: '생성일',
