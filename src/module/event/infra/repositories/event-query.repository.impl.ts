@@ -305,6 +305,7 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
           select: {
             id: true,
             name: true,
+            max_members: true,
           },
         },
         event_participants: {
@@ -330,6 +331,8 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
       isParticipant: event.event_participants.some(
         (participant) => participant.user_id === userId,
       ),
+      currentParticipants: event.event_participants.length,
+      maxParticipants: event.groups.max_members,
     }));
   }
 
