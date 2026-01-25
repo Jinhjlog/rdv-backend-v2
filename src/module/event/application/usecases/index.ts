@@ -10,3 +10,4 @@ export * from './update-event.usecase';
 export * from './delete-event.usecase';
 export * from './find-calendar-marked-dates.usecase';
 export * from './find-calendar-event-list.usecase';
+export * from './find-event-result.usecase';
