@@ -129,7 +129,7 @@ export class UserEventController {
       '**조회 조건**<br>' +
       '- 해당 날짜(00:00:00 ~ 23:59:59)의 일정<br>' +
       '- 사용자가 소속된 모임의 일정<br>' +
-      '- 모집중(RECRUITING) 또는 진행중(IN_PROGRESS) 상태인 일정<br>' +
+      '- 모집중(RECRUITING), 진행중(IN_PROGRESS), 종료(ENDED) 상태인 일정<br>' +
       '- eventTime 기준 오름차순 정렬<br><br>' +
       '**응답 구조**<br>' +
       '- items: 일정 배열<br>' +
@@ -140,7 +140,7 @@ export class UserEventController {
       '  - eventTime: 일정 날짜/시간<br>' +
       '  - locationAddress: 도로명 주소<br>' +
       '  - locationDetail: 상세 주소<br>' +
-      '  - status: 일정 상태 (RECRUITING/IN_PROGRESS)<br>' +
+      '  - status: 일정 상태 (RECRUITING/IN_PROGRESS/ENDED)<br>' +
       '  - isParticipant: 현재 사용자의 참여 여부<br><br>' +
       '**주의사항**<br>' +
       '- 인증된 사용자만 접근 가능합니다.<br>' +
