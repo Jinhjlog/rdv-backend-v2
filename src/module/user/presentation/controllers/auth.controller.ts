@@ -139,6 +139,7 @@ export class AuthController {
       '- nickname이 비어있거나 문자열이 아닌 경우<br>' +
       '- nickname이 2자 미만인 경우: _**NICKNAME_TOO_SHORT**_<br>' +
       '- nickname이 5자를 초과하는 경우: _**NICKNAME_TOO_LONG**_<br>' +
+      '- nickname에 부적절한 단어가 포함된 경우: _**NICKNAME_CONTAINS_PROFANITY**_<br>' +
       '<br>' +
       '**preferredThemeColor**<br>' +
       '- preferredThemeColor가 비어있거나 문자열이 아닌 경우<br>',
