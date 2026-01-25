@@ -8,4 +8,6 @@ export interface CalendarEventListItemQueryModel {
   locationDetail: string;
   status: string;
   isParticipant: boolean;
+  currentParticipants: number;
+  maxParticipants: number;
 }
