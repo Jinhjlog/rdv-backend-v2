@@ -55,6 +55,18 @@ class CalendarEventListItemResponseDto {
     example: true,
   })
   isParticipant: boolean;
+
+  @ApiProperty({
+    description: '현재 참여자 수',
+    example: 3,
+  })
+  currentParticipants: number;
+
+  @ApiProperty({
+    description: '최대 참여자 수',
+    example: 6,
+  })
+  maxParticipants: number;
 }
 
 export class CalendarEventListResponseDto {

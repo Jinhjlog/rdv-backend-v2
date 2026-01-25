@@ -141,7 +141,9 @@ export class UserEventController {
       '  - locationAddress: 도로명 주소<br>' +
       '  - locationDetail: 상세 주소<br>' +
       '  - status: 일정 상태 (RECRUITING/IN_PROGRESS/ENDED)<br>' +
-      '  - isParticipant: 현재 사용자의 참여 여부<br><br>' +
+      '  - isParticipant: 현재 사용자의 참여 여부<br>' +
+      '  - currentParticipants: 현재 참여자 수<br>' +
+      '  - maxParticipants: 최대 참여자 수<br><br>' +
       '**주의사항**<br>' +
       '- 인증된 사용자만 접근 가능합니다.<br>' +
       '- date는 YYYY-MM-DD 형식이어야 합니다.<br>',
