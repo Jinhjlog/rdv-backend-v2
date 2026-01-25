@@ -2,6 +2,7 @@ import {
   EventListItemQueryModel,
   EventDetailQueryModel,
   ActiveEventQueryModel,
+  CalendarEventListItemQueryModel,
 } from '../models';
 
 export interface FindEventListParams {
@@ -35,6 +36,11 @@ export interface FindCalendarMarkedDatesParams {
   month: number;
 }
 
+export interface FindCalendarEventListParams {
+  userId: string;
+  date: string; // YYYY-MM-DD 형식
+}
+
 export abstract class EventQueryRepository {
   abstract findList(
     params: FindEventListParams,
@@ -58,4 +64,12 @@ export abstract class EventQueryRepository {
   abstract findCalendarMarkedDates(
     params: FindCalendarMarkedDatesParams,
   ): Promise<string[]>;
+
+  /**
+   * 특정 날짜의 사용자 소속 모임 일정 목록을 조회합니다.
+   * 캘린더에서 날짜 선택 시 해당 날짜의 일정 목록 표시용.
+   */
+  abstract findCalendarEventList(
+    params: FindCalendarEventListParams,
+  ): Promise<CalendarEventListItemQueryModel[]>;
 }
