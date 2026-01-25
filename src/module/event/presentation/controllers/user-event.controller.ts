@@ -27,6 +27,7 @@ import {
   FindActiveEventUseCase,
   FindCalendarMarkedDatesUseCase,
   FindCalendarEventListUseCase,
+  FindEventResultUseCase,
   CreateEventUseCase,
   JoinEventUseCase,
   DepartEventUseCase,
@@ -42,6 +43,7 @@ import {
   ActiveEventResponseDto,
   CalendarMarkedDatesResponseDto,
   CalendarEventListResponseDto,
+  EventResultResponseDto,
   CreateEventRequestDto,
   ArriveEventRequestDto,
   UpdateEventRequestDto,
@@ -60,6 +62,7 @@ export class UserEventController {
     private readonly findActiveEventUseCase: FindActiveEventUseCase,
     private readonly findCalendarMarkedDatesUseCase: FindCalendarMarkedDatesUseCase,
     private readonly findCalendarEventListUseCase: FindCalendarEventListUseCase,
+    private readonly findEventResultUseCase: FindEventResultUseCase,
     private readonly createEventUseCase: CreateEventUseCase,
     private readonly joinEventUseCase: JoinEventUseCase,
     private readonly departEventUseCase: DepartEventUseCase,
@@ -396,6 +399,57 @@ export class UserEventController {
     });
 
     return EventTransformer.toDetailResponse(event);
+  }
+
+  @ApiOperation({
+    summary: '사용자 - 일정 결과 조회',
+    description:
+      '종료된 일정의 출석 결과를 조회합니다.<br><br>' +
+      '**목적**<br>' +
+      '일정 종료 후 참여자들의 출석 결과(도착/지각/부재)를 확인하기 위한 API입니다.<br><br>' +
+      '**조회 조건**<br>' +
+      '- 종료된(ENDED) 상태의 일정만 조회 가능<br>' +
+      '- 사용자가 소속된 모임의 일정만 조회 가능<br><br>' +
+      '**응답 구조**<br>' +
+      '- eventId: 일정 ID<br>' +
+      '- groupId: 모임 ID<br>' +
+      '- title: 일정 제목<br>' +
+      '- eventTime: 일정 시간<br>' +
+      '- locationAddress: 도로명 주소<br>' +
+      '- locationDetail: 상세 주소<br>' +
+      '- results: 출석 결과 목록<br>' +
+      '  - userId, nickname, nameTag, characterCode, preferredThemeColor<br>' +
+      '  - result: ARRIVED(도착) / LATE(지각) / ABSENT(부재)<br><br>' +
+      '**주의사항**<br>' +
+      '- 인증된 사용자만 접근 가능합니다.<br>' +
+      '- eventId는 UUID 형식이어야 합니다.<br>',
+  })
+  @ApiParam({
+    name: 'eventId',
+    description: '일정 ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    required: true,
+  })
+  @ApiOkResponse({
+    description: '일정 결과 조회 성공',
+    type: EventResultResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description:
+      '리소스를 찾을 수 없음<br>' +
+      '- 일정이 존재하지 않거나, 종료되지 않았거나, 사용자가 속한 모임의 일정이 아닌 경우: _**EVENT_RESULT_NOT_FOUND**_<br>',
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.OK)
+  @Get('events/:eventId/result')
+  async getEventResult(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @User() user: UserInfo,
+  ): Promise<EventResultResponseDto> {
+    return this.findEventResultUseCase.execute({
+      userId: user.userId,
+      eventId: eventId,
+    });
   }
 
   @ApiOperation({
