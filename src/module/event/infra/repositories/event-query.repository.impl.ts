@@ -6,6 +6,7 @@ import {
   FindActiveEventParams,
   FindCalendarMarkedDatesParams,
   FindCalendarEventListParams,
+  FindEventResultParams,
 } from '../../domain/repositories';
 import { PrismaService } from '@core/database';
 import {
@@ -13,6 +14,7 @@ import {
   EventDetailQueryModel,
   ActiveEventQueryModel,
   CalendarEventListItemQueryModel,
+  EventResultQueryModel,
 } from '../../domain/models';
 import { event_status, Prisma } from '@prisma/client';
 
@@ -305,5 +307,71 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
         (participant) => participant.user_id === userId,
       ),
     }));
+  }
+
+  async findEventResult(
+    params: FindEventResultParams,
+  ): Promise<EventResultQueryModel | undefined> {
+    const { eventId, contextUserId } = params;
+
+    const whereClause: Prisma.eventsWhereUniqueInput = {
+      id: eventId,
+      status: event_status.ENDED,
+    };
+
+    if (contextUserId) {
+      whereClause.groups = {
+        group_members: {
+          some: { user_id: contextUserId },
+        },
+      };
+    }
+
+    const event = await this.prisma.events.findUnique({
+      where: whereClause,
+      select: {
+        id: true,
+        group_id: true,
+        title: true,
+        event_time: true,
+        location_address: true,
+        location_detail: true,
+        event_results: {
+          select: {
+            result: true,
+            users: {
+              select: {
+                id: true,
+                nickname: true,
+                name_tag: true,
+                character_code: true,
+                preferred_theme_color: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!event) {
+      return undefined;
+    }
+
+    return {
+      eventId: event.id,
+      groupId: event.group_id,
+      title: event.title,
+      eventTime: event.event_time,
+      locationAddress: event.location_address,
+      locationDetail: event.location_detail,
+      results: event.event_results.map((result) => ({
+        userId: result.users.id,
+        nickname: result.users.nickname,
+        nameTag: result.users.name_tag,
+        characterCode: result.users.character_code,
+        preferredThemeColor: result.users.preferred_theme_color,
+        result: result.result,
+      })),
+    };
   }
 }
