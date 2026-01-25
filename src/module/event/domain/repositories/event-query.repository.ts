@@ -29,6 +29,12 @@ export interface FindActiveEventParams {
   contextUserId?: string;
 }
 
+export interface FindCalendarMarkedDatesParams {
+  userId: string;
+  year: number;
+  month: number;
+}
+
 export abstract class EventQueryRepository {
   abstract findList(
     params: FindEventListParams,
@@ -44,4 +50,12 @@ export abstract class EventQueryRepository {
   abstract findActiveEventByGroupId(
     params: FindActiveEventParams,
   ): Promise<ActiveEventQueryModel | undefined>;
+
+  /**
+   * 사용자가 참여한 일정이 있는 날짜 목록을 조회합니다.
+   * 캘린더 마커 표시용.
+   */
+  abstract findCalendarMarkedDates(
+    params: FindCalendarMarkedDatesParams,
+  ): Promise<string[]>;
 }
