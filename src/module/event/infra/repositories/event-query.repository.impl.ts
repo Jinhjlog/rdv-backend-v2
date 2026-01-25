@@ -58,6 +58,13 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
             max_members: true,
           },
         },
+        users: {
+          select: {
+            nickname: true,
+            level: true,
+            character_code: true,
+          },
+        },
       },
     });
 
@@ -72,6 +79,11 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
         userId: participant.user_id,
       })),
       maxParticipants: event.groups.max_members,
+      createdBy: {
+        nickname: event.users.nickname,
+        level: event.users.level,
+        characterCode: event.users.character_code,
+      },
       createdAt: event.created_at,
       updatedAt: event.updated_at,
     }));
@@ -104,6 +116,12 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
             name_tag: true,
             character_code: true,
             preferred_theme_color: true,
+            level: true,
+          },
+        },
+        groups: {
+          select: {
+            max_members: true,
           },
         },
         event_participants: {
@@ -135,6 +153,7 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
         nameTag: event.users.name_tag,
         characterCode: event.users.character_code,
         preferredThemeColor: event.users.preferred_theme_color,
+        level: event.users.level,
       },
       title: event.title,
       description: event.description,
@@ -146,6 +165,7 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
       locationLatitude: event.location_latitude.toString(),
       locationLongitude: event.location_longitude.toString(),
       status: event.status,
+      maxParticipants: event.groups.max_members,
       createdAt: event.created_at,
       updatedAt: event.updated_at,
       participants: event.event_participants.map((participant) => ({
