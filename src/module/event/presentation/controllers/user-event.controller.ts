@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -24,6 +25,7 @@ import {
   FindEventListUseCase,
   FindEventDetailUseCase,
   FindActiveEventUseCase,
+  FindCalendarMarkedDatesUseCase,
   CreateEventUseCase,
   JoinEventUseCase,
   DepartEventUseCase,
@@ -37,9 +39,11 @@ import {
   EventListResponseDto,
   EventDetailResponseDto,
   ActiveEventResponseDto,
+  CalendarMarkedDatesResponseDto,
   CreateEventRequestDto,
   ArriveEventRequestDto,
   UpdateEventRequestDto,
+  GetCalendarMarkedDatesRequestDto,
 } from '../dtos';
 import { UserInfo } from 'src/module/auth/interfaces';
 import { EventTransformer } from '../transformers';
@@ -51,6 +55,7 @@ export class UserEventController {
     private readonly findEventListUseCase: FindEventListUseCase,
     private readonly findEventDetailUseCase: FindEventDetailUseCase,
     private readonly findActiveEventUseCase: FindActiveEventUseCase,
+    private readonly findCalendarMarkedDatesUseCase: FindCalendarMarkedDatesUseCase,
     private readonly createEventUseCase: CreateEventUseCase,
     private readonly joinEventUseCase: JoinEventUseCase,
     private readonly departEventUseCase: DepartEventUseCase,
@@ -59,6 +64,54 @@ export class UserEventController {
     private readonly updateEventUseCase: UpdateEventUseCase,
     private readonly deleteEventUseCase: DeleteEventUseCase,
   ) {}
+
+  @ApiOperation({
+    summary: '사용자 - 캘린더 마커 날짜 조회',
+    description:
+      '사용자가 소속된 모임의 일정이 있는 날짜 목록을 조회합니다.<br><br>' +
+      '**목적**<br>' +
+      '캘린더 UI에서 일정이 있는 날짜에 마커를 표시하기 위한 API입니다.<br><br>' +
+      '**조회 조건**<br>' +
+      '- 사용자가 소속된 모임의 모든 일정<br>' +
+      '- 모집중(RECRUITING) 또는 진행중(IN_PROGRESS) 상태인 일정<br><br>' +
+      '**응답 구조**<br>' +
+      '- dates: 일정이 있는 날짜 배열 (YYYY-MM-DD 형식)<br><br>' +
+      '**주의사항**<br>' +
+      '- 인증된 사용자만 접근 가능합니다.<br>' +
+      '- year는 4자리 연도, month는 1~12 범위입니다.<br>',
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (필드 검증 실패)<br>' +
+      '**연도**<br>' +
+      '- 정수가 아닌 경우<br>' +
+      '- 2020 미만인 경우<br>' +
+      '- 2100 초과인 경우<br>' +
+      '<br>' +
+      '**월**<br>' +
+      '- 정수가 아닌 경우<br>' +
+      '- 1 미만인 경우<br>' +
+      '- 12 초과인 경우',
+  })
+  @ApiOkResponse({
+    description: '캘린더 마커 날짜 조회 성공',
+    type: CalendarMarkedDatesResponseDto,
+  })
+  @UserAuth()
+  @HttpCode(HttpStatus.OK)
+  @Get('users/me/calendar/events')
+  async getCalendarMarkedDates(
+    @Query() query: GetCalendarMarkedDatesRequestDto,
+    @User() user: UserInfo,
+  ): Promise<CalendarMarkedDatesResponseDto> {
+    const dates = await this.findCalendarMarkedDatesUseCase.execute({
+      userId: user.userId,
+      year: query.year,
+      month: query.month,
+    });
+
+    return { dates };
+  }
 
   @ApiOperation({
     summary: '사용자 - 모임 일정 목록 조회',
