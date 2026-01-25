@@ -13,6 +13,15 @@ export class ChatMessageQueryRepositoryImpl implements ChatMessageQueryRepositor
   async findList(
     params: FindChatMessageListParams,
   ): Promise<ChatMessageQueryModel[]> {
+    // sinceId가 있으면 해당 메시지의 createdAt을 먼저 조회
+    let sinceMessage: { created_at: Date; id: string } | null = null;
+    if (params.sinceId) {
+      sinceMessage = await this.prisma.chat_messages.findUnique({
+        where: { id: params.sinceId },
+        select: { id: true, created_at: true },
+      });
+    }
+
     const messages = await this.prisma.chat_messages.findMany({
       where: {
         group_id: params.groupId,
@@ -34,11 +43,23 @@ export class ChatMessageQueryRepositoryImpl implements ChatMessageQueryRepositor
             },
           ],
         }),
-        // sinceId 기반 필터링 - 미래 방향 (해당 ID 이후 메시지)
-        ...(params.sinceId && {
-          id: {
-            gt: params.sinceId,
-          },
+        // sinceId 기반 필터링 - 미래 방향 (해당 메시지 이후에 생성된 메시지)
+        ...(sinceMessage && {
+          OR: [
+            // createdAt이 sinceMessage보다 이후인 경우
+            {
+              created_at: {
+                gt: sinceMessage.created_at,
+              },
+            },
+            // createdAt이 같으면 id로 비교 (tie-breaker)
+            {
+              created_at: sinceMessage.created_at,
+              id: {
+                gt: sinceMessage.id,
+              },
+            },
+          ],
         }),
       },
       include: {
