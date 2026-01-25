@@ -7,6 +7,7 @@ import { JwtModule } from './jwt/jwt.module';
 import { RedisModule } from './database/redis.module';
 import { QueueModule } from './queue/queue.module';
 import { FirebaseModule } from './firebase/firebase.module';
+import { ProfanityModule } from './profanity/profanity.module';
 
 @Global()
 @Module({
@@ -21,6 +22,7 @@ import { FirebaseModule } from './firebase/firebase.module';
     DatabaseModule,
     QueueModule,
     FirebaseModule,
+    ProfanityModule,
   ],
   providers: [ConfigService],
   exports: [
@@ -30,6 +32,7 @@ import { FirebaseModule } from './firebase/firebase.module';
     JwtModule,
     QueueModule,
     FirebaseModule,
+    ProfanityModule,
   ],
 })
 export class CoreModule {}
