@@ -61,7 +61,7 @@ jobs:
 
           # [비밀 파일 마운트]
           secrets: |
-            /usr/src/app/.env=projects/${{ env.PROJECT_ID }}/secrets/RDV_BACKEND_ENV:latest
+            /usr/src/app/.env=RDV_BACKEND_ENV:latest
 
           # [시스템 변수]
           env_vars: |
