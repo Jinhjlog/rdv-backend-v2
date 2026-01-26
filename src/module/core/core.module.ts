@@ -14,7 +14,11 @@ import { ProfanityModule } from './profanity/profanity.module';
   imports: [
     ConfigModule.forRoot({
       load: [environmentConfig],
-      envFilePath: [`.env.${process.env.NODE_ENV || 'development'}`, '.env'],
+      envFilePath: [
+        '/secrets/.env', // Cloud Run 시크릿 마운트 경로
+        `.env.${process.env.NODE_ENV || 'development'}`,
+        '.env',
+      ],
     }),
     LoggerModule,
     RedisModule,
