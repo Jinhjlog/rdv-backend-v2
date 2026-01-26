@@ -29,14 +29,19 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-      # 2. Docker 설정
+      # 2. Docker 설정 (Cloud SDK)
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Docker Configure
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-      # 3. 빌드 및 푸시
+      # 3. Buildx 설정
+      # 캐시 기능을 쓰기 위해 필수적인 단계입니다.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 4. 빌드 및 푸시
       - name: Build and Push
         uses: docker/build-push-action@v5
         with:
@@ -46,7 +51,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 4. Cloud Run 배포
+      # 5. Cloud Run 배포
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -54,13 +59,11 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
-          # [핵심] Secret Manager의 'RDV_BACKEND_ENV'을 컨테이너 내부의 '.env' 파일로 생성
-          # 좌측: 컨테이너 내부 경로 / 우측: Secret Manager 이름
+          # [비밀 파일 마운트]
           secrets: |
             /usr/src/app/.env=RDV_BACKEND_ENV:latest
 
           # [시스템 변수]
-          # .env 파일에 있더라도 PORT와 NODE_ENV는 Cloud Run 시스템 설정을 위해 명시하는 게 안전합니다.
           env_vars: |
             NODE_ENV=production
             PORT=3000
