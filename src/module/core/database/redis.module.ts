@@ -54,7 +54,6 @@ function createRedisFactory(config: RedisInstanceConfig) {
 
     // 기본 옵션
     const baseRedisOptions: RedisOptions = {
-      password: redisConfig.password,
       db,
       reconnectOnError: (err) => {
         console.error(`Redis [${config.dbKey}] 연결 오류 발생: ${err}`);

@@ -4,7 +4,6 @@ export type EnvironmentConfig = {
   };
   redis: {
     url: string;
-    password?: string;
     authDB: number;
     meetingRoomDB: number;
     queueDB: number;
@@ -56,7 +55,6 @@ export default (): EnvironmentConfig => {
     },
     redis: {
       url: process.env.REDIS_URL || '',
-      password: process.env.REDIS_PASSWORD,
       authDB: process.env.REDIS_AUTH_DB
         ? parseInt(process.env.REDIS_AUTH_DB, 10)
         : -1,
