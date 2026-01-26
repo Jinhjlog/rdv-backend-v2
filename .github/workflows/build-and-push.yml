@@ -1,103 +1,66 @@
-name: Build and Push to GHCR
+name: Deploy rdv-backend-v2 (Japan)
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: asia-northeast1 # 도쿄
+  GAR_REPO: rdv-backend-v2 # 저장소 이름
+  SERVICE_NAME: rdv-backend-v2 # 서비스 이름
 
 jobs:
-  # lint:
-  #   name: Lint
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '22'
-  #         cache: 'npm'
-
-  #     - name: Install dependencies
-  #       run: npm ci
-
-  #     - name: Run lint
-  #       run: npm run lint
-
-  # test:
-  #   name: Test
-  #   runs-on: ubuntu-latest
-  #   needs: lint
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '22'
-  #         cache: 'npm'
-
-  #     - name: Install dependencies
-  #       run: npm ci
-
-  #     - name: Generate Prisma Client
-  #       run: npx prisma generate
-
-  #     - name: Run tests
-  #       run: npm test
-
-  build-and-push:
-    name: Build and Push
+  deploy:
     runs-on: ubuntu-latest
-    # needs: test
     permissions:
       contents: read
-      packages: write
+      id-token: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      # 1. 구글 인증
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+      # 2. Docker 설정
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
 
-      - name: Build and push Docker image
+      - name: Docker Configure
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      # 3. 빌드 및 푸시
+      - name: Build and Push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Deploy to Koyeb
-        run: |
-          curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.KOYEB_API_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/redeploy"
+      # 4. Cloud Run 배포
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+
+          # [핵심] Secret Manager의 'RDV_BACKEND_ENV'을 컨테이너 내부의 '.env' 파일로 생성
+          # 좌측: 컨테이너 내부 경로 / 우측: Secret Manager 이름
+          secrets: |
+            /usr/src/app/.env=RDV_BACKEND_ENV:latest
+
+          # [시스템 변수]
+          # .env 파일에 있더라도 PORT와 NODE_ENV는 Cloud Run 시스템 설정을 위해 명시하는 게 안전합니다.
+          env_vars: |
+            NODE_ENV=production
+            PORT=3000
