@@ -66,4 +66,7 @@ jobs:
           # [시스템 변수]
           env_vars: |
             NODE_ENV=production
-            PORT=3000
+            LOG_LEVEL=debug
+
+          # [포트 설정]
+          flags: '--port 3000'
