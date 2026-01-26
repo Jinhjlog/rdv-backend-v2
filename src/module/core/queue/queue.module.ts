@@ -24,6 +24,7 @@ import { BullQueueService } from './bull-queue.service';
         return {
           connection: {
             url: redisConfig.url,
+            password: redisConfig.password,
             db: redisConfig.queueDB,
           },
         };
