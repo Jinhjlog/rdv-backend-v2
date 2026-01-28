@@ -71,17 +71,16 @@ export class GroupRepositoryImpl implements GroupRepository {
       },
     });
 
-    // 2. 제거된 멤버 삭제 (Orphan 제거)
-    const currentMemberIds = group.members.map((member) =>
-      member.id.toString(),
-    );
-
-    await client.group_members.deleteMany({
-      where: {
-        group_id: group.id.toString(),
-        NOT: { id: { in: currentMemberIds } },
-      },
-    });
+    // 2. 명시적으로 삭제 요청된 멤버만 삭제
+    const removedMemberIds = group.removedMemberIds;
+    if (removedMemberIds.length > 0) {
+      await client.group_members.deleteMany({
+        where: {
+          id: { in: removedMemberIds },
+        },
+      });
+      group.clearRemovedMemberIds();
+    }
 
     // 3. 멤버 저장/업데이트 (배치 처리)
     if (group.members.length > 0) {
