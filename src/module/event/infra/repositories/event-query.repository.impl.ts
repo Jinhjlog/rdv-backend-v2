@@ -165,6 +165,7 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
       locationLatitude: event.location_latitude.toString(),
       locationLongitude: event.location_longitude.toString(),
       status: event.status,
+      isParticipantChecked: event.is_participant_checked,
       maxParticipants: event.groups.max_members,
       createdAt: event.created_at,
       updatedAt: event.updated_at,
