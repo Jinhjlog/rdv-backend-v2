@@ -17,8 +17,26 @@ export interface GroupProps {
 }
 
 export class Group extends AggregateRoot<GroupProps> {
+  private _removedMemberIds: string[] = [];
+
   constructor(props: GroupProps) {
     super(props, new UniqueEntityId(props.id));
+  }
+
+  /**
+   * 삭제된 멤버 ID 목록을 반환합니다.
+   * Repository에서 명시적으로 삭제할 멤버를 식별하는 데 사용됩니다.
+   */
+  get removedMemberIds(): string[] {
+    return [...this._removedMemberIds];
+  }
+
+  /**
+   * 삭제된 멤버 ID 목록을 초기화합니다.
+   * Repository에서 save 완료 후 호출합니다.
+   */
+  clearRemovedMemberIds(): void {
+    this._removedMemberIds = [];
   }
 
   get name(): BoundedString {
@@ -160,6 +178,8 @@ export class Group extends AggregateRoot<GroupProps> {
     }
 
     // 멤버 제거
+    const removedMember = this.props.members[memberIndex];
+    this._removedMemberIds.push(removedMember.id.toString());
     this.props.members.splice(memberIndex, 1);
     this.props.updatedAt = new Date();
   }
@@ -195,6 +215,8 @@ export class Group extends AggregateRoot<GroupProps> {
     }
 
     // 멤버 제거
+    const removedMember = this.props.members[memberIndex];
+    this._removedMemberIds.push(removedMember.id.toString());
     this.props.members.splice(memberIndex, 1);
     this.props.updatedAt = new Date();
   }
