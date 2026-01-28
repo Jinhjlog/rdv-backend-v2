@@ -68,6 +68,7 @@ export interface EventDetailQueryModel {
   locationLatitude: string;
   locationLongitude: string;
   status: string;
+  isParticipantChecked: boolean;
   maxParticipants: number;
   createdAt: Date;
   updatedAt: Date;
