@@ -168,6 +168,12 @@ export class EventDetailResponseDto {
   status: string;
 
   @ApiProperty({
+    description: '참여자 체크 완료 여부 (true: 체크 완료, false: 체크 미완료)',
+    example: false,
+  })
+  isParticipantChecked: boolean;
+
+  @ApiProperty({
     description: '최대 참여자 수',
     example: 10,
   })

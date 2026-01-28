@@ -53,6 +53,7 @@ export class EventTransformer {
       locationLatitude: event.locationLatitude,
       locationLongitude: event.locationLongitude,
       status: event.status,
+      isParticipantChecked: event.isParticipantChecked,
       maxParticipants: event.maxParticipants,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
