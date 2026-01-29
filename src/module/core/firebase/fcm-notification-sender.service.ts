@@ -4,6 +4,7 @@ import {
   NotificationSenderService,
   NotificationProps,
   SendResponse,
+  SilentPushData,
 } from './notification-sender.service';
 import { ArrayUtil } from '@shared/utils/array.util';
 
@@ -187,6 +188,102 @@ export class FcmNotificationSenderService implements NotificationSenderService {
           `❌ FCM 토픽 구독해제 실패: token=${token.slice(0, 10)}..., topic=${topic}, 오류: ${error}`,
         );
       }
+    }
+  }
+
+  async sendSilentPushToMultipleDevices(
+    tokens: string[],
+    data: SilentPushData,
+  ): Promise<SendResponse> {
+    try {
+      let totalSuccess = 0;
+      let totalFailure = 0;
+      const allFailureTokens: string[] = [];
+
+      const tokenChunks = ArrayUtil.chunk(tokens, FCM_MAX_TOKENS_PER_REQUEST);
+
+      for (const chunk of tokenChunks) {
+        const response = await admin.messaging().sendEachForMulticast({
+          tokens: chunk,
+          data,
+          // iOS: 사일런트 푸시 설정
+          apns: {
+            headers: {
+              'apns-push-type': 'background',
+              'apns-priority': '5',
+            },
+            payload: {
+              aps: {
+                contentAvailable: true,
+              },
+            },
+          },
+          // Android: 백그라운드 전달을 위해 high priority
+          android: {
+            priority: 'high',
+          },
+        });
+
+        totalSuccess += response.successCount;
+        totalFailure += response.failureCount;
+
+        response.responses.forEach((res, index) => {
+          if (!res.success) {
+            allFailureTokens.push(chunk[index]);
+          }
+        });
+      }
+
+      this.logger.debug(
+        `사일런트 푸시 발송 완료: 성공=${totalSuccess}, 실패=${totalFailure}`,
+      );
+
+      return {
+        successCount: totalSuccess,
+        failureCount: totalFailure,
+        failureTokens: allFailureTokens,
+      };
+    } catch (error) {
+      this.logger.warn(`사일런트 푸시 다중 발송 실패: ${error}`);
+      throw new Error(`사일런트 푸시 다중 발송 실패: ${error}`);
+    }
+  }
+
+  async sendSilentPushToDevice(
+    token: string,
+    data: SilentPushData,
+  ): Promise<boolean> {
+    try {
+      await admin.messaging().send({
+        token,
+        data,
+        // iOS: 사일런트 푸시 설정
+        apns: {
+          headers: {
+            'apns-push-type': 'background',
+            'apns-priority': '5',
+          },
+          payload: {
+            aps: {
+              contentAvailable: true,
+            },
+          },
+        },
+        // Android: 백그라운드 전달을 위해 high priority
+        android: {
+          priority: 'high',
+        },
+      });
+
+      this.logger.debug(
+        `사일런트 푸시 발송 성공: token=${token.slice(0, 10)}...`,
+      );
+      return true;
+    } catch (error) {
+      this.logger.warn(
+        `사일런트 푸시 발송 실패: token=${token.slice(0, 10)}..., 오류: ${error}`,
+      );
+      return false;
     }
   }
 }

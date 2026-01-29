@@ -9,6 +9,10 @@ export interface SendResponse {
   failureTokens: string[];
 }
 
+export interface SilentPushData {
+  [key: string]: string;
+}
+
 export abstract class NotificationSenderService {
   /**
    * 여러개의 디바이스 토큰으로 알림을 전송합니다.
@@ -89,4 +93,32 @@ export abstract class NotificationSenderService {
     token: string,
     topics: string[],
   ): Promise<void>;
+
+  /**
+   * 사일런트 푸시(데이터 전용 메시지)를 여러 디바이스에 전송합니다.
+   *
+   * 사용자에게 알림을 표시하지 않고 백그라운드에서 앱에 데이터를 전달합니다.
+   * 백그라운드 데이터 동기화, 앱 상태 업데이트 등에 사용합니다.
+   *
+   * @param tokens 전송 대상 디바이스 토큰 목록
+   * @param data 전송할 데이터 (key-value 형태, 값은 문자열만 가능)
+   * @returns 발송 결과 (성공/실패 수, 실패 토큰 목록)
+   * @warning iOS에서는 전달이 보장되지 않으며, Low Power Mode에서 차단될 수 있습니다.
+   */
+  abstract sendSilentPushToMultipleDevices(
+    tokens: string[],
+    data: SilentPushData,
+  ): Promise<SendResponse>;
+
+  /**
+   * 사일런트 푸시(데이터 전용 메시지)를 단일 디바이스에 전송합니다.
+   *
+   * @param token 전송 대상 디바이스 토큰
+   * @param data 전송할 데이터 (key-value 형태, 값은 문자열만 가능)
+   * @returns 발송 성공 여부
+   */
+  abstract sendSilentPushToDevice(
+    token: string,
+    data: SilentPushData,
+  ): Promise<boolean>;
 }
