@@ -428,6 +428,7 @@ model public_users {
   updated_at                                    DateTime                 @db.Timestamptz(6)
   account_transfer_codes                        account_transfer_codes[]
   chat_messages                                 chat_messages[]
+  device_tokens                                 device_tokens[]
   event_participants                            event_participants[]
   event_results                                 event_results[]
   events                                        events[]
@@ -634,6 +635,24 @@ model chat_messages {
   users      public_users @relation(fields: [sender_id], references: [id], onDelete: Cascade, map: "chat_messages_senderId_fkey")
 
   @@index([group_id, created_at(sort: Desc)], map: "idx_chat_message_group_created")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model device_tokens {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String       @db.Uuid
+  token        String       @unique
+  platform     String
+  device_info  String?
+  last_used_at DateTime     @db.Timestamptz(6)
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @db.Timestamptz(6)
+  users        public_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([last_used_at], map: "idx_device_tokens_last_used_at")
+  @@index([user_id], map: "idx_device_tokens_user_id")
   @@schema("public")
 }
 
