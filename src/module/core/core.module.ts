@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import environmentConfig from './config/environment.config';
 import { DatabaseModule } from './database/database.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -20,6 +21,7 @@ import { ProfanityModule } from './profanity/profanity.module';
         '.env',
       ],
     }),
+    ScheduleModule.forRoot(),
     LoggerModule,
     RedisModule,
     JwtModule,
