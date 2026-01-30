@@ -38,6 +38,14 @@ export abstract class DeviceTokenRepository {
   abstract findByUserId(userId: string): Promise<DeviceToken[]>;
 
   /**
+   * 여러 사용자 ID로 디바이스 토큰 일괄 조회
+   *
+   * @param userIds 사용자 ID 배열
+   * @returns DeviceToken 배열
+   */
+  abstract findByUserIds(userIds: string[]): Promise<DeviceToken[]>;
+
+  /**
    * 디바이스 토큰 삭제
    *
    * @param id 토큰 ID
