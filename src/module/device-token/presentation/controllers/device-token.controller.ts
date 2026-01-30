@@ -5,6 +5,7 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,6 +27,8 @@ import {
   SendTestPushRequestDto,
   SendTestPushResponseDto,
 } from '../dtos';
+
+const TEST_API_KEY = 'wlsguswnsdmlzl';
 
 @ApiTags('사용자 - 디바이스 토큰')
 @Controller({ path: 'device-tokens', version: '1' })
@@ -153,6 +156,10 @@ export class DeviceTokenController {
   async sendTestPush(
     @Body() dto: SendTestPushRequestDto,
   ): Promise<SendTestPushResponseDto> {
+    if (dto.testKey !== TEST_API_KEY) {
+      throw new ForbiddenException('유효하지 않은 테스트 키입니다.');
+    }
+
     return this.sendTestPushUseCase.execute({
       userId: dto.userId,
       title: dto.title,
