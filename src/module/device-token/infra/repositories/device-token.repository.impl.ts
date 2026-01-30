@@ -56,6 +56,18 @@ export class DeviceTokenRepositoryImpl implements DeviceTokenRepository {
     return raws.map((raw) => DeviceTokenMapper.toDomain(raw));
   }
 
+  async findByUserIds(userIds: string[]): Promise<DeviceToken[]> {
+    if (userIds.length === 0) {
+      return [];
+    }
+
+    const raws = await this.prisma.device_tokens.findMany({
+      where: { user_id: { in: userIds } },
+    });
+
+    return raws.map((raw) => DeviceTokenMapper.toDomain(raw));
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.device_tokens.delete({
       where: { id },
