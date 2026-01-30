@@ -11,13 +11,21 @@ import {
   ApiOperation,
   ApiNoContentResponse,
   ApiBadRequestResponse,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { UserAuth, User } from '../../../auth/decorators';
 import { UserInfo } from '../../../auth/interfaces';
-import { RegisterDeviceTokenUseCase } from '../../application/usecases/register-device-token.usecase';
-import { RemoveDeviceTokenUseCase } from '../../application/usecases/remove-device-token.usecase';
-import { RegisterDeviceTokenRequestDto } from '../dtos/request/register-device-token.request.dto';
-import { RemoveDeviceTokenRequestDto } from '../dtos/request/remove-device-token.request.dto';
+import {
+  RegisterDeviceTokenUseCase,
+  RemoveDeviceTokenUseCase,
+  SendTestPushUseCase,
+} from '../../application/usecases';
+import {
+  RegisterDeviceTokenRequestDto,
+  RemoveDeviceTokenRequestDto,
+  SendTestPushRequestDto,
+  SendTestPushResponseDto,
+} from '../dtos';
 
 @ApiTags('사용자 - 디바이스 토큰')
 @Controller({ path: 'device-tokens', version: '1' })
@@ -25,6 +33,7 @@ export class DeviceTokenController {
   constructor(
     private readonly registerDeviceTokenUseCase: RegisterDeviceTokenUseCase,
     private readonly removeDeviceTokenUseCase: RemoveDeviceTokenUseCase,
+    private readonly sendTestPushUseCase: SendTestPushUseCase,
   ) {}
 
   @ApiOperation({
@@ -107,6 +116,48 @@ export class DeviceTokenController {
   ): Promise<void> {
     await this.removeDeviceTokenUseCase.execute({
       token: dto.token,
+    });
+  }
+
+  @ApiOperation({
+    summary: '테스트 푸시 알림 발송 [테스트]',
+    description:
+      '특정 사용자에게 테스트 푸시 알림을 발송합니다.<br><br>' +
+      '**필수 항목**<br>' +
+      '- userId: 푸시 알림을 받을 사용자 ID<br>' +
+      '- title: 알림 제목<br>' +
+      '- body: 알림 내용<br><br>' +
+      '**선택 항목**<br>' +
+      '- data: 추가 데이터 (key-value 형태)<br><br>' +
+      '**주의사항**<br>' +
+      '- 테스트 용도로만 사용하세요.<br>' +
+      '- 해당 사용자의 모든 등록된 디바이스에 푸시 알림이 발송됩니다.<br>',
+  })
+  @ApiOkResponse({
+    description: '푸시 알림 발송 결과',
+    type: SendTestPushResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청 (필드 검증 실패)<br>' +
+      '**userId**<br>' +
+      '- userId가 비어있는 경우: _**VALIDATION_ERROR**_<br>' +
+      '<br>' +
+      '**title**<br>' +
+      '- title이 비어있는 경우: _**VALIDATION_ERROR**_<br>' +
+      '<br>' +
+      '**body**<br>' +
+      '- body가 비어있는 경우: _**VALIDATION_ERROR**_<br>',
+  })
+  @Post('test')
+  async sendTestPush(
+    @Body() dto: SendTestPushRequestDto,
+  ): Promise<SendTestPushResponseDto> {
+    return this.sendTestPushUseCase.execute({
+      userId: dto.userId,
+      title: dto.title,
+      body: dto.body,
+      data: dto.data,
     });
   }
 }

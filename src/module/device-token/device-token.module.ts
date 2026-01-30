@@ -5,6 +5,7 @@ import {
   RemoveDeviceTokenUseCase,
   CleanupStaleTokensUseCase,
   HandleFailedTokensUseCase,
+  SendTestPushUseCase,
 } from './application/usecases';
 import { DeviceTokenController } from './presentation/controllers';
 import { DeviceTokenRepository } from './domain/repositories';
@@ -15,6 +16,7 @@ const useCases: Provider[] = [
   RemoveDeviceTokenUseCase,
   CleanupStaleTokensUseCase,
   HandleFailedTokensUseCase,
+  SendTestPushUseCase,
 ];
 
 @Module({
