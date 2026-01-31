@@ -6,6 +6,7 @@ import {
   ChatMessageRepository,
   ChatMessageQueryRepository,
   ShortTalkUserQueryRepository,
+  EventRepository,
 } from './domain/repositories';
 import {
   GroupRepositoryImpl,
@@ -14,7 +15,9 @@ import {
   ChatMessageRepositoryImpl,
   ChatMessageQueryRepositoryImpl,
   ShortTalkUserQueryRepositoryImpl,
+  EventRepositoryImpl,
 } from './infra/repositories';
+import { GroupLeavePolicyService } from './domain/services';
 
 /**
  * Group Core 모듈
@@ -47,6 +50,11 @@ import {
       provide: ShortTalkUserQueryRepository,
       useClass: ShortTalkUserQueryRepositoryImpl,
     },
+    {
+      provide: EventRepository,
+      useClass: EventRepositoryImpl,
+    },
+    GroupLeavePolicyService,
   ],
   exports: [
     GroupRepository,
@@ -55,6 +63,8 @@ import {
     ChatMessageRepository,
     ChatMessageQueryRepository,
     ShortTalkUserQueryRepository,
+    EventRepository,
+    GroupLeavePolicyService,
   ],
 })
 export class GroupCoreModule {}
