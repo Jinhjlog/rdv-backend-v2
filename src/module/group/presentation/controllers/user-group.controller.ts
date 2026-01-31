@@ -446,7 +446,12 @@ export class UserGroupController {
       '모임에서 탈퇴합니다. 일반 참여자만 탈퇴할 수 있습니다.<br><br>' +
       '**탈퇴 조건**<br>' +
       '- 일반 참여자(MEMBER)만 탈퇴 가능합니다.<br>' +
-      '- 모임장은 탈퇴할 수 없습니다.<br><br>' +
+      '- 모임장은 탈퇴할 수 없습니다.<br>' +
+      '- 진행중인 일정에 참여 중이면 탈퇴할 수 없습니다.<br>' +
+      '- 참여자 체크 시간(일정 시간 -20분) 이내의 모집중 일정에 참여 중이면 탈퇴할 수 없습니다.<br>' +
+      '- 본인이 생성한 활성 일정(모집중/진행중)이 있으면 탈퇴할 수 없습니다.<br><br>' +
+      '**자동 처리**<br>' +
+      '- 참여자 체크 시간 이전의 모집중 일정(생성자가 아닌 경우)은 자동으로 참여 철회됩니다.<br><br>' +
       '**주의사항**<br>' +
       '- 탈퇴 후에는 즉시 모임에서 제외됩니다.<br>' +
       '- 탈퇴 후 복구는 불가능합니다.',
@@ -469,7 +474,12 @@ export class UserGroupController {
       '- 모임장은 탈퇴할 수 없습니다: _**GROUP_OWNER_CANNOT_LEAVE**_<br>' +
       '<br>' +
       '**멤버 확인**<br>' +
-      '- 멤버를 찾을 수 없습니다: _**GROUP_MEMBER_NOT_FOUND**_<br>',
+      '- 멤버를 찾을 수 없습니다: _**GROUP_MEMBER_NOT_FOUND**_<br>' +
+      '<br>' +
+      '**일정 관련 제약**<br>' +
+      '- 진행중인 일정에 참여 중입니다: _**CANNOT_LEAVE_DURING_EVENT_IN_PROGRESS**_<br>' +
+      '- 참여자 체크 시간이 임박한 일정이 있습니다: _**CANNOT_LEAVE_NEAR_PARTICIPANT_CHECK**_<br>' +
+      '- 본인이 생성한 활성 일정이 있습니다: _**CANNOT_LEAVE_WITH_ACTIVE_EVENTS_CREATED**_<br>',
   })
   @UserAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
