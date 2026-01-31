@@ -242,7 +242,11 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
           lte: endDate,
         },
         status: {
-          in: [event_status.RECRUITING, event_status.IN_PROGRESS],
+          in: [
+            event_status.RECRUITING,
+            event_status.IN_PROGRESS,
+            event_status.ENDED,
+          ],
         },
         // 사용자가 소속된 그룹의 일정
         groups: {
