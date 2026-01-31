@@ -48,12 +48,13 @@ export class DeviceTokenRepositoryImpl implements DeviceTokenRepository {
     return DeviceTokenMapper.toDomain(raw);
   }
 
-  async findByUserId(userId: string): Promise<DeviceToken[]> {
-    const raws = await this.prisma.device_tokens.findMany({
+  async findByUserId(userId: string): Promise<DeviceToken | undefined> {
+    const raw = await this.prisma.device_tokens.findFirst({
       where: { user_id: userId },
+      orderBy: { last_used_at: 'desc' },
     });
 
-    return raws.map((raw) => DeviceTokenMapper.toDomain(raw));
+    return raw ? DeviceTokenMapper.toDomain(raw) : undefined;
   }
 
   async findByUserIds(userIds: string[]): Promise<DeviceToken[]> {
@@ -100,5 +101,11 @@ export class DeviceTokenRepositoryImpl implements DeviceTokenRepository {
     });
 
     return result.count;
+  }
+
+  async deleteByUserId(userId: string): Promise<void> {
+    await this.prisma.device_tokens.deleteMany({
+      where: { user_id: userId },
+    });
   }
 }
