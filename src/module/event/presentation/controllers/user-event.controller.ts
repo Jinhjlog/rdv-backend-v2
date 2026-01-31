@@ -80,7 +80,7 @@ export class UserEventController {
       '캘린더 UI에서 일정이 있는 날짜에 마커를 표시하기 위한 API입니다.<br><br>' +
       '**조회 조건**<br>' +
       '- 사용자가 소속된 모임의 모든 일정<br>' +
-      '- 모집중(RECRUITING) 또는 진행중(IN_PROGRESS) 상태인 일정<br><br>' +
+      '- 모집중(RECRUITING), 진행중(IN_PROGRESS), 종료(ENDED) 상태인 일정<br><br>' +
       '**응답 구조**<br>' +
       '- dates: 일정이 있는 날짜 배열 (YYYY-MM-DD 형식)<br><br>' +
       '**주의사항**<br>' +
