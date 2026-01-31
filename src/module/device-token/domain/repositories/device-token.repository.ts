@@ -30,12 +30,12 @@ export abstract class DeviceTokenRepository {
   abstract findByToken(token: string): Promise<DeviceToken | undefined>;
 
   /**
-   * 사용자 ID로 모든 디바이스 토큰 조회
+   * 사용자 ID로 디바이스 토큰 조회 (1:1 관계)
    *
    * @param userId 사용자 ID
-   * @returns DeviceToken 배열
+   * @returns DeviceToken 또는 undefined
    */
-  abstract findByUserId(userId: string): Promise<DeviceToken[]>;
+  abstract findByUserId(userId: string): Promise<DeviceToken | undefined>;
 
   /**
    * 여러 사용자 ID로 디바이스 토큰 일괄 조회
@@ -73,4 +73,11 @@ export abstract class DeviceTokenRepository {
    * @returns 삭제된 토큰 수
    */
   abstract deleteStaleTokens(staleDate: Date): Promise<number>;
+
+  /**
+   * 사용자 ID로 모든 디바이스 토큰 삭제
+   *
+   * @param userId 사용자 ID
+   */
+  abstract deleteByUserId(userId: string): Promise<void>;
 }
