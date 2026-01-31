@@ -8,9 +8,11 @@ import { UserCharacterModule } from './character/user-character.module';
 import { UserEventModule } from './event/user-event.module';
 import { UserLocationTrackingModule } from './location-tracking/user-location-tracking.module';
 import { DeviceTokenModule } from './device-token/device-token.module';
+import { AppVersionModule } from './app-version/app-version.module';
 
 export const modules: Type<any>[] = [
   CoreModule,
+  AppVersionModule,
   AuthModule,
   HealthModule,
   UserModule,
