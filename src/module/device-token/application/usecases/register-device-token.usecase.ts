@@ -31,7 +31,7 @@ export class RegisterDeviceTokenUseCase {
       return;
     }
 
-    // 2. 동일 FCM 토큰이 다른 사용자에게 있으면 삭제 (기기 소유권 이전)
+    // 2. 동일 토큰이 다른 사용자에게 있는지 확인 (기기 소유권 이전 케이스)
     const existingByToken = await this.deviceTokenRepository.findByToken(
       dto.token,
     );
@@ -42,21 +42,32 @@ export class RegisterDeviceTokenUseCase {
       );
     }
 
-    // 3. 사용자의 기존 토큰 삭제 (1:1 관계 강제)
-    await this.deviceTokenRepository.deleteByUserId(dto.userId);
-
-    // 4. 새 토큰 생성 및 저장
-    const deviceToken = DeviceToken.create({
-      userId: dto.userId,
-      token: dto.token,
-      platform: dto.platform,
-      deviceInfo: dto.deviceInfo,
-      lastUsedAt: new Date(),
-    });
-
-    await this.deviceTokenRepository.save(deviceToken);
-    this.logger.debug(
-      `새 토큰 등록 완료: userId=${dto.userId}, platform=${dto.platform}`,
+    // 3. 사용자의 기존 토큰 조회
+    const existingByUser = await this.deviceTokenRepository.findByUserId(
+      dto.userId,
     );
+
+    // 4. 토큰 등록 또는 업데이트
+    if (existingByUser) {
+      // 4-1. 기존 토큰이 있으면 업데이트
+      existingByUser.updateToken(dto.token, dto.platform, dto.deviceInfo);
+      await this.deviceTokenRepository.save(existingByUser);
+      this.logger.debug(
+        `토큰 업데이트 완료: userId=${dto.userId}, platform=${dto.platform}`,
+      );
+    } else {
+      // 4-2. 없으면 새로 생성
+      const deviceToken = DeviceToken.create({
+        userId: dto.userId,
+        token: dto.token,
+        platform: dto.platform,
+        deviceInfo: dto.deviceInfo,
+        lastUsedAt: new Date(),
+      });
+      await this.deviceTokenRepository.save(deviceToken);
+      this.logger.debug(
+        `새 토큰 등록 완료: userId=${dto.userId}, platform=${dto.platform}`,
+      );
+    }
   }
 }

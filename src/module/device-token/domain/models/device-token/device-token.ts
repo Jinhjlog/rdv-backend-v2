@@ -77,6 +77,23 @@ export class DeviceToken extends AggregateRoot<DeviceTokenProps> {
   }
 
   /**
+   * 토큰 정보 전체 업데이트
+   *
+   * 기기 변경 또는 토큰 갱신 시 호출합니다.
+   */
+  updateToken(
+    token: string,
+    platform: DevicePlatform,
+    deviceInfo?: string,
+  ): void {
+    this.props.token = token;
+    this.props.platform = platform;
+    this.props.deviceInfo = deviceInfo;
+    this.props.lastUsedAt = new Date();
+    this.props.updatedAt = new Date();
+  }
+
+  /**
    * DeviceToken 생성 팩토리 메서드
    *
    * @param props 디바이스 토큰 속성 (id, createdAt, updatedAt 제외)
