@@ -42,6 +42,12 @@ export class CharacterListItemResponseDto {
     example: '2025-01-01T00:00:00.000Z',
   })
   updatedAt: Date;
+
+  @ApiProperty({
+    description: '보유 여부',
+    example: true,
+  })
+  isOwned: boolean;
 }
 
 export class CharacterListResponseDto {
