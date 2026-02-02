@@ -3,16 +3,11 @@ import { CharacterCoreModule } from './character-core.module';
 import { UserCharacterController } from './presentation/controllers';
 import {
   FindCharacterListUseCase,
-  FindMyCharacterListUseCase,
   UnlockCharacterUseCase,
 } from './application/usecases';
 import { UserRegisteredEventHandler } from './application/handlers';
 
-const useCases: Provider[] = [
-  FindCharacterListUseCase,
-  FindMyCharacterListUseCase,
-  UnlockCharacterUseCase,
-];
+const useCases: Provider[] = [FindCharacterListUseCase, UnlockCharacterUseCase];
 
 /**
  * Character User 모듈
