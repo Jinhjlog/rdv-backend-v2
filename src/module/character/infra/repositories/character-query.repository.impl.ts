@@ -5,6 +5,7 @@ import {
 } from '../../domain/repositories';
 import {
   CharacterListItemQueryModel,
+  CharacterListItemWithOwnershipQueryModel,
   CharacterDetailQueryModel,
 } from '../../domain/models';
 import { PrismaService } from '@core/database/prisma.service';
@@ -46,34 +47,42 @@ export class CharacterQueryRepositoryImpl implements CharacterQueryRepository {
   }
 
   /**
-   * 내 보유 캐릭터 목록을 조회합니다.
+   * 보유 여부 포함 목록을 조회합니다.
    *
    * @param userId 사용자 ID
-   * @returns 보유한 캐릭터 목록
+   * @returns 보유 여부 포함 목록
    */
-  async findMyCharacterList(
+  async findListWithOwnership(
     userId: string,
-  ): Promise<CharacterListItemQueryModel[]> {
-    const results = await this.prisma.user_characters.findMany({
-      where: {
-        user_id: userId,
-      },
-      include: {
-        characters: true,
+  ): Promise<CharacterListItemWithOwnershipQueryModel[]> {
+    const results = await this.prisma.characters.findMany({
+      select: {
+        id: true,
+        character_code: true,
+        name: true,
+        description: true,
+        is_default: true,
+        created_at: true,
+        updated_at: true,
+        user_characters: {
+          where: { user_id: userId },
+          select: { id: true },
+        },
       },
       orderBy: {
-        unlocked_at: 'asc',
+        created_at: 'asc',
       },
     });
 
-    return results.map((result) => ({
-      id: result.characters.id,
-      characterCode: result.characters.character_code,
-      name: result.characters.name,
-      description: result.characters.description,
-      isDefault: result.characters.is_default,
-      createdAt: result.characters.created_at,
-      updatedAt: result.characters.updated_at,
+    return results.map((char) => ({
+      id: char.id,
+      characterCode: char.character_code,
+      name: char.name,
+      description: char.description,
+      isDefault: char.is_default,
+      createdAt: char.created_at,
+      updatedAt: char.updated_at,
+      isOwned: char.user_characters.length > 0,
     }));
   }
 

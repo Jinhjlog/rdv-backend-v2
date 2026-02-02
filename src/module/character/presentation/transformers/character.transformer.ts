@@ -1,12 +1,12 @@
-import { CharacterListItemQueryModel } from '../../domain/models';
+import { CharacterListItemWithOwnershipQueryModel } from '../../domain/models';
 import { CharacterListResponseDto } from '../dtos/response';
 
 export class CharacterTransformer {
   /**
-   * QueryModel 배열을 ListResponseDto로 변환합니다
+   * 보유 여부 포함 QueryModel 배열을 ListResponseDto로 변환합니다
    */
-  static toListResponse(
-    queryModels: CharacterListItemQueryModel[],
+  static toListWithOwnershipResponse(
+    queryModels: CharacterListItemWithOwnershipQueryModel[],
   ): CharacterListResponseDto {
     return {
       characters: queryModels.map((model) => ({
@@ -17,6 +17,7 @@ export class CharacterTransformer {
         isDefault: model.isDefault,
         createdAt: model.createdAt,
         updatedAt: model.updatedAt,
+        isOwned: model.isOwned,
       })),
     };
   }
