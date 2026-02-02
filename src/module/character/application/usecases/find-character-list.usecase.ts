@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CharacterQueryRepository } from '../../domain/repositories';
-import { CharacterListItemQueryModel } from '../../domain/models';
+import { CharacterListItemWithOwnershipQueryModel } from '../../domain/models';
+
+export interface FindCharacterListInput {
+  userId: string;
+}
 
 @Injectable()
 export class FindCharacterListUseCase {
@@ -8,8 +12,11 @@ export class FindCharacterListUseCase {
     private readonly characterQueryRepository: CharacterQueryRepository,
   ) {}
 
-  async execute(): Promise<CharacterListItemQueryModel[]> {
-    const characters = await this.characterQueryRepository.findList();
+  async execute(
+    input: FindCharacterListInput,
+  ): Promise<CharacterListItemWithOwnershipQueryModel[]> {
+    const characters =
+      await this.characterQueryRepository.findListWithOwnership(input.userId);
 
     return characters;
   }
