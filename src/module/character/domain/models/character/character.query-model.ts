@@ -12,6 +12,13 @@ export interface CharacterListItemQueryModel {
 }
 
 /**
+ * 보유 여부 포함 캐릭터 목록 조회용 쿼리 모델
+ */
+export interface CharacterListItemWithOwnershipQueryModel extends CharacterListItemQueryModel {
+  isOwned: boolean;
+}
+
+/**
  * 캐릭터 상세 조회용 쿼리 모델
  */
 export interface CharacterDetailQueryModel {

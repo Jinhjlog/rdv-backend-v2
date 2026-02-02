@@ -1,5 +1,6 @@
 import {
   CharacterListItemQueryModel,
+  CharacterListItemWithOwnershipQueryModel,
   CharacterDetailQueryModel,
 } from '../models';
 
@@ -21,14 +22,14 @@ export abstract class CharacterQueryRepository {
   abstract findList(): Promise<CharacterListItemQueryModel[]>;
 
   /**
-   * 내 보유 캐릭터 목록을 조회합니다.
+   * 보유 여부 포함 목록을 조회합니다.
    *
    * @param userId 사용자 ID
-   * @returns 보유한 캐릭터 목록
+   * @returns 보유 여부 포함 목록
    */
-  abstract findMyCharacterList(
+  abstract findListWithOwnership(
     userId: string,
-  ): Promise<CharacterListItemQueryModel[]>;
+  ): Promise<CharacterListItemWithOwnershipQueryModel[]>;
 
   /**
    * ID로 상세 정보를 조회합니다.
