@@ -7,6 +7,7 @@ export interface CharacterListItemQueryModel {
   name: string;
   description: string;
   isDefault: boolean;
+  unlockHint?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +28,7 @@ export interface CharacterDetailQueryModel {
   name: string;
   description: string;
   isDefault: boolean;
+  unlockHint?: string;
   createdAt: Date;
   updatedAt: Date;
 }

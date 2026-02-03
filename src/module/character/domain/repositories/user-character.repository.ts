@@ -6,4 +6,5 @@ export abstract class UserCharacterRepository {
     userId: string,
     characterId: string,
   ): Promise<UserCharacter | undefined>;
+  abstract exists(userId: string, characterId: string): Promise<boolean>;
 }

@@ -32,6 +32,13 @@ export class CharacterListItemResponseDto {
   isDefault: boolean;
 
   @ApiProperty({
+    description: '언락 힌트',
+    example: '후원 페이지를 방문해보세요',
+    nullable: true,
+  })
+  unlockHint: string | null;
+
+  @ApiProperty({
     description: '생성일',
     example: '2025-01-01T00:00:00.000Z',
   })
