@@ -21,6 +21,7 @@
 ```
 
 이 스크립트는 다음 작업을 수행합니다:
+
 - ✅ Supabase CLI 설치 확인
 - ✅ Supabase 계정 로그인
 - ✅ 프로젝트 Reference ID 입력 및 연결
@@ -33,12 +34,16 @@
 ```
 
 이 스크립트는 다음 작업을 수행합니다:
+
 1. ✅ Supabase CLI 설치 확인
 2. ✅ Supabase 프로젝트 초기화 확인
 3. ✅ Supabase 프로덕션 프로젝트 연결 확인
-4. ✅ 로컬과 프로덕션 스키마 차이 확인 및 마이그레이션 파일 생성
+4. ✅ **로컬 DB**와 프로덕션 DB 직접 비교 및 마이그레이션 파일 생성 (`--linked` 옵션 사용)
 5. ✅ 프로덕션에 마이그레이션 적용
 6. ✅ Prisma 클라이언트 재생성
+
+> ⚠️ **중요**: 이 스크립트는 `--linked` 옵션을 사용하여 **로컬 Supabase DB**와 프로덕션을 직접 비교합니다.
+> 따라서 스크립트 실행 전에 로컬 Supabase가 실행 중이어야 합니다: `npx supabase start`
 
 ## 📖 상세 가이드
 
@@ -50,6 +55,7 @@
 4. **Reference ID** 복사
 
 또는 URL에서 확인:
+
 ```
 https://supabase.com/dashboard/project/[여기가 Reference ID]
 ```
@@ -70,15 +76,23 @@ npx supabase login
 # 3. 프로젝트 연결
 npx supabase link --project-ref YOUR_PROJECT_REF
 
-# 4. 마이그레이션 파일 생성
-npx supabase db diff --use-migra -f init_schema
+# 4. 로컬 Supabase 시작 (필수!)
+npx supabase start
 
-# 5. 프로덕션에 푸시
+# 5. 마이그레이션 파일 생성 (로컬 DB와 프로덕션 비교)
+npx supabase db diff --linked -f my_migration_name
+
+# 6. 프로덕션에 푸시
 npx supabase db push
 
-# 6. Prisma 클라이언트 재생성
+# 7. Prisma 클라이언트 재생성
 npm run prisma:generate:prod
 ```
+
+> 💡 `--linked` vs `--use-migra` 차이:
+>
+> - `--linked`: **로컬 DB** ↔ 프로덕션 직접 비교 (권장)
+> - `--use-migra`: shadow DB (마이그레이션 파일 적용 상태) ↔ 프로덕션 비교
 
 ## ⚠️ 주의사항
 
@@ -119,6 +133,32 @@ npx supabase projects list
 ### "No schema changes detected" 메시지
 
 로컬과 프로덕션 스키마가 이미 동일한 상태입니다. 이는 정상입니다.
+
+### 로컬 DB 변경이 diff에 감지되지 않음
+
+**원인**: `--use-migra` 옵션을 사용하면 shadow DB(마이그레이션 파일 적용 상태)와 프로덕션을 비교하므로, 로컬 DB에 직접 추가한 변경사항이 감지되지 않습니다.
+
+**해결책**: `--linked` 옵션을 사용하세요.
+
+```bash
+# 잘못된 방법 (로컬 DB 변경 감지 안됨)
+npx supabase db diff --use-migra -f migration_name
+
+# 올바른 방법 (로컬 DB와 프로덕션 직접 비교)
+npx supabase db diff --linked -f migration_name
+```
+
+### 로컬 Supabase가 실행 중이 아님
+
+`--linked` 옵션은 로컬 Supabase DB와 연결이 필요합니다.
+
+```bash
+# 로컬 Supabase 상태 확인
+npx supabase status
+
+# 실행 중이 아니면 시작
+npx supabase start
+```
 
 ### 마이그레이션 적용 실패
 
@@ -169,17 +209,18 @@ git commit -m "🎨 db: 새로운 스키마 마이그레이션 추가"
   "scripts": {
     "supabase:setup": "./scripts/setup-supabase-link.sh",
     "supabase:sync": "./scripts/sync-to-production.sh",
-    "supabase:diff": "npx supabase db diff --use-migra",
+    "supabase:diff": "npx supabase db diff --linked",
     "supabase:push": "npx supabase db push"
   }
 }
 ```
 
 사용:
+
 ```bash
 npm run supabase:setup    # 프로젝트 연결
 npm run supabase:sync     # 프로덕션 동기화
-npm run supabase:diff     # 차이점 확인
+npm run supabase:diff     # 차이점 확인 (로컬 DB 기준)
 npm run supabase:push     # 프로덕션에 푸시
 ```
 
@@ -194,4 +235,4 @@ npm run supabase:push     # 프로덕션에 푸시
 
 ---
 
-**마지막 업데이트:** 2026-01-21
+**마지막 업데이트:** 2026-02-03

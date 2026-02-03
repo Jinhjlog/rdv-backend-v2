@@ -54,35 +54,48 @@ else
 fi
 
 # 4. 현재 스키마와 프로덕션 스키마 차이 확인
-echo -e "\n${YELLOW}[4/5]${NC} 로컬 스키마와 프로덕션 스키마 차이 확인..."
-echo "마이그레이션 파일을 생성합니다..."
+echo -e "\n${YELLOW}[4/5]${NC} 로컬 DB와 프로덕션 스키마 차이 확인..."
+echo -e "${YELLOW}📌 로컬 Supabase DB와 프로덕션 DB를 직접 비교합니다.${NC}"
 
 # 마이그레이션 디렉토리가 없으면 생성
 mkdir -p supabase/migrations
 
-# 현재 날짜로 마이그레이션 파일명 생성
-MIGRATION_NAME="init_schema"
-TIMESTAMP=$(date +%Y%m%d%H%M%S)
+# 마이그레이션 이름 입력 받기
+echo ""
+read -p "마이그레이션 이름을 입력하세요 (예: add_user_column): " MIGRATION_NAME
+if [ -z "$MIGRATION_NAME" ]; then
+    MIGRATION_NAME="schema_update"
+fi
 
 echo -e "${YELLOW}마이그레이션 이름: ${MIGRATION_NAME}${NC}"
 
-# diff 생성 (실패해도 계속 진행)
-if npx supabase db diff --use-migra -f "${MIGRATION_NAME}"; then
+# --linked 옵션으로 로컬 DB와 프로덕션 직접 비교
+# (기존 --use-migra는 shadow DB 기준이라 로컬 DB 직접 변경사항을 감지 못함)
+echo "로컬 DB와 프로덕션 DB 차이를 분석합니다..."
+if npx supabase db diff --linked -f "${MIGRATION_NAME}"; then
     echo -e "${GREEN}✅ 마이그레이션 파일 생성 완료${NC}"
 
     # 생성된 마이그레이션 파일 확인
     LATEST_MIGRATION=$(ls -t supabase/migrations/*.sql 2>/dev/null | head -n 1)
     if [ -n "$LATEST_MIGRATION" ]; then
+        # 빈 파일인지 확인
+        if [ ! -s "$LATEST_MIGRATION" ]; then
+            echo -e "${YELLOW}⚠️  변경사항이 없습니다. 로컬 DB와 프로덕션이 이미 동일합니다.${NC}"
+            rm -f "$LATEST_MIGRATION"
+            echo "빈 마이그레이션 파일을 삭제했습니다."
+            exit 0
+        fi
+
         echo -e "${GREEN}생성된 마이그레이션 파일: ${LATEST_MIGRATION}${NC}"
         echo -e "\n${YELLOW}마이그레이션 내용 미리보기:${NC}"
         echo "----------------------------------------"
-        head -n 20 "$LATEST_MIGRATION"
+        head -n 30 "$LATEST_MIGRATION"
         echo "----------------------------------------"
         echo "(전체 내용은 파일을 직접 확인하세요)"
     fi
 else
     echo -e "${RED}⚠️  마이그레이션 파일 생성 중 문제가 발생했습니다.${NC}"
-    echo "이미 동기화되어 있거나 변경사항이 없을 수 있습니다."
+    echo "로컬 Supabase가 실행 중인지 확인하세요: npx supabase status"
 
     read -p "계속 진행하시겠습니까? (y/N): " -n 1 -r
     echo
