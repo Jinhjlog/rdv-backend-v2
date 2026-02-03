@@ -7,7 +7,10 @@ import {
   HandleFailedTokensUseCase,
   SendTestPushUseCase,
 } from './application/usecases';
-import { EventStartedPushHandler } from './application/handlers';
+import {
+  EventStartedPushHandler,
+  CharacterUnlockedPushHandler,
+} from './application/handlers';
 import { DeviceTokenController } from './presentation/controllers';
 import { DeviceTokenRepository } from './domain/repositories';
 import { TokenCleanupScheduler } from './infra/schedulers';
@@ -20,7 +23,10 @@ const useCases: Provider[] = [
   SendTestPushUseCase,
 ];
 
-const handlers: Provider[] = [EventStartedPushHandler];
+const handlers: Provider[] = [
+  EventStartedPushHandler,
+  CharacterUnlockedPushHandler,
+];
 
 @Module({
   controllers: [DeviceTokenController],
