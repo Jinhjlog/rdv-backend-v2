@@ -5,7 +5,7 @@ export class CharacterTransformer {
   /**
    * 보유 여부 포함 QueryModel 배열을 ListResponseDto로 변환합니다
    */
-  static toListWithOwnershipResponse(
+  static toListResponse(
     queryModels: CharacterListItemWithOwnershipQueryModel[],
   ): CharacterListResponseDto {
     return {
@@ -15,6 +15,7 @@ export class CharacterTransformer {
         name: model.name,
         description: model.description,
         isDefault: model.isDefault,
+        unlockHint: model.unlockHint ?? null,
         createdAt: model.createdAt,
         updatedAt: model.updatedAt,
         isOwned: model.isOwned,
