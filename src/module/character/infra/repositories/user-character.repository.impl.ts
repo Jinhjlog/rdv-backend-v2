@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DomainEvents } from '@lib/domain/events/domain-events';
 import { UserCharacterRepository } from '../../domain/repositories';
 import { UserCharacter } from '../../domain/models';
 import { PrismaService } from '@core/database/prisma.service';
@@ -16,6 +17,11 @@ export class UserCharacterRepositoryImpl implements UserCharacterRepository {
       create: raw,
       update: raw,
     });
+
+    // Domain Events 발행
+    if (entity.domainEvents.length > 0) {
+      DomainEvents.dispatchEventsForAggregate(entity.id);
+    }
   }
 
   async findByUserIdAndCharacterId(
@@ -35,5 +41,16 @@ export class UserCharacterRepositoryImpl implements UserCharacterRepository {
     }
 
     return UserCharacterMapper.toDomain(raw);
+  }
+
+  async exists(userId: string, characterId: string): Promise<boolean> {
+    const count = await this.prisma.user_characters.count({
+      where: {
+        user_id: userId,
+        character_id: characterId,
+      },
+    });
+
+    return count > 0;
   }
 }
