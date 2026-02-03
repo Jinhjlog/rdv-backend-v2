@@ -1,4 +1,5 @@
 import { AggregateRoot, UniqueEntityId } from '@lib/domain';
+import { CharacterUnlockedEvent } from '../../events';
 
 export interface UserCharacterProps {
   id?: string;
@@ -16,6 +17,31 @@ export interface UserCharacterProps {
 export class UserCharacter extends AggregateRoot<UserCharacterProps> {
   constructor(props: UserCharacterProps) {
     super(props, new UniqueEntityId(props.id));
+  }
+
+  /**
+   * 새로운 UserCharacter를 생성합니다.
+   * 생성 시 CharacterUnlockedEvent를 발행합니다.
+   */
+  static create(
+    props: Pick<UserCharacterProps, 'userId' | 'characterId'>,
+  ): UserCharacter {
+    const userCharacter = new UserCharacter({
+      ...props,
+      unlockedAt: new Date(),
+    });
+
+    return userCharacter;
+  }
+
+  unlock(name: string, code: string): void {
+    this.addDomainEvent(
+      new CharacterUnlockedEvent(this.id, {
+        characterCode: code,
+        name: name,
+        characterId: this.characterId,
+      }),
+    );
   }
 
   // Getter 메서드
