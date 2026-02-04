@@ -27,8 +27,7 @@ export class CharacterUnlockedPushHandler implements OnModuleInit {
   }
 
   async handle(event: CharacterUnlockedEvent): Promise<void> {
-    const userId = event.aggregateId.toString();
-    const { characterCode, name } = event.metadata;
+    const { userId, characterCode, name } = event.metadata;
 
     this.logger.log(
       `캐릭터 언락 푸시 핸들러: userId=${userId}, character=${name}`,
