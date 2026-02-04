@@ -4,7 +4,7 @@
 export class TrackUnlockEventDto {
   userId: string;
   eventType: string;
-  payload: Record<string, unknown>;
+  payload?: Record<string, unknown>;
 }
 
 /**

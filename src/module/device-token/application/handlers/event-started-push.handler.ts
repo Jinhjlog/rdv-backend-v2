@@ -3,6 +3,7 @@ import { DomainEvents } from '@lib/domain/events/domain-events';
 import { EventStartedEvent } from '../../../event/domain/events';
 import { DeviceTokenRepository } from '../../domain/repositories';
 import { NotificationSenderService } from '@core/firebase/notification-sender.service';
+import { SilentPushType } from '../../domain/constants';
 
 /**
  * 일정 시작 시 사일런트 푸시 발송 핸들러
@@ -54,7 +55,7 @@ export class EventStartedPushHandler implements OnModuleInit {
       await this.notificationSenderService.sendSilentPushToMultipleDevices(
         tokens,
         {
-          type: 'EVENT_STARTED',
+          type: SilentPushType.EventStarted,
           eventId,
           groupId,
         },

@@ -1,7 +1,7 @@
 # 캐릭터 언락 시스템 - 클라이언트 구현 가이드
 
 > **대상**: Android/iOS 프론트엔드 개발자
-> **최종 수정일**: 2026-02-03
+> **최종 수정일**: 2026-02-04
 
 ---
 
@@ -27,7 +27,7 @@
 
 ```
 예시:
-- 후원 메뉴에 처음 들어가면 → "갈색 강아지" 캐릭터 획득
+- 채팅 5번 이상 사용하면 → "고구마" 캐릭터 획득 (서버 검증)
 - 레벨 10 달성하면 → "파란 새" 캐릭터 획득
 - 첫 모임 생성하면 → "초록 개구리" 캐릭터 획득
 ```
@@ -39,6 +39,7 @@
 | **서버가 주인**   | 어떤 캐릭터가 언락되는지는 **서버만 알고 있음** | 결과만 받아서 표시             |
 | **조건 숨김**     | 언락 조건을 클라이언트에 노출하면 안 됨         | 조건을 추측하는 코드 금지      |
 | **트래킹 최적화** | 모든 캐릭터를 보유하면 트래킹 불필요            | 서버 설정에 따라 트래킹 ON/OFF |
+| **서버 검증**     | 일부 이벤트는 서버가 직접 데이터를 검증         | payload 없이 eventType만 전송  |
 
 ### 1.3 클라이언트가 아는 것 vs 모르는 것
 
@@ -111,10 +112,10 @@ sequenceDiagram
     User->>App: 후원 메뉴 터치
     App->>App: needsTracking 확인 → true
 
-    App->>API: POST /api/v1/characters/unlock<br/>{ eventType: "MENU_ACCESSED",<br/>  payload: { menuId: "sponsor_menu" } }
+    App->>API: POST /api/v1/characters/unlock<br/>{ eventType: "CHAT_COUNT" }
 
-    API->>API: 조건 확인 및 캐릭터 지급
-    API-->>App: { unlockedCharacters: [<br/>  { characterCode: "brown_dog",<br/>    name: "갈색 강아지", ... }] }
+    API->>API: 서버에서 채팅 횟수 조회 및 조건 확인
+    API-->>App: { unlockedCharacters: [<br/>  { characterCode: "brown_dog",<br/>    name: "고구마", ... }] }
 
     App->>User: 🎉 언락 다이얼로그 표시
     User->>App: "바로 사용하기" 터치
@@ -170,30 +171,39 @@ POST /api/v1/characters/unlock
 Authorization: Bearer {accessToken}
 Content-Type: application/json
 
+// 클라이언트 검증 이벤트 (payload 필요)
 {
   "eventType": "MENU_ACCESSED",
   "payload": {
     "menuId": "sponsor_menu"
   }
 }
+
+// 서버 검증 이벤트 (payload 불필요)
+{
+  "eventType": "CHAT_COUNT"
+}
 ```
 
 **요청 필드:**
 
-| 필드        | 타입   | 필수 | 설명                             |
-| ----------- | ------ | ---- | -------------------------------- |
-| `eventType` | string | ✅   | 이벤트 타입 (아래 표 참조)       |
-| `payload`   | object | ✅   | 추가 정보 (이벤트 타입별로 다름) |
+| 필드        | 타입   | 필수 | 설명                                                      |
+| ----------- | ------ | ---- | --------------------------------------------------------- |
+| `eventType` | string | ✅   | 이벤트 타입 (아래 표 참조)                                |
+| `payload`   | object | ❌   | 추가 정보. 서버 검증 이벤트 타입은 생략 가능 |
 
 **이벤트 타입 목록:**
 
-| eventType              | 설명           | payload 예시                       |
-| ---------------------- | -------------- | ---------------------------------- |
-| `MENU_ACCESSED`        | 특정 메뉴 접근 | `{ "menuId": "sponsor_menu" }`     |
-| `SCREEN_VIEWED`        | 특정 화면 조회 | `{ "screenId": "profile_screen" }` |
-| `LEVEL_REACHED`        | 특정 레벨 도달 | `{ "level": 10 }`                  |
-| `FIRST_ACTION`         | 최초 특정 행동 | `{ "action": "create_meeting" }`   |
-| `MEETING_PARTICIPATED` | 모임 참여      | `{ "meetingId": "..." }`           |
+| eventType              | 검증 방식      | 설명               | payload 예시                       |
+| ---------------------- | -------------- | ------------------ | ---------------------------------- |
+| `CHAT_COUNT`           | **서버 검증**  | 채팅 횟수 기반     | 불필요 (서버에서 직접 조회)        |
+| `MENU_ACCESSED`        | 클라이언트     | 특정 메뉴 접근     | `{ "menuId": "sponsor_menu" }`     |
+| `SCREEN_VIEWED`        | 클라이언트     | 특정 화면 조회     | `{ "screenId": "profile_screen" }` |
+| `LEVEL_REACHED`        | 클라이언트     | 특정 레벨 도달     | `{ "level": 10 }`                  |
+| `FIRST_ACTION`         | 클라이언트     | 최초 특정 행동     | `{ "action": "create_meeting" }`   |
+| `MEETING_PARTICIPATED` | 클라이언트     | 모임 참여          | `{ "meetingId": "..." }`           |
+
+> **서버 검증 이벤트**: 서버가 직접 DB에서 데이터를 조회하여 조건을 확인합니다. 클라이언트가 payload를 조작할 수 없으므로 보안이 강화됩니다.
 
 **응답:**
 
@@ -468,7 +478,7 @@ data class UnlockConfigResponse(
 // data/dto/TrackUnlockEventRequest.kt
 data class TrackUnlockEventRequest(
     val eventType: String,
-    val payload: Map<String, Any>
+    val payload: Map<String, Any>? = null  // 서버 검증 이벤트는 생략 가능
 )
 
 // data/dto/TrackUnlockEventResponse.kt
@@ -633,13 +643,26 @@ class UnlockEventTracker @Inject constructor(
         }
     }
 
+    /**
+     * 채팅 횟수 이벤트 (서버 검증)
+     *
+     * 서버가 직접 채팅 횟수를 조회하므로 payload 불필요
+     */
+    fun trackChatCount() {
+        if (!shouldTrack("CHAT_COUNT")) return
+
+        scope.launch {
+            trackEventInternal(eventType = "CHAT_COUNT")
+        }
+    }
+
     // ============================================================
     // 내부 구현
     // ============================================================
 
     private suspend fun trackEventInternal(
         eventType: String,
-        payload: Map<String, Any>
+        payload: Map<String, Any>? = null
     ) {
         runCatching {
             val response = characterApi.trackUnlockEvent(
@@ -905,12 +928,13 @@ fun getCharacterImage(characterCode: String): Int {
 
 현재 구현된 이벤트와 발생 위치:
 
-| eventType       | payload                        | 발생 위치         | 비고             |
-| --------------- | ------------------------------ | ----------------- | ---------------- |
-| `MENU_ACCESSED` | `{ menuId: "sponsor_menu" }`   | 후원 메뉴 화면    | `LaunchedEffect` |
-| `MENU_ACCESSED` | `{ menuId: "secret_menu" }`    | 비밀 메뉴 화면    | `LaunchedEffect` |
-| `LEVEL_REACHED` | `{ level: N }`                 | 레벨업 처리 후    | ViewModel        |
-| `FIRST_ACTION`  | `{ action: "create_meeting" }` | 모임 생성 완료 후 | ViewModel        |
+| eventType       | payload                        | 발생 위치         | 검증 방식     | 비고             |
+| --------------- | ------------------------------ | ----------------- | ------------- | ---------------- |
+| `CHAT_COUNT`    | 불필요                         | 채팅 전송 후      | **서버 검증** | ViewModel        |
+| `MENU_ACCESSED` | `{ menuId: "sponsor_menu" }`   | 후원 메뉴 화면    | 클라이언트    | `LaunchedEffect` |
+| `MENU_ACCESSED` | `{ menuId: "secret_menu" }`    | 비밀 메뉴 화면    | 클라이언트    | `LaunchedEffect` |
+| `LEVEL_REACHED` | `{ level: N }`                 | 레벨업 처리 후    | 클라이언트    | ViewModel        |
+| `FIRST_ACTION`  | `{ action: "create_meeting" }` | 모임 생성 완료 후 | 클라이언트    | ViewModel        |
 
 > **Note**: 새 이벤트 추가 시 이 표에도 추가해주세요!
 
