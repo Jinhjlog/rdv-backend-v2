@@ -18,6 +18,24 @@ export const CharacterInfos: Prisma.charactersCreateInput[] = [
     created_at: new Date(),
     updated_at: new Date(),
   },
+  {
+    id: '1a2b3c4d-5e6f-7890-abcd-ef1234567890',
+    character_code: 'brown_dog',
+    name: '고구마',
+    description: '내 최애 간식은 고구마',
+    is_default: false,
+    created_at: new Date(),
+    updated_at: new Date(),
+  },
+  {
+    id: '2b3c4d5e-6f78-90ab-cdef-234567890abc',
+    character_code: 'black_dog',
+    name: '밤이',
+    description: '불켜라 안보인다',
+    is_default: false,
+    created_at: new Date(),
+    updated_at: new Date(),
+  },
 ];
 
 const prisma = new PrismaClient({
@@ -27,13 +45,23 @@ const prisma = new PrismaClient({
 async function main() {
   console.log('DB 시드 데이터 추가 중...');
 
-  // 캐릭터(Character) 데이터 생성
-  console.log('🎮 Character 데이터 추가 중...');
-  await prisma.characters.createMany({
-    data: [...CharacterInfos],
-    skipDuplicates: true,
-  });
-  console.log('✅ Character 데이터 추가 완료');
+  // 캐릭터(Character) 데이터 생성 (upsert)
+  console.log('🎮 Character 데이터 추가/업데이트 중...');
+  for (const character of CharacterInfos) {
+    await prisma.characters.upsert({
+      where: { id: character.id },
+      update: {
+        character_code: character.character_code,
+        name: character.name,
+        description: character.description,
+        is_default: character.is_default,
+        unlock_condition: character.unlock_condition,
+        updated_at: new Date(),
+      },
+      create: character,
+    });
+  }
+  console.log('✅ Character 데이터 추가/업데이트 완료');
 
   console.log('DB 시드 데이터 추가 완료!');
 }

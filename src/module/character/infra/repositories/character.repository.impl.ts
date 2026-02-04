@@ -37,4 +37,17 @@ export class CharacterRepositoryImpl implements CharacterRepository {
 
     return raw.id;
   }
+
+  async findByEventType(eventType: string): Promise<Character[]> {
+    const results = await this.prisma.characters.findMany({
+      where: {
+        unlock_condition: {
+          path: ['eventType'],
+          equals: eventType,
+        },
+      },
+    });
+
+    return results.map((raw) => CharacterMapper.toDomain(raw));
+  }
 }

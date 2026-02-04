@@ -4,10 +4,17 @@ import { UserCharacterController } from './presentation/controllers';
 import {
   FindCharacterListUseCase,
   UnlockCharacterUseCase,
+  GetUnlockConfigUseCase,
+  TrackUnlockEventUseCase,
 } from './application/usecases';
 import { UserRegisteredEventHandler } from './application/handlers';
 
-const useCases: Provider[] = [FindCharacterListUseCase, UnlockCharacterUseCase];
+const useCases: Provider[] = [
+  FindCharacterListUseCase,
+  UnlockCharacterUseCase,
+  GetUnlockConfigUseCase,
+  TrackUnlockEventUseCase,
+];
 
 /**
  * Character User 모듈

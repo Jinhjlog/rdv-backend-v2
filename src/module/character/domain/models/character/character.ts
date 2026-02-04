@@ -1,11 +1,22 @@
 import { AggregateRoot, UniqueEntityId } from '@lib/domain';
 
+/**
+ * 언락 조건 인터페이스
+ *
+ * characters.unlock_condition 필드에 저장되는 JSON 구조
+ */
+export interface UnlockCondition {
+  eventType: string;
+  [key: string]: unknown;
+}
+
 export interface CharacterProps {
   id?: string;
   characterCode: string;
   name: string;
   description: string;
-  unlockCondition?: Record<string, unknown>;
+  unlockCondition?: UnlockCondition;
+  unlockHint?: string;
   isDefault: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -29,8 +40,12 @@ export class Character extends AggregateRoot<CharacterProps> {
     return this.props.description;
   }
 
-  get unlockCondition(): Record<string, unknown> | undefined {
+  get unlockCondition(): UnlockCondition | undefined {
     return this.props.unlockCondition;
+  }
+
+  get unlockHint(): string | undefined {
+    return this.props.unlockHint;
   }
 
   get isDefault(): boolean {
