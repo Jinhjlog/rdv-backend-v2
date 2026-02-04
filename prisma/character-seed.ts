@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from './generated/prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 /**
  * @warning
@@ -23,6 +23,8 @@ export const CharacterInfos: Prisma.charactersCreateInput[] = [
     character_code: 'brown_dog',
     name: '고구마',
     description: '내 최애 간식은 고구마',
+    unlock_condition: { eventType: 'CHAT_COUNT', count: 5 },
+    unlock_hint: '나는 대화를 좋아해요!',
     is_default: false,
     created_at: new Date(),
     updated_at: new Date(),
@@ -32,6 +34,7 @@ export const CharacterInfos: Prisma.charactersCreateInput[] = [
     character_code: 'black_dog',
     name: '밤이',
     description: '불켜라 안보인다',
+    unlock_hint: '언락할 수 없는 캐릭터예요...',
     is_default: false,
     created_at: new Date(),
     updated_at: new Date(),

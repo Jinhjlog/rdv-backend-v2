@@ -109,10 +109,13 @@ export class UserCharacterController {
     description:
       '클라이언트에서 발생한 이벤트를 기반으로 캐릭터 언락을 처리합니다.<br><br>' +
       '**목적**<br>' +
-      '특정 조건(메뉴 접근, 레벨 달성 등)을 충족하면 자동으로 캐릭터를 지급합니다.<br><br>' +
+      '특정 조건(메뉴 접근, 채팅 횟수 등)을 충족하면 자동으로 캐릭터를 지급합니다.<br><br>' +
       '**요청 구조**<br>' +
-      '- eventType: 이벤트 타입 (예: MENU_ACCESSED, LEVEL_REACHED)<br>' +
-      '- payload: 추가 조건 정보 (예: { menuId: "sponsor_menu" })<br><br>' +
+      '- eventType: 이벤트 타입 (예: CHAT_COUNT, MENU_ACCESSED, LEVEL_REACHED)<br>' +
+      '- payload: 추가 조건 정보 (선택). 서버 검증 이벤트는 생략 가능<br><br>' +
+      '**검증 방식**<br>' +
+      '- 서버 검증 (CHAT_COUNT 등): 서버가 DB에서 직접 데이터를 조회하여 조건 확인. payload 불필요<br>' +
+      '- 클라이언트 검증 (MENU_ACCESSED 등): 클라이언트가 payload로 조건 정보 전달<br><br>' +
       '**응답 구조**<br>' +
       '- unlockedCharacters: 이번 요청으로 언락된 캐릭터 목록<br>' +
       '  - characterCode: 캐릭터 코드<br>' +

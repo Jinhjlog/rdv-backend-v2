@@ -6,11 +6,16 @@ import {
   UserRepository,
 } from './domain/repositories';
 import {
+  UnlockConditionResolver,
+  UNLOCK_CONDITION_RESOLVER,
+} from './domain/services';
+import {
   CharacterRepositoryImpl,
   CharacterQueryRepositoryImpl,
   UserCharacterRepositoryImpl,
   UserRepositoryImpl,
 } from './infra/repositories';
+import { UNLOCK_CONDITION_RESOLVER_CLASSES } from './infra/services';
 
 /**
  * Character Core 모듈
@@ -35,12 +40,19 @@ import {
       provide: UserRepository,
       useClass: UserRepositoryImpl,
     },
+    ...UNLOCK_CONDITION_RESOLVER_CLASSES,
+    {
+      provide: UNLOCK_CONDITION_RESOLVER,
+      useFactory: (...resolvers: UnlockConditionResolver[]) => resolvers,
+      inject: UNLOCK_CONDITION_RESOLVER_CLASSES,
+    },
   ],
   exports: [
     CharacterRepository,
     CharacterQueryRepository,
     UserCharacterRepository,
     UserRepository,
+    UNLOCK_CONDITION_RESOLVER,
   ],
 })
 export class CharacterCoreModule {}
