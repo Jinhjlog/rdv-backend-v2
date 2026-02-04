@@ -3,6 +3,7 @@ import { DomainEvents } from '@lib/domain/events/domain-events';
 import { CharacterUnlockedEvent } from '../../../character/domain/events';
 import { DeviceTokenRepository } from '../../domain/repositories';
 import { NotificationSenderService } from '@core/firebase/notification-sender.service';
+import { SilentPushType } from '../../domain/constants';
 
 /**
  * 캐릭터 언락 시 사일런트 푸시 발송 핸들러
@@ -51,7 +52,7 @@ export class CharacterUnlockedPushHandler implements OnModuleInit {
       await this.notificationSenderService.sendSilentPushToMultipleDevices(
         tokens,
         {
-          type: 'CHARACTER_UNLOCKED',
+          type: SilentPushType.CharacterUnlocked,
           characterCode,
           name: name,
         },
