@@ -37,6 +37,7 @@ export class UserCharacter extends AggregateRoot<UserCharacterProps> {
   unlock(name: string, code: string): void {
     this.addDomainEvent(
       new CharacterUnlockedEvent(this.id, {
+        userId: this.userId,
         characterCode: code,
         name: name,
         characterId: this.characterId,

@@ -2,6 +2,7 @@ import { UniqueEntityId } from '@lib/domain';
 import { IDomainEvent } from '@lib/domain/events/i-domain-event';
 
 export interface CharacterUnlockedEventData {
+  userId: string;
   characterId: string;
   characterCode: string;
   name: string;
