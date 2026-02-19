@@ -26,6 +26,14 @@ export type EnvironmentConfig = {
     maxFiles: string;
     maxSize: string;
   };
+  appSecurity: {
+    apiKey: string;
+    attestation: {
+      enabled: boolean;
+      googlePackageName: string;
+      appleAppId: string;
+    };
+  };
 };
 
 function validateEnvVariables(config: EnvironmentConfig) {
@@ -93,6 +101,14 @@ export default (): EnvironmentConfig => {
       directory: process.env.LOG_DIRECTORY || 'logs',
       maxFiles: process.env.LOG_MAX_FILES || '30d',
       maxSize: process.env.LOG_MAX_SIZE || '20m',
+    },
+    appSecurity: {
+      apiKey: process.env.APP_API_KEY || '',
+      attestation: {
+        enabled: process.env.ATTESTATION_ENABLED === 'true',
+        googlePackageName: process.env.GOOGLE_PACKAGE_NAME || '',
+        appleAppId: process.env.APPLE_APP_ID || '',
+      },
     },
   };
 

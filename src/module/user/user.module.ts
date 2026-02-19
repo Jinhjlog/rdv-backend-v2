@@ -13,7 +13,11 @@ import {
   RegisterUseCase,
   GetUserAttendanceStatisticsUseCase,
 } from './application/usecases';
-import { AuthController, UserController } from './presentation/controllers';
+import {
+  AuthController,
+  AuthV2Controller,
+  UserController,
+} from './presentation/controllers';
 import {
   CharactersRepository,
   UserQueryRepository,
@@ -34,7 +38,7 @@ const useCases: Provider[] = [
 
 @Module({
   imports: [JwtModule],
-  controllers: [AuthController, UserController],
+  controllers: [AuthController, AuthV2Controller, UserController],
   providers: [
     {
       provide: UserRepository,
