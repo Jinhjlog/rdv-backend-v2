@@ -1,10 +1,25 @@
 import { Global, Module, Provider } from '@nestjs/common';
-import { JwtBlacklistCheckGuard, UserJwtAuthGuard } from './guards';
+import {
+  JwtBlacklistCheckGuard,
+  UserJwtAuthGuard,
+  ApiKeyGuard,
+  AttestationGuard,
+} from './guards';
 import { UserJwtStrategy } from './strategies';
-import { UserRepository, UserRepositoryImpl } from './infra';
+import {
+  UserRepository,
+  UserRepositoryImpl,
+  AttestationServiceImpl,
+} from './infra';
+import { AttestationService } from './services/attestation.service';
 
 const useCases: Provider[] = [];
-const guards: Provider[] = [UserJwtAuthGuard, JwtBlacklistCheckGuard];
+const guards: Provider[] = [
+  UserJwtAuthGuard,
+  JwtBlacklistCheckGuard,
+  ApiKeyGuard,
+  AttestationGuard,
+];
 
 @Global()
 @Module({
@@ -17,7 +32,11 @@ const guards: Provider[] = [UserJwtAuthGuard, JwtBlacklistCheckGuard];
       provide: UserRepository,
       useClass: UserRepositoryImpl,
     },
+    {
+      provide: AttestationService,
+      useClass: AttestationServiceImpl,
+    },
   ],
-  exports: [UserJwtStrategy, ...guards, UserRepository],
+  exports: [UserJwtStrategy, ...guards, UserRepository, AttestationService],
 })
 export class AuthModule {}
