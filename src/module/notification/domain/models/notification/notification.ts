@@ -55,6 +55,11 @@ export class Notification extends AggregateRoot<NotificationProps> {
     return this.props.createdAt;
   }
 
+  /** 알림 소유자인지 확인 */
+  isOwnedBy(userId: string): boolean {
+    return this.props.userId === userId;
+  }
+
   /** 읽음 처리 (멱등성 보장 - 이미 읽음이면 무시) */
   markAsRead(): void {
     if (this.props.isRead) return;
