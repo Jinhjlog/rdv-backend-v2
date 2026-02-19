@@ -41,7 +41,7 @@ export class NotificationRepositoryImpl implements NotificationRepository {
       where: {
         user_id: userId,
         is_read: false,
-        ...(type && { type: notification_type[type] }),
+        ...(type && { type: type.value as notification_type }),
       },
       data: {
         is_read: true,
