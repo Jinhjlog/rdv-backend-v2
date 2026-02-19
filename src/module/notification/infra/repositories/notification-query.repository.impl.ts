@@ -6,7 +6,6 @@ import {
   FindNotificationListParams,
 } from '../../domain/repositories';
 import { NotificationListItemQueryModel } from '../../domain/models';
-import { NotificationType } from '../../domain/models';
 
 @Injectable()
 export class NotificationQueryRepositoryImpl implements NotificationQueryRepository {
@@ -19,7 +18,7 @@ export class NotificationQueryRepositoryImpl implements NotificationQueryReposit
       where: {
         user_id: params.userId,
         ...(params.type && {
-          type: notification_type[params.type],
+          type: params.type.value as notification_type,
         }),
         ...(params.cursor && {
           OR: [
@@ -38,7 +37,7 @@ export class NotificationQueryRepositoryImpl implements NotificationQueryReposit
     return results.map((raw) => ({
       id: raw.id,
       userId: raw.user_id,
-      type: NotificationType[raw.type],
+      type: raw.type,
       title: raw.title,
       subtitle: raw.subtitle,
       isRead: raw.is_read,

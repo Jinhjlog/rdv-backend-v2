@@ -1,5 +1,3 @@
-import { NotificationType } from './notification-type';
-
 /**
  * Notification 목록 조회용 쿼리 모델
  *
@@ -9,7 +7,7 @@ import { NotificationType } from './notification-type';
 export interface NotificationListItemQueryModel {
   id: string;
   userId: string;
-  type: NotificationType;
+  type: string;
   title: string;
   subtitle: string;
   isRead: boolean;

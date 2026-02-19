@@ -1,8 +1,4 @@
-import {
-  Prisma,
-  notifications as NotificationPrisma,
-  notification_type,
-} from '@prisma/client';
+import { Prisma, notifications as NotificationPrisma } from '@prisma/client';
 import { Notification, NotificationType } from '../../domain/models';
 
 export class NotificationMapper {
@@ -10,7 +6,7 @@ export class NotificationMapper {
     return new Notification({
       id: raw.id,
       userId: raw.user_id,
-      type: NotificationType[raw.type],
+      type: NotificationType.unsafeCreate(raw.type),
       title: raw.title,
       subtitle: raw.subtitle,
       isRead: raw.is_read,
@@ -27,7 +23,7 @@ export class NotificationMapper {
     return {
       id: domain.id.toString(),
       user_id: domain.userId,
-      type: notification_type[domain.type],
+      type: domain.type.value,
       title: domain.title,
       subtitle: domain.subtitle,
       is_read: domain.isRead,
