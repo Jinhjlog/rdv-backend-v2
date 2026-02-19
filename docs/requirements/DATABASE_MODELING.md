@@ -48,6 +48,9 @@ erDiagram
     Group ||--o{ ChatMessage : "채팅"
     User ||--o{ ChatMessage : "발신"
 
+    %% Notification Domain
+    User ||--o{ Notification : "알림"
+
     %% User
     User {
         uuid id PK
@@ -186,6 +189,20 @@ erDiagram
         uuid group_id FK
         uuid sender_id FK "발신자 ID"
         text content "메시지 내용"
+        datetime created_at
+    }
+
+    %% Notification
+    Notification {
+        uuid id PK
+        uuid user_id FK "수신자 ID"
+        enum type "알림 타입"
+        string title "알림 제목 (100자)"
+        string subtitle "알림 부제 (200자)"
+        string reference_type "참조 엔티티 종류"
+        uuid reference_id "참조 엔티티 ID"
+        boolean is_read "읽음 여부"
+        datetime read_at "읽은 시간"
         datetime created_at
     }
 ```
@@ -612,6 +629,51 @@ ABSENT   - 부재
 
 ---
 
+### 13. Notification (알림)
+
+사용자에게 전달되는 알림 정보. Fan-out on Write 방식으로 모든 알림을 수신 대상 유저별 개별 row로 저장.
+
+| 컬럼명         | 타입         | 제약조건     | 설명                          | 기본값            |
+| -------------- | ------------ | ------------ | ----------------------------- | ----------------- |
+| id             | UUID         | PK           | 고유 식별자                   | gen_random_uuid() |
+| user_id        | UUID         | FK, NOT NULL | 수신 대상 사용자 ID           | -                 |
+| type           | ENUM         | NOT NULL     | 알림 유형                     | -                 |
+| title          | VARCHAR(100) | NOT NULL     | 알림 제목                     | -                 |
+| subtitle       | VARCHAR(200) | NOT NULL     | 알림 부제/설명                | -                 |
+| reference_type | VARCHAR(50)  | NULL         | 연관 엔티티 종류 (딥링크용)   | NULL              |
+| reference_id   | UUID         | NULL         | 연관 엔티티 ID (딥링크용)     | NULL              |
+| is_read        | BOOLEAN      | NOT NULL     | 읽음 여부                     | false             |
+| read_at        | TIMESTAMPTZ  | NULL         | 읽음 처리 시각                | NULL              |
+| created_at     | TIMESTAMPTZ  | NOT NULL     | 생성일                        | now()             |
+
+**Enum: NotificationType**
+
+```
+MEETING    - 모임 관련 알림
+CHARACTER  - 캐릭터 관련 알림
+ATTENDANCE - 출석 관련 알림
+SYSTEM     - 시스템/공지 알림
+```
+
+**인덱스**
+
+- `idx_notifications_user_created`: (user_id, created_at DESC) - 전체 알림 목록 조회
+- `idx_notifications_user_unread`: (user_id, is_read, created_at DESC) - 미읽음 카운트, 전체 읽음 처리
+- `idx_notifications_user_type`: (user_id, type, created_at DESC) - 타입별 필터 조회
+
+**외래키**
+
+- user_id → User(id) ON DELETE CASCADE
+
+**비즈니스 규칙**
+
+- 알림은 생성 후 30일간 보관 후 자동 삭제 (배치)
+- 읽음 처리는 취소할 수 없음 (멱등성 보장)
+- reference_type/reference_id로 클라이언트 딥링크 대응
+- 아이콘/색상은 타입별로 프론트엔드에서 매핑
+
+---
+
 ## Enum 정의
 
 ### GroupMemberRole
@@ -638,6 +700,12 @@ CREATE TYPE participant_status AS ENUM ('PREPARING', 'DEPARTED', 'ARRIVED');
 CREATE TYPE attendance_result AS ENUM ('ARRIVED', 'LATE', 'ABSENT');
 ```
 
+### NotificationType
+
+```sql
+CREATE TYPE notification_type AS ENUM ('MEETING', 'CHARACTER', 'ATTENDANCE', 'SYSTEM');
+```
+
 ---
 
 ## 관계 요약
@@ -654,6 +722,7 @@ CREATE TYPE attendance_result AS ENUM ('ARRIVED', 'LATE', 'ABSENT');
 | User → EventResult         | 출석 결과   | 1:N             |
 | User → LocationTracking    | 위치 정보   | 1:N             |
 | User → ChatMessage         | 채팅 메시지 | 1:N             |
+| User → Notification        | 알림        | 1:N             |
 
 ### Group 중심 관계
 
@@ -698,6 +767,12 @@ CREATE TYPE attendance_result AS ENUM ('ARRIVED', 'LATE', 'ABSENT');
 - 출발(DEPARTED) 상태에서만 위치 전송 가능
 - 일정 종료 시 위치 데이터 삭제
 
+### 5. 알림 관련
+
+- 알림은 생성 후 30일간 보관 (배치로 자동 삭제)
+- 읽음 처리는 되돌릴 수 없음
+- 사용자 삭제 시 모든 알림도 함께 삭제
+
 ---
 
 ## 삭제 정책 (CASCADE 규칙)
@@ -711,6 +786,7 @@ CREATE TYPE attendance_result AS ENUM ('ARRIVED', 'LATE', 'ABSENT');
 | User        | EventResult              | CASCADE   |
 | User        | LocationTracking         | CASCADE   |
 | User        | ChatMessage              | CASCADE   |
+| User        | Notification             | CASCADE   |
 | User        | Group (owner)            | RESTRICT  |
 | User        | InviteCode (created_by)  | CASCADE   |
 | User        | InviteCode (used_by)     | SET NULL  |
@@ -755,6 +831,11 @@ CREATE INDEX idx_location_tracking_event_id ON "LocationTracking"(event_id);
 CREATE INDEX idx_chat_message_group_id ON "ChatMessage"(group_id);
 CREATE INDEX idx_chat_message_created_at ON "ChatMessage"(created_at DESC);
 CREATE INDEX idx_chat_message_group_created ON "ChatMessage"(group_id, created_at DESC);
+
+-- 알림 조회
+CREATE INDEX idx_notifications_user_created ON "Notification"(user_id, created_at DESC);
+CREATE INDEX idx_notifications_user_unread ON "Notification"(user_id, is_read, created_at DESC);
+CREATE INDEX idx_notifications_user_type ON "Notification"(user_id, type, created_at DESC);
 ```
 
 ### 복합 유니크 인덱스
@@ -793,6 +874,13 @@ CREATE UNIQUE INDEX idx_location_tracking_unique ON "LocationTracking"(event_id,
 - 커서 기반 페이지네이션으로 대량 메시지 효율적 처리
 - created_at DESC 정렬 인덱스로 히스토리 조회 최적화
 
+### 5. 알림 조회 및 관리 최적화
+
+- (user_id, created_at DESC) 복합 인덱스로 커서 기반 페이지네이션 최적화
+- (user_id, is_read, created_at DESC) 복합 인덱스로 미읽음 카운트 및 전체 읽음 처리 최적화
+- (user_id, type, created_at DESC) 복합 인덱스로 타입별 필터 조회 최적화
+- Fan-out on Write 방식: 시스템 공지도 유저별 row 생성하여 쿼리 단순화
+
 ---
 
 ## 참고사항
@@ -814,3 +902,4 @@ CREATE UNIQUE INDEX idx_location_tracking_unique ON "LocationTracking"(event_id,
 5. GroupMember, InviteCode, ChatMessage 테이블 (Group 의존)
 6. Event 테이블 (Group 의존)
 7. EventParticipant, EventResult, LocationTracking 테이블 (Event 의존)
+8. Notification 테이블 (User 의존)
