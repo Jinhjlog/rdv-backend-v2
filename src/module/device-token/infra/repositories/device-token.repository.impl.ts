@@ -108,4 +108,12 @@ export class DeviceTokenRepositoryImpl implements DeviceTokenRepository {
       where: { user_id: userId },
     });
   }
+
+  async findAllTokens(): Promise<string[]> {
+    const raws = await this.prisma.device_tokens.findMany({
+      select: { token: true },
+    });
+
+    return raws.map((r) => r.token);
+  }
 }

@@ -10,6 +10,7 @@ import {
 import {
   EventStartedPushHandler,
   CharacterUnlockedPushHandler,
+  SystemNotificationPushHandler,
 } from './application/handlers';
 import { DeviceTokenController } from './presentation/controllers';
 import { DeviceTokenRepository } from './domain/repositories';
@@ -26,6 +27,7 @@ const useCases: Provider[] = [
 const handlers: Provider[] = [
   EventStartedPushHandler,
   CharacterUnlockedPushHandler,
+  SystemNotificationPushHandler,
 ];
 
 @Module({

@@ -80,4 +80,12 @@ export abstract class DeviceTokenRepository {
    * @param userId 사용자 ID
    */
   abstract deleteByUserId(userId: string): Promise<void>;
+
+  /**
+   * 전체 FCM 토큰 문자열 목록 조회
+   *
+   * 시스템 공지 브로드캐스트 푸시 전송 시 사용합니다.
+   * @returns FCM 토큰 문자열 배열
+   */
+  abstract findAllTokens(): Promise<string[]>;
 }
