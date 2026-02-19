@@ -2,10 +2,14 @@ import { Module } from '@nestjs/common';
 import {
   NotificationRepository,
   NotificationQueryRepository,
+  NotificationUserRepository,
+  SystemNotificationRepository,
 } from './domain/repositories';
 import {
   NotificationRepositoryImpl,
   NotificationQueryRepositoryImpl,
+  NotificationUserRepositoryImpl,
+  SystemNotificationRepositoryImpl,
 } from './infra/repositories';
 
 /**
@@ -23,7 +27,20 @@ import {
       provide: NotificationQueryRepository,
       useClass: NotificationQueryRepositoryImpl,
     },
+    {
+      provide: NotificationUserRepository,
+      useClass: NotificationUserRepositoryImpl,
+    },
+    {
+      provide: SystemNotificationRepository,
+      useClass: SystemNotificationRepositoryImpl,
+    },
   ],
-  exports: [NotificationRepository, NotificationQueryRepository],
+  exports: [
+    NotificationRepository,
+    NotificationQueryRepository,
+    NotificationUserRepository,
+    SystemNotificationRepository,
+  ],
 })
 export class NotificationCoreModule {}
