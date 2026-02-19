@@ -11,6 +11,7 @@ import {
   ReadAllNotificationsUseCase,
   BroadcastSystemNotificationUseCase,
 } from './application/usecases';
+import { UserRegisteredNotificationHandler } from './application/handlers';
 
 const useCases: Provider[] = [
   GetNotificationListUseCase,
@@ -20,6 +21,8 @@ const useCases: Provider[] = [
   BroadcastSystemNotificationUseCase,
 ];
 
+const handlers: Provider[] = [UserRegisteredNotificationHandler];
+
 /**
  * Notification 모듈
  *
@@ -28,6 +31,6 @@ const useCases: Provider[] = [
 @Module({
   imports: [NotificationCoreModule],
   controllers: [NotificationController, AdminNotificationController],
-  providers: [...useCases],
+  providers: [...useCases, ...handlers],
 })
 export class NotificationModule {}
