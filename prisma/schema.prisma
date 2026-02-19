@@ -438,6 +438,7 @@ model public_users {
   invite_codes_invite_codes_created_byTousers   invite_codes[]           @relation("invite_codes_created_byTousers")
   invite_codes_invite_codes_used_byTousers      invite_codes[]           @relation("invite_codes_used_byTousers")
   location_trackings                            location_trackings[]
+  notifications                                 notifications[]
   user_characters                               user_characters[]
 
   @@map("users")
@@ -671,6 +672,24 @@ model app_versions {
   @@schema("public")
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model notifications {
+  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String            @db.Uuid
+  type           notification_type
+  title          String
+  subtitle       String
+  is_read        Boolean
+  reference_id   String?
+  reference_type String?
+  read_at        DateTime?         @db.Timestamptz(6)
+  created_at     DateTime          @default(now()) @db.Timestamptz(6)
+  users          public_users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
 enum aal_level {
   aal1
   aal2
@@ -773,6 +792,16 @@ enum participant_status {
   PREPARING
   DEPARTED
   ARRIVED
+
+  @@schema("public")
+}
+
+/// This enum is commented in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+enum notification_type {
+  MEETING
+  CHARACTER
+  ATTENDANCE
+  SYSTEM
 
   @@schema("public")
 }

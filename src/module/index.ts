@@ -9,6 +9,7 @@ import { UserEventModule } from './event/user-event.module';
 import { UserLocationTrackingModule } from './location-tracking/user-location-tracking.module';
 import { DeviceTokenModule } from './device-token/device-token.module';
 import { AppVersionModule } from './app-version/app-version.module';
+import { NotificationModule } from './notification/notification.module';
 
 export const modules: Type<any>[] = [
   CoreModule,
@@ -21,4 +22,5 @@ export const modules: Type<any>[] = [
   UserEventModule,
   UserLocationTrackingModule,
   DeviceTokenModule,
+  NotificationModule,
 ];
