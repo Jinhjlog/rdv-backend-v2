@@ -5,9 +5,7 @@ import { SubscriptionFilterRepository } from '../../domain/repositories';
 import { AlertPushTypeCode } from '../../domain/constants';
 
 @Injectable()
-export class SubscriptionFilterRepositoryImpl
-  implements SubscriptionFilterRepository
-{
+export class SubscriptionFilterRepositoryImpl implements SubscriptionFilterRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findSubscribedUserIdsByType(

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DeviceTokenRepository } from '../../domain/repositories';
+import { PushTokenRepository } from '../../domain/repositories';
 
 /**
  * 실패한 토큰 처리 UseCase
@@ -11,7 +11,7 @@ import { DeviceTokenRepository } from '../../domain/repositories';
 export class HandleFailedTokensUseCase {
   private readonly logger = new Logger(HandleFailedTokensUseCase.name);
 
-  constructor(private readonly deviceTokenRepository: DeviceTokenRepository) {}
+  constructor(private readonly pushTokenRepository: PushTokenRepository) {}
 
   /**
    * 실패한 토큰 처리 실행
@@ -23,7 +23,7 @@ export class HandleFailedTokensUseCase {
       return;
     }
 
-    await this.deviceTokenRepository.deleteByTokens(failedTokens);
+    await this.pushTokenRepository.deleteByTokens(failedTokens);
     this.logger.log(`무효 토큰 삭제 완료: ${failedTokens.length}개`);
   }
 }

@@ -5,10 +5,8 @@ import {
   SendResponse,
   SilentPushData,
 } from '@core/firebase/notification-sender.service';
-import {
-  DeviceTokenRepository,
-  SubscriptionFilterRepository,
-} from '../../domain/repositories';
+import { PushTokenRepository } from '../../domain/repositories';
+import { SubscriptionFilterRepository } from '../../domain/repositories';
 import { AlertPushTypeCode } from '../../domain/constants';
 import { HandleFailedTokensUseCase } from '../usecases';
 
@@ -29,7 +27,7 @@ export class PushDispatchService {
   private readonly logger = new Logger(PushDispatchService.name);
 
   constructor(
-    private readonly deviceTokenRepository: DeviceTokenRepository,
+    private readonly pushTokenRepository: PushTokenRepository,
     private readonly notificationSenderService: NotificationSenderService,
     private readonly handleFailedTokensUseCase: HandleFailedTokensUseCase,
     private readonly subscriptionFilterRepository: SubscriptionFilterRepository,
@@ -107,9 +105,7 @@ export class PushDispatchService {
 
   private async resolveTokens(userIds: string[]): Promise<string[]> {
     if (userIds.length === 0) return [];
-    const deviceTokens =
-      await this.deviceTokenRepository.findByUserIds(userIds);
-    return deviceTokens.map((dt) => dt.token);
+    return this.pushTokenRepository.findTokensByUserIds(userIds);
   }
 
   private async handleFailures(response: SendResponse): Promise<void> {

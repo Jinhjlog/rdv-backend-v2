@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SendTestPushDto } from '../dtos/send-test-push.dto';
-import { DeviceTokenRepository } from '../../domain/repositories';
+import { PushTokenRepository } from '../../domain/repositories';
 import { NotificationSenderService } from '@core/firebase/notification-sender.service';
 
 /**
@@ -25,17 +25,15 @@ export class SendTestPushUseCase {
   private readonly logger = new Logger(SendTestPushUseCase.name);
 
   constructor(
-    private readonly deviceTokenRepository: DeviceTokenRepository,
+    private readonly pushTokenRepository: PushTokenRepository,
     private readonly notificationSenderService: NotificationSenderService,
   ) {}
 
   async execute(dto: SendTestPushDto): Promise<SendTestPushResult> {
     // 1. 사용자의 디바이스 토큰 조회
-    const deviceToken = await this.deviceTokenRepository.findByUserId(
-      dto.userId,
-    );
+    const token = await this.pushTokenRepository.findTokenByUserId(dto.userId);
 
-    if (!deviceToken) {
+    if (!token) {
       this.logger.warn(
         `사용자의 등록된 디바이스 토큰이 없습니다: userId=${dto.userId}`,
       );
@@ -50,7 +48,7 @@ export class SendTestPushUseCase {
     // 2. 푸시 알림 발송
     const response =
       await this.notificationSenderService.sendToMultipleDeviceTokens(
-        [deviceToken.token],
+        [token],
         'test',
         {
           title: dto.title,
