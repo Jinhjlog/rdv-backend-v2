@@ -20,4 +20,21 @@ export class SubscriptionFilterRepositoryImpl implements SubscriptionFilterRepos
     });
     return rows.map((row) => row.user_id);
   }
+
+  async findSubscribedUserIdsAmong(
+    userIds: string[],
+    type: AlertPushTypeCode,
+  ): Promise<string[]> {
+    if (userIds.length === 0) return [];
+
+    const rows = await this.prisma.notification_subscriptions.findMany({
+      where: {
+        user_id: { in: userIds },
+        type: type as notification_type,
+        is_subscribed: true,
+      },
+      select: { user_id: true },
+    });
+    return rows.map((row) => row.user_id);
+  }
 }
