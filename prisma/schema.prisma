@@ -416,28 +416,29 @@ model auth_users {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model public_users {
-  id                                            String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  device_id                                     String                   @unique
+  id                                            String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  device_id                                     String                       @unique
   nickname                                      String
-  name_tag                                      String                   @unique
+  name_tag                                      String                       @unique
   preferred_theme_color                         String
   character_code                                String
-  level                                         Int                      @default(1)
-  experience                                    Int                      @default(0)
-  created_at                                    DateTime                 @default(now()) @db.Timestamptz(6)
-  updated_at                                    DateTime                 @db.Timestamptz(6)
+  level                                         Int                          @default(1)
+  experience                                    Int                          @default(0)
+  created_at                                    DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime                     @db.Timestamptz(6)
   account_transfer_codes                        account_transfer_codes[]
   chat_messages                                 chat_messages[]
   device_tokens                                 device_tokens[]
   event_participants                            event_participants[]
   event_results                                 event_results[]
   events                                        events[]
-  group_members_group_members_invited_byTousers group_members[]          @relation("group_members_invited_byTousers")
-  group_members_group_members_user_idTousers    group_members[]          @relation("group_members_user_idTousers")
+  group_members_group_members_invited_byTousers group_members[]              @relation("group_members_invited_byTousers")
+  group_members_group_members_user_idTousers    group_members[]              @relation("group_members_user_idTousers")
   groups                                        groups[]
-  invite_codes_invite_codes_created_byTousers   invite_codes[]           @relation("invite_codes_created_byTousers")
-  invite_codes_invite_codes_used_byTousers      invite_codes[]           @relation("invite_codes_used_byTousers")
+  invite_codes_invite_codes_created_byTousers   invite_codes[]               @relation("invite_codes_created_byTousers")
+  invite_codes_invite_codes_used_byTousers      invite_codes[]               @relation("invite_codes_used_byTousers")
   location_trackings                            location_trackings[]
+  notification_subscriptions                    notification_subscriptions[]
   notifications                                 notifications[]
   user_characters                               user_characters[]
 
@@ -687,6 +688,21 @@ model notifications {
   created_at     DateTime          @default(now()) @db.Timestamptz(6)
   users          public_users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model notification_subscriptions {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String            @db.Uuid
+  type          notification_type
+  is_subscribed Boolean
+  created_at    DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime          @db.Timestamptz(6)
+  users         public_users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, type])
   @@schema("public")
 }
 
