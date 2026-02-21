@@ -22,4 +22,13 @@ export class GroupRepositoryImpl implements GroupRepository {
 
     return members.map((m) => m.user_id);
   }
+
+  async findGroupNameById(groupId: string): Promise<string> {
+    const group = await this.prisma.groups.findUnique({
+      where: { id: groupId },
+      select: { name: true },
+    });
+
+    return group?.name ?? '';
+  }
 }
