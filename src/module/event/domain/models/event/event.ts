@@ -10,6 +10,7 @@ import { EventSchedule } from './event-schedule';
 import {
   ParticipantsCheckPassedEvent,
   EventCancelledEvent,
+  EventCreatedEvent,
   EventStartedEvent,
   EventEndedEvent,
   ParticipantDepartedEvent,
@@ -112,6 +113,24 @@ export class Event extends AggregateRoot<EventProps> {
 
   get results(): EventResult[] {
     return this.props.results;
+  }
+
+  /**
+   * 일정 생성 완료 표시 및 도메인 이벤트 발행
+   *
+   * @param groupMemberUserIds 모임 멤버 전체 user ID 목록
+   */
+  markAsCreated(groupMemberUserIds: string[]): void {
+    this.addDomainEvent(
+      new EventCreatedEvent(this.id, {
+        eventId: this.id.toString(),
+        groupId: this.props.groupId,
+        createdByUserId: this.props.createdBy,
+        groupMemberUserIds,
+        title: this.props.title.value,
+        eventTime: this.props.schedule.eventTime,
+      }),
+    );
   }
 
   /**
@@ -292,8 +311,13 @@ export class Event extends AggregateRoot<EventProps> {
     this.addDomainEvent(
       new EventCancelledEvent(this.id, {
         eventId: this.id.toString(),
-        reason,
+        groupId: this.props.groupId,
+        title: this.props.title.value,
+        eventTime: this.props.schedule.eventTime,
+        participantUserIds: this.props.participants.map((p) => p.userId),
         participantCount: this.props.participants.length,
+        reason,
+        cancelledByUserId: this.props.createdBy,
       }),
     );
   }
@@ -334,6 +358,28 @@ export class Event extends AggregateRoot<EventProps> {
         errorCode: 'NOT_EVENT_CREATOR',
       });
     }
+  }
+
+  /**
+   * 일정 삭제 표시 및 도메인 이벤트 발행
+   *
+   * 하드 삭제 전에 호출하여 참여자들에게 취소 알림을 보낼 수 있도록 합니다.
+   *
+   * @param userId 삭제 요청자 ID
+   */
+  markAsDeleted(userId: string): void {
+    this.addDomainEvent(
+      new EventCancelledEvent(this.id, {
+        eventId: this.id.toString(),
+        groupId: this.props.groupId,
+        title: this.props.title.value,
+        eventTime: this.props.schedule.eventTime,
+        participantUserIds: this.props.participants.map((p) => p.userId),
+        participantCount: this.props.participants.length,
+        reason: '일정 생성자에 의한 삭제',
+        cancelledByUserId: userId,
+      }),
+    );
   }
 
   /**
@@ -387,8 +433,12 @@ export class Event extends AggregateRoot<EventProps> {
     this.addDomainEvent(
       new EventCancelledEvent(this.id, {
         eventId: this.id.toString(),
-        reason,
+        groupId: this.props.groupId,
+        title: this.props.title.value,
+        eventTime: this.props.schedule.eventTime,
+        participantUserIds: this.props.participants.map((p) => p.userId),
         participantCount: this.props.participants.length,
+        reason,
       }),
     );
   }
@@ -563,6 +613,7 @@ export class Event extends AggregateRoot<EventProps> {
       new EventEndedEvent(this.id, {
         eventId: this.id.toString(),
         groupId: this.props.groupId,
+        title: this.props.title.value,
         results: this.props.results.map((r) => ({
           userId: r.userId,
           result: r.result,

@@ -11,4 +11,10 @@ export abstract class SubscriptionFilterRepository {
   abstract findSubscribedUserIdsByType(
     type: AlertPushTypeCode,
   ): Promise<string[]>;
+
+  /** 특정 유저 목록 중 해당 알림 타입을 구독 중인 유저 ID 조회 */
+  abstract findSubscribedUserIdsAmong(
+    userIds: string[],
+    type: AlertPushTypeCode,
+  ): Promise<string[]>;
 }

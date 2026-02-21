@@ -1,6 +1,7 @@
 import { AggregateRoot, BoundedString, UniqueEntityId } from '@lib/domain';
 import { GroupMember } from './group-member';
 import { DomainRuleViolationException } from '@shared/exception';
+import { MemberKickedEvent } from '../../events';
 
 export interface GroupProps {
   id?: string;
@@ -182,6 +183,14 @@ export class Group extends AggregateRoot<GroupProps> {
     this._removedMemberIds.push(removedMember.id.toString());
     this.props.members.splice(memberIndex, 1);
     this.props.updatedAt = new Date();
+
+    this.addDomainEvent(
+      new MemberKickedEvent(this.id, {
+        groupId: this.id.toString(),
+        groupName: this.props.name.value,
+        kickedUserId: userId,
+      }),
+    );
   }
 
   /**

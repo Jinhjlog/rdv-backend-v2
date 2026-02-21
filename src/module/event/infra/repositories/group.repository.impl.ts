@@ -13,4 +13,13 @@ export class GroupRepositoryImpl implements GroupRepository {
 
     return count > 0;
   }
+
+  async findMemberUserIds(groupId: string): Promise<string[]> {
+    const members = await this.prisma.group_members.findMany({
+      where: { group_id: groupId },
+      select: { user_id: true },
+    });
+
+    return members.map((m) => m.user_id);
+  }
 }
