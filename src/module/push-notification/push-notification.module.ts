@@ -10,6 +10,7 @@ import {
   EventCreatedPushHandler,
   EventCancelledPushHandler,
   EventEndedPushHandler,
+  MemberKickedPushHandler,
   CharacterUnlockedPushHandler,
 } from './application/handlers';
 import { PushNotificationController } from './presentation/controllers';
@@ -32,6 +33,7 @@ const handlers: Provider[] = [
   EventCreatedPushHandler,
   EventCancelledPushHandler,
   EventEndedPushHandler,
+  MemberKickedPushHandler,
   CharacterUnlockedPushHandler,
 ];
 
