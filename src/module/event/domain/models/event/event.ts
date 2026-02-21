@@ -119,12 +119,14 @@ export class Event extends AggregateRoot<EventProps> {
    * 일정 생성 완료 표시 및 도메인 이벤트 발행
    *
    * @param groupMemberUserIds 모임 멤버 전체 user ID 목록
+   * @param groupName 모임 이름
    */
-  markAsCreated(groupMemberUserIds: string[]): void {
+  markAsCreated(groupMemberUserIds: string[], groupName: string): void {
     this.addDomainEvent(
       new EventCreatedEvent(this.id, {
         eventId: this.id.toString(),
         groupId: this.props.groupId,
+        groupName,
         createdByUserId: this.props.createdBy,
         groupMemberUserIds,
         title: this.props.title.value,
@@ -293,9 +295,10 @@ export class Event extends AggregateRoot<EventProps> {
    * 일정 취소 (사용자에 의한 수동 취소)
    *
    * @param reason 취소 사유
+   * @param groupName 모임 이름
    * @throws {DomainRuleViolationException} EVENT_CANNOT_BE_CANCELLED - 취소할 수 없는 상태인 경우
    */
-  cancel(reason: string): void {
+  cancel(reason: string, groupName: string): void {
     if (!this.canBeCancelled()) {
       throw new DomainRuleViolationException({
         entityName: 'Event',
@@ -312,6 +315,7 @@ export class Event extends AggregateRoot<EventProps> {
       new EventCancelledEvent(this.id, {
         eventId: this.id.toString(),
         groupId: this.props.groupId,
+        groupName,
         title: this.props.title.value,
         eventTime: this.props.schedule.eventTime,
         participantUserIds: this.props.participants.map((p) => p.userId),
@@ -366,12 +370,14 @@ export class Event extends AggregateRoot<EventProps> {
    * 하드 삭제 전에 호출하여 참여자들에게 취소 알림을 보낼 수 있도록 합니다.
    *
    * @param userId 삭제 요청자 ID
+   * @param groupName 모임 이름
    */
-  markAsDeleted(userId: string): void {
+  markAsDeleted(userId: string, groupName: string): void {
     this.addDomainEvent(
       new EventCancelledEvent(this.id, {
         eventId: this.id.toString(),
         groupId: this.props.groupId,
+        groupName,
         title: this.props.title.value,
         eventTime: this.props.schedule.eventTime,
         participantUserIds: this.props.participants.map((p) => p.userId),
@@ -388,9 +394,10 @@ export class Event extends AggregateRoot<EventProps> {
    * - 참여자 2명 이상: ParticipantsCheckPassedEvent 발행
    * - 참여자 1명 이하: 일정 취소 (EventCancelledEvent 발행)
    *
+   * @param groupName 모임 이름
    * @returns 참여자 체크 통과 여부
    */
-  checkParticipantsForStart(): boolean {
+  checkParticipantsForStart(groupName: string): boolean {
     if (this.props.status !== EventStatus.RECRUITING) {
       return false;
     }
@@ -414,6 +421,7 @@ export class Event extends AggregateRoot<EventProps> {
       // 시스템에 의한 자동 취소 (참여자 부족)
       this.cancelBySystem(
         `참여자 ${participantCount}명, 최소 인원(${MIN_PARTICIPANTS_FOR_START}명) 미달`,
+        groupName,
       );
       return false;
     }
@@ -425,8 +433,9 @@ export class Event extends AggregateRoot<EventProps> {
    * 참여자 체크 완료 후에도 시스템에 의해 취소될 수 있음
    *
    * @param reason 취소 사유
+   * @param groupName 모임 이름
    */
-  private cancelBySystem(reason: string): void {
+  private cancelBySystem(reason: string, groupName: string): void {
     this.props.status = EventStatus.CANCELLED;
     this.props.updatedAt = new Date();
 
@@ -434,6 +443,7 @@ export class Event extends AggregateRoot<EventProps> {
       new EventCancelledEvent(this.id, {
         eventId: this.id.toString(),
         groupId: this.props.groupId,
+        groupName,
         title: this.props.title.value,
         eventTime: this.props.schedule.eventTime,
         participantUserIds: this.props.participants.map((p) => p.userId),
@@ -586,9 +596,10 @@ export class Event extends AggregateRoot<EventProps> {
    * - DEPARTED → LATE (지각)
    * - PREPARING → ABSENT (부재)
    *
+   * @param groupName 모임 이름
    * @throws {DomainRuleViolationException} EVENT_CANNOT_END - 종료할 수 없는 상태인 경우
    */
-  end(): void {
+  end(groupName: string): void {
     if (!this.canEnd()) {
       throw new DomainRuleViolationException({
         entityName: 'Event',
@@ -613,6 +624,7 @@ export class Event extends AggregateRoot<EventProps> {
       new EventEndedEvent(this.id, {
         eventId: this.id.toString(),
         groupId: this.props.groupId,
+        groupName,
         title: this.props.title.value,
         results: this.props.results.map((r) => ({
           userId: r.userId,

@@ -4,6 +4,7 @@ import { IDomainEvent } from '@lib/domain/events/i-domain-event';
 export interface EventCreatedEventData {
   eventId: string;
   groupId: string;
+  groupName: string;
   createdByUserId: string;
   groupMemberUserIds: string[];
   title: string;

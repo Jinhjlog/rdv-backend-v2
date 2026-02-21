@@ -4,6 +4,7 @@ import { IDomainEvent } from '@lib/domain/events/i-domain-event';
 export interface EventCancelledEventData {
   eventId: string;
   groupId: string;
+  groupName: string;
   title: string;
   eventTime: Date;
   participantUserIds: string[];
