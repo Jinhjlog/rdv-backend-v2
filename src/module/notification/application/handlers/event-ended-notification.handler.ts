@@ -27,7 +27,7 @@ export class EventEndedNotificationHandler implements OnModuleInit {
   }
 
   async handle(event: EventEndedEvent): Promise<void> {
-    const { eventId, title, results } = event.metadata;
+    const { eventId, groupName, title, results } = event.metadata;
 
     const participantUserIds = results.map((r) => r.userId);
 
@@ -43,7 +43,7 @@ export class EventEndedNotificationHandler implements OnModuleInit {
       (r) => r.result === AttendanceResult.LATE,
     ).length;
 
-    const subtitle = `${title} · 도착 ${arrivedCount}명 · 지각 ${lateCount}명`;
+    const subtitle = `${groupName} · ${title} · 도착 ${arrivedCount}명 · 지각 ${lateCount}명`;
 
     const notifications = participantUserIds.map((userId) =>
       Notification.create({

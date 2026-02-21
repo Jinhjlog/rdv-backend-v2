@@ -25,7 +25,7 @@ export class EventEndedPushHandler implements OnModuleInit {
   }
 
   async handle(event: EventEndedEvent): Promise<void> {
-    const { eventId, groupId, title, results } = event.metadata;
+    const { eventId, groupId, groupName, title, results } = event.metadata;
 
     const participantUserIds = results.map((r) => r.userId);
 
@@ -41,7 +41,7 @@ export class EventEndedPushHandler implements OnModuleInit {
       (r) => r.result === AttendanceResult.LATE,
     ).length;
 
-    const body = `${title} · 도착 ${arrivedCount}명 · 지각 ${lateCount}명`;
+    const body = `${groupName} · ${title} · 도착 ${arrivedCount}명 · 지각 ${lateCount}명`;
 
     const result =
       await this.pushDispatchService.sendAlertPushToTargetSubscribers({

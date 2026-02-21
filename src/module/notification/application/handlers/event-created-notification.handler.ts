@@ -26,7 +26,7 @@ export class EventCreatedNotificationHandler implements OnModuleInit {
   }
 
   async handle(event: EventCreatedEvent): Promise<void> {
-    const { createdByUserId, groupMemberUserIds, title, eventTime } =
+    const { createdByUserId, groupMemberUserIds, groupName, title, eventTime } =
       event.metadata;
 
     const targetUserIds = groupMemberUserIds.filter(
@@ -45,7 +45,7 @@ export class EventCreatedNotificationHandler implements OnModuleInit {
         userId,
         type: NotificationType.create('MEETING'),
         title: '📅 새 일정이 등록됐어요',
-        subtitle: `${title} · ${formattedTime}`,
+        subtitle: `${groupName} · ${title} · ${formattedTime}`,
       }),
     );
 

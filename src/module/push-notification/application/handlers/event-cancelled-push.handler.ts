@@ -29,6 +29,7 @@ export class EventCancelledPushHandler implements OnModuleInit {
     const {
       eventId,
       groupId,
+      groupName,
       cancelledByUserId,
       participantUserIds,
       title,
@@ -52,8 +53,8 @@ export class EventCancelledPushHandler implements OnModuleInit {
       : '📅 참여 중인 일정이 취소됐어요';
 
     const body = isSystemCancel
-      ? `${title} · 참여자 ${participantCount}명 (최소 2명 필요)`
-      : `${title} · ${formatKoreanDateTime(eventTime)}`;
+      ? `${groupName} · ${title} · 참여자 ${participantCount}명 (최소 2명 필요)`
+      : `${groupName} · ${title} · ${formatKoreanDateTime(eventTime)}`;
 
     const result =
       await this.pushDispatchService.sendAlertPushToTargetSubscribers({

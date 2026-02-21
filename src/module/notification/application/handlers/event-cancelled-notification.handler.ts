@@ -31,6 +31,7 @@ export class EventCancelledNotificationHandler implements OnModuleInit {
     const {
       cancelledByUserId,
       participantUserIds,
+      groupName,
       title,
       eventTime,
       participantCount,
@@ -52,8 +53,8 @@ export class EventCancelledNotificationHandler implements OnModuleInit {
       : '📅 참여 중인 일정이 취소됐어요';
 
     const subtitle = isSystemCancel
-      ? `${title} · 참여자 ${participantCount}명 (최소 2명 필요)`
-      : `${title} · ${formatKoreanDateTime(eventTime)}`;
+      ? `${groupName} · ${title} · 참여자 ${participantCount}명 (최소 2명 필요)`
+      : `${groupName} · ${title} · ${formatKoreanDateTime(eventTime)}`;
 
     const notifications = targetUserIds.map((userId) =>
       Notification.create({
