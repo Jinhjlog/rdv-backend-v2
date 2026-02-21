@@ -10,6 +10,7 @@ export interface EventEndedResultData {
 export interface EventEndedEventData {
   eventId: string;
   groupId: string;
+  title: string;
   results: EventEndedResultData[];
 }
 

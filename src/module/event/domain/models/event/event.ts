@@ -613,6 +613,7 @@ export class Event extends AggregateRoot<EventProps> {
       new EventEndedEvent(this.id, {
         eventId: this.id.toString(),
         groupId: this.props.groupId,
+        title: this.props.title.value,
         results: this.props.results.map((r) => ({
           userId: r.userId,
           result: r.result,
