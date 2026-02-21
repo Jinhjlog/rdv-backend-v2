@@ -1,9 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DomainEvents } from '@lib/domain/events/domain-events';
 import { EventStartedEvent } from '../../../event/domain/events';
-import { DeviceTokenRepository } from '../../domain/repositories';
-import { NotificationSenderService } from '@core/firebase/notification-sender.service';
 import { SilentPushType } from '../../domain/constants';
+import { PushDispatchService } from '../services';
 
 /**
  * 일정 시작 시 사일런트 푸시 발송 핸들러
@@ -14,10 +13,7 @@ import { SilentPushType } from '../../domain/constants';
 export class EventStartedPushHandler implements OnModuleInit {
   private readonly logger = new Logger(EventStartedPushHandler.name);
 
-  constructor(
-    private readonly deviceTokenRepository: DeviceTokenRepository,
-    private readonly notificationSenderService: NotificationSenderService,
-  ) {}
+  constructor(private readonly pushDispatchService: PushDispatchService) {}
 
   onModuleInit() {
     DomainEvents.register(
@@ -33,36 +29,24 @@ export class EventStartedPushHandler implements OnModuleInit {
       `일정 시작 푸시 핸들러: eventId=${eventId}, participants=${participantUserIds.length}명`,
     );
 
-    if (participantUserIds.length === 0) {
-      this.logger.warn(`푸시 발송 대상 없음: eventId=${eventId} (참여자 0명)`);
-      return;
-    }
+    const result = await this.pushDispatchService.sendSilentPush({
+      userIds: participantUserIds,
+      data: {
+        type: SilentPushType.EventStarted,
+        eventId,
+        groupId,
+      },
+    });
 
-    // 1. 모든 참여자의 디바이스 토큰 조회
-    const deviceTokens =
-      await this.deviceTokenRepository.findByUserIds(participantUserIds);
-    const tokens = deviceTokens.map((dt) => dt.token);
-
-    if (tokens.length === 0) {
+    if (!result.sent) {
       this.logger.warn(
         `푸시 발송 대상 없음: eventId=${eventId} (등록된 토큰 없음)`,
       );
       return;
     }
 
-    // 2. 사일런트 푸시 발송
-    const response =
-      await this.notificationSenderService.sendSilentPushToMultipleDevices(
-        tokens,
-        {
-          type: SilentPushType.EventStarted,
-          eventId,
-          groupId,
-        },
-      );
-
     this.logger.log(
-      `사일런트 푸시 발송 완료: eventId=${eventId}, 성공=${response.successCount}, 실패=${response.failureCount}`,
+      `사일런트 푸시 발송 완료: eventId=${eventId}, 성공=${result.successCount}, 실패=${result.failureCount}`,
     );
   }
 }

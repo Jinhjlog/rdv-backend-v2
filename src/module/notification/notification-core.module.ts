@@ -4,12 +4,16 @@ import {
   NotificationQueryRepository,
   NotificationUserRepository,
   SystemNotificationRepository,
+  NotificationSubscriptionRepository,
+  NotificationSubscriptionQueryRepository,
 } from './domain/repositories';
 import {
   NotificationRepositoryImpl,
   NotificationQueryRepositoryImpl,
   NotificationUserRepositoryImpl,
   SystemNotificationRepositoryImpl,
+  NotificationSubscriptionRepositoryImpl,
+  NotificationSubscriptionQueryRepositoryImpl,
 } from './infra/repositories';
 
 /**
@@ -35,12 +39,22 @@ import {
       provide: SystemNotificationRepository,
       useClass: SystemNotificationRepositoryImpl,
     },
+    {
+      provide: NotificationSubscriptionRepository,
+      useClass: NotificationSubscriptionRepositoryImpl,
+    },
+    {
+      provide: NotificationSubscriptionQueryRepository,
+      useClass: NotificationSubscriptionQueryRepositoryImpl,
+    },
   ],
   exports: [
     NotificationRepository,
     NotificationQueryRepository,
     NotificationUserRepository,
     SystemNotificationRepository,
+    NotificationSubscriptionRepository,
+    NotificationSubscriptionQueryRepository,
   ],
 })
 export class NotificationCoreModule {}

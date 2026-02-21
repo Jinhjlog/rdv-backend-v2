@@ -1,5 +1,8 @@
 import { Module, Provider } from '@nestjs/common';
-import { DeviceTokenRepositoryImpl } from './infra/repositories';
+import {
+  DeviceTokenRepositoryImpl,
+  SubscriptionFilterRepositoryImpl,
+} from './infra/repositories';
 import {
   RegisterDeviceTokenUseCase,
   RemoveDeviceTokenUseCase,
@@ -7,13 +10,17 @@ import {
   HandleFailedTokensUseCase,
   SendTestPushUseCase,
 } from './application/usecases';
+import { PushDispatchService } from './application/services';
 import {
   EventStartedPushHandler,
   CharacterUnlockedPushHandler,
   SystemNotificationPushHandler,
 } from './application/handlers';
 import { DeviceTokenController } from './presentation/controllers';
-import { DeviceTokenRepository } from './domain/repositories';
+import {
+  DeviceTokenRepository,
+  SubscriptionFilterRepository,
+} from './domain/repositories';
 import { TokenCleanupScheduler } from './infra/schedulers';
 
 const useCases: Provider[] = [
@@ -23,6 +30,8 @@ const useCases: Provider[] = [
   HandleFailedTokensUseCase,
   SendTestPushUseCase,
 ];
+
+const services: Provider[] = [PushDispatchService];
 
 const handlers: Provider[] = [
   EventStartedPushHandler,
@@ -37,8 +46,13 @@ const handlers: Provider[] = [
       provide: DeviceTokenRepository,
       useClass: DeviceTokenRepositoryImpl,
     },
+    {
+      provide: SubscriptionFilterRepository,
+      useClass: SubscriptionFilterRepositoryImpl,
+    },
     TokenCleanupScheduler,
     ...useCases,
+    ...services,
     ...handlers,
   ],
 })

@@ -24,16 +24,25 @@ import {
   GetUnreadCountUseCase,
   ReadNotificationUseCase,
   ReadAllNotificationsUseCase,
+  GetNotificationSubscriptionsUseCase,
+  UpdateNotificationSubscriptionUseCase,
 } from '../../application/usecases';
-import { GetNotificationListRequestDto } from '../dtos/request';
-import { ReadAllNotificationsRequestDto } from '../dtos/request';
+import { NotificationTypeCode } from '../../domain/models';
+import {
+  GetNotificationListRequestDto,
+  ReadAllNotificationsRequestDto,
+  UpdateNotificationSubscriptionRequestDto,
+} from '../dtos/request';
 import {
   NotificationListResponseDto,
   UnreadCountResponseDto,
   ReadNotificationResponseDto,
   ReadAllNotificationsResponseDto,
+  NotificationSubscriptionsResponseDto,
+  NotificationSubscriptionResponseDto,
 } from '../dtos/response';
 import { NotificationTransformer } from '../transformers';
+import { NotificationSubscriptionTransformer } from '../transformers/notification-subscription.transformer';
 
 @ApiTags('사용자 - 알림')
 @Controller({ path: 'notifications', version: '1' })
@@ -44,7 +53,89 @@ export class NotificationController {
     private readonly getUnreadCountUseCase: GetUnreadCountUseCase,
     private readonly readNotificationUseCase: ReadNotificationUseCase,
     private readonly readAllNotificationsUseCase: ReadAllNotificationsUseCase,
+    private readonly getNotificationSubscriptionsUseCase: GetNotificationSubscriptionsUseCase,
+    private readonly updateNotificationSubscriptionUseCase: UpdateNotificationSubscriptionUseCase,
   ) {}
+
+  /**
+   * 알림 구독 설정 전체 조회
+   */
+  @ApiOperation({
+    summary: '[사용자] 알림 구독 설정 조회',
+    description:
+      '사용자의 알림 타입별 수신 설정을 조회합니다.<br><br>' +
+      '**알림 타입**<br>' +
+      '- MEETING: 미팅 알림<br>' +
+      '- CHARACTER: 캐릭터 알림<br>' +
+      '- ATTENDANCE: 출석 알림<br>' +
+      '- SYSTEM: 시스템 공지<br>',
+  })
+  @ApiOkResponse({
+    description: '구독 설정 조회 성공',
+    type: NotificationSubscriptionsResponseDto,
+  })
+  @Get('subscriptions')
+  async getSubscriptions(
+    @User() user: UserInfo,
+  ): Promise<{ data: NotificationSubscriptionsResponseDto }> {
+    const subscriptions =
+      await this.getNotificationSubscriptionsUseCase.execute({
+        userId: user.userId,
+      });
+    return {
+      data: NotificationSubscriptionTransformer.toSubscriptionsResponse(
+        subscriptions,
+      ),
+    };
+  }
+
+  /**
+   * 알림 구독 상태 변경
+   */
+  @ApiOperation({
+    summary: '[사용자] 알림 구독 상태 변경',
+    description:
+      '특정 알림 타입의 수신 여부를 변경합니다.<br><br>' +
+      '**알림 타입** (Path Parameter)<br>' +
+      '- MEETING, CHARACTER, ATTENDANCE, SYSTEM<br><br>' +
+      '**주의사항**<br>' +
+      '- 이미 동일한 상태인 경우 에러 없이 현재 상태를 반환합니다 (멱등성 보장)<br>',
+  })
+  @ApiOkResponse({
+    description: '구독 상태 변경 성공',
+    type: NotificationSubscriptionResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description:
+      '잘못된 요청<br>' +
+      '**type**<br>' +
+      '- 유효하지 않은 알림 타입 (MEETING, CHARACTER, ATTENDANCE, SYSTEM 중 하나여야 함): _**INVALID_NOTIFICATION_TYPE**_<br>',
+  })
+  @ApiParam({
+    name: 'type',
+    description: '알림 타입',
+    example: 'MEETING',
+    enum: ['MEETING', 'CHARACTER', 'ATTENDANCE', 'SYSTEM'],
+  })
+  @Patch('subscriptions/:type')
+  @HttpCode(HttpStatus.OK)
+  async updateSubscription(
+    @Param('type') type: string,
+    @Body() body: UpdateNotificationSubscriptionRequestDto,
+    @User() user: UserInfo,
+  ): Promise<{ data: NotificationSubscriptionResponseDto }> {
+    const subscription =
+      await this.updateNotificationSubscriptionUseCase.execute({
+        userId: user.userId,
+        type: type.toUpperCase() as NotificationTypeCode,
+        isSubscribed: body.isSubscribed,
+      });
+    return {
+      data: NotificationSubscriptionTransformer.toSubscriptionResponse(
+        subscription,
+      ),
+    };
+  }
 
   /**
    * 알림 목록 조회
