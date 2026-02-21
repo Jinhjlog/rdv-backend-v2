@@ -5,6 +5,7 @@ import { PrismaService } from '@core/database/prisma.service';
 import { GroupMapper, GroupMemberMapper } from '../mappers';
 import { TransactionContextService } from '@lib/infra/unit-of-work';
 import { PrismaTransactionClient } from '@core/database';
+import { DomainEvents } from '@lib/domain/events/domain-events';
 
 @Injectable()
 export class GroupRepositoryImpl implements GroupRepository {
@@ -43,6 +44,10 @@ export class GroupRepositoryImpl implements GroupRepository {
     await this.prisma.$transaction(async (tx) => {
       await this._saveWithClient(tx, group);
     });
+
+    if (group.domainEvents.length > 0) {
+      DomainEvents.dispatchEventsForAggregate(group.id);
+    }
   }
 
   /**
