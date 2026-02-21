@@ -77,6 +77,19 @@ export class CreateEventUseCase {
       });
     }
 
+    const hasConflict = await this.eventRepository.hasScheduleConflict(
+      dto.userId,
+      schedule.trackingStartTime,
+      schedule.endTime,
+    );
+    if (hasConflict) {
+      throw new DomainRuleViolationException({
+        entityName: 'Event',
+        reason: '다른 일정과 시간이 중복됩니다. 기존 일정 참여를 철회하세요.',
+        errorCode: 'EVENT_TIME_CONFLICT',
+      });
+    }
+
     const event = new Event({
       groupId: dto.groupId,
       createdBy: dto.userId,
