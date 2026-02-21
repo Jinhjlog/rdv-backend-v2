@@ -53,7 +53,9 @@ export class EventRepositoryImpl implements EventRepository {
     }
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(event: Event): Promise<void> {
+    const id = event.id.toString();
+
     // 이미 트랜잭션 컨텍스트 내부라면 현재 트랜잭션 재사용
     if (this.txContext.isInTransaction()) {
       await this._deleteWithClient(this.client, id);
@@ -64,6 +66,10 @@ export class EventRepositoryImpl implements EventRepository {
     await this.prisma.$transaction(async (tx) => {
       await this._deleteWithClient(tx, id);
     });
+
+    if (event.domainEvents.length > 0) {
+      DomainEvents.dispatchEventsForAggregate(event.id);
+    }
   }
 
   private async _deleteWithClient(
