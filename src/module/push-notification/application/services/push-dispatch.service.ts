@@ -58,6 +58,32 @@ export class PushDispatchService {
   }
 
   /**
+   * 특정 유저 중 구독 중인 유저에게 Alert 푸시 전송
+   *
+   * 대상 유저 목록에서 구독 필터링 → 토큰 조회 → FCM 전송 → 실패 토큰 처리
+   */
+  async sendAlertPushToTargetSubscribers(params: {
+    userIds: string[];
+    type: AlertPushTypeCode;
+    topic: string;
+    notification: NotificationProps;
+    data?: Record<string, string>;
+  }): Promise<PushDispatchResult> {
+    const subscribedUserIds =
+      await this.subscriptionFilterRepository.findSubscribedUserIdsAmong(
+        params.userIds,
+        params.type,
+      );
+
+    return this.sendAlertPush({
+      userIds: subscribedUserIds,
+      topic: params.topic,
+      notification: params.notification,
+      data: params.data,
+    });
+  }
+
+  /**
    * Alert 푸시 전송 (알림 표시 O)
    */
   async sendAlertPush(params: {
