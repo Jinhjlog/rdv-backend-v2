@@ -7,6 +7,7 @@ import {
 import {
   SystemNotificationPushHandler,
   EventStartedPushHandler,
+  EventCreatedPushHandler,
   CharacterUnlockedPushHandler,
 } from './application/handlers';
 import { PushNotificationController } from './presentation/controllers';
@@ -26,6 +27,7 @@ const services: Provider[] = [PushDispatchService];
 const handlers: Provider[] = [
   SystemNotificationPushHandler,
   EventStartedPushHandler,
+  EventCreatedPushHandler,
   CharacterUnlockedPushHandler,
 ];
 
