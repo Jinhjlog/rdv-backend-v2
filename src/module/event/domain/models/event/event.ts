@@ -10,6 +10,7 @@ import { EventSchedule } from './event-schedule';
 import {
   ParticipantsCheckPassedEvent,
   EventCancelledEvent,
+  EventCreatedEvent,
   EventStartedEvent,
   EventEndedEvent,
   ParticipantDepartedEvent,
@@ -112,6 +113,24 @@ export class Event extends AggregateRoot<EventProps> {
 
   get results(): EventResult[] {
     return this.props.results;
+  }
+
+  /**
+   * 일정 생성 완료 표시 및 도메인 이벤트 발행
+   *
+   * @param groupMemberUserIds 모임 멤버 전체 user ID 목록
+   */
+  markAsCreated(groupMemberUserIds: string[]): void {
+    this.addDomainEvent(
+      new EventCreatedEvent(this.id, {
+        eventId: this.id.toString(),
+        groupId: this.props.groupId,
+        createdByUserId: this.props.createdBy,
+        groupMemberUserIds,
+        title: this.props.title.value,
+        eventTime: this.props.schedule.eventTime,
+      }),
+    );
   }
 
   /**
