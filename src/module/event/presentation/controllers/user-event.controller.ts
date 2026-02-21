@@ -267,6 +267,7 @@ export class UserEventController {
       '**주의사항**<br>' +
       '- 일정 시간은 현재 시간으로부터 최소 20분 이후여야 합니다.<br>' +
       '- 모임당 모집 중인 일정은 최대 3개까지 생성할 수 있습니다.<br>' +
+      '- 생성자가 참여 중인 다른 일정과 시간이 중복되면 생성할 수 없습니다.<br>' +
       '- 위도는 소수점 6~8자리, -90 ~ 90 범위여야 합니다.<br>' +
       '- 경도는 소수점 6~8자리, -180 ~ 180 범위여야 합니다.<br>',
   })
@@ -312,7 +313,8 @@ export class UserEventController {
       '- 경도가 -180 ~ 180 범위를 벗어나는 경우: _**LONGITUDE_OUT_OF_RANGE**_<br>' +
       '<br>' +
       '**도메인 규칙**<br>' +
-      '- 모임당 모집 중인 일정이 이미 3개 이상인 경우: _**MAX_RECURRING_EVENTS_EXCEEDED**_<br>',
+      '- 모임당 모집 중인 일정이 이미 3개 이상인 경우: _**MAX_RECURRING_EVENTS_EXCEEDED**_<br>' +
+      '- 다른 일정과 시간이 중복되는 경우: _**EVENT_TIME_CONFLICT**_<br>',
   })
   @ApiNotFoundResponse({
     description:
