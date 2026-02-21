@@ -17,6 +17,7 @@ import {
   UserRegisteredNotificationHandler,
   UserRegisteredSubscriptionHandler,
   EventCreatedNotificationHandler,
+  EventCancelledNotificationHandler,
 } from './application/handlers';
 
 const useCases: Provider[] = [
@@ -33,6 +34,7 @@ const handlers: Provider[] = [
   UserRegisteredNotificationHandler,
   UserRegisteredSubscriptionHandler,
   EventCreatedNotificationHandler,
+  EventCancelledNotificationHandler,
 ];
 
 /**
