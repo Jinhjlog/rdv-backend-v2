@@ -10,8 +10,13 @@ import {
   ReadNotificationUseCase,
   ReadAllNotificationsUseCase,
   BroadcastSystemNotificationUseCase,
+  GetNotificationSubscriptionsUseCase,
+  UpdateNotificationSubscriptionUseCase,
 } from './application/usecases';
-import { UserRegisteredNotificationHandler } from './application/handlers';
+import {
+  UserRegisteredNotificationHandler,
+  UserRegisteredSubscriptionHandler,
+} from './application/handlers';
 
 const useCases: Provider[] = [
   GetNotificationListUseCase,
@@ -19,9 +24,14 @@ const useCases: Provider[] = [
   ReadNotificationUseCase,
   ReadAllNotificationsUseCase,
   BroadcastSystemNotificationUseCase,
+  GetNotificationSubscriptionsUseCase,
+  UpdateNotificationSubscriptionUseCase,
 ];
 
-const handlers: Provider[] = [UserRegisteredNotificationHandler];
+const handlers: Provider[] = [
+  UserRegisteredNotificationHandler,
+  UserRegisteredSubscriptionHandler,
+];
 
 /**
  * Notification 모듈
