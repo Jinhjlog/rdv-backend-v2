@@ -3,7 +3,7 @@ import { EVENT_QUEUE } from '../../event.constants';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventJobData } from '../services';
 import { Job } from 'bullmq';
-import { EventRepository } from '../../domain/repositories';
+import { EventRepository, GroupRepository } from '../../domain/repositories';
 
 @Injectable()
 @Processor(EVENT_QUEUE.NAME, {
@@ -57,7 +57,10 @@ import { EventRepository } from '../../domain/repositories';
 export class EventProcessor extends WorkerHost {
   private readonly logger = new Logger(EventProcessor.name);
 
-  constructor(private readonly eventRepository: EventRepository) {
+  constructor(
+    private readonly eventRepository: EventRepository,
+    private readonly groupRepository: GroupRepository,
+  ) {
     super();
   }
 
@@ -103,10 +106,15 @@ export class EventProcessor extends WorkerHost {
       return;
     }
 
-    // 2. 도메인 메서드 호출 (Domain Event 자동 발행)
-    const passed = event.checkParticipantsForStart();
+    // 2. 모임 이름 조회
+    const groupName = await this.groupRepository.findGroupNameById(
+      event.groupId,
+    );
 
-    // 3. 저장 (Domain Events 발행됨)
+    // 3. 도메인 메서드 호출 (Domain Event 자동 발행)
+    const passed = event.checkParticipantsForStart(groupName);
+
+    // 4. 저장 (Domain Events 발행됨)
     await this.eventRepository.save(event);
 
     this.logger.log(
@@ -172,10 +180,15 @@ export class EventProcessor extends WorkerHost {
       return;
     }
 
-    // 3. 도메인 메서드 호출 (Domain Event 자동 발행 + 출석 결과 생성)
-    event.end();
+    // 3. 모임 이름 조회
+    const groupName = await this.groupRepository.findGroupNameById(
+      event.groupId,
+    );
 
-    // 4. 저장 (Domain Events 발행됨)
+    // 4. 도메인 메서드 호출 (Domain Event 자동 발행 + 출석 결과 생성)
+    event.end(groupName);
+
+    // 5. 저장 (Domain Events 발행됨)
     await this.eventRepository.save(event);
 
     this.logger.log(

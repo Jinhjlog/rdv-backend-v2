@@ -28,6 +28,7 @@ export class EventCreatedPushHandler implements OnModuleInit {
     const {
       eventId,
       groupId,
+      groupName,
       createdByUserId,
       groupMemberUserIds,
       title,
@@ -52,7 +53,7 @@ export class EventCreatedPushHandler implements OnModuleInit {
         topic: 'event-created',
         notification: {
           title: '📅 새 일정이 등록됐어요',
-          body: `${title} · ${formattedTime}`,
+          body: `${groupName} · ${title} · ${formattedTime}`,
         },
         data: {
           targetScreen: 'eventDetail',

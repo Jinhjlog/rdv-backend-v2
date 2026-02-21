@@ -111,10 +111,11 @@ export class CreateEventUseCase {
 
     event.addParticipant(participant);
 
-    const groupMemberUserIds = await this.groupRepository.findMemberUserIds(
-      dto.groupId,
-    );
-    event.markAsCreated(groupMemberUserIds);
+    const [groupMemberUserIds, groupName] = await Promise.all([
+      this.groupRepository.findMemberUserIds(dto.groupId),
+      this.groupRepository.findGroupNameById(dto.groupId),
+    ]);
+    event.markAsCreated(groupMemberUserIds, groupName);
 
     const scheduleSuccess =
       await this.eventQueueService.scheduleParticipantCheck(
