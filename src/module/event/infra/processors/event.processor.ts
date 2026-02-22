@@ -145,10 +145,15 @@ export class EventProcessor extends WorkerHost {
       return;
     }
 
-    // 3. 도메인 메서드 호출 (Domain Event 자동 발행)
-    event.start();
+    // 3. 모임 이름 조회
+    const groupName = await this.groupRepository.findGroupNameById(
+      event.groupId,
+    );
 
-    // 4. 저장 (Domain Events 발행됨)
+    // 4. 도메인 메서드 호출 (Domain Event 자동 발행)
+    event.start(groupName);
+
+    // 5. 저장 (Domain Events 발행됨)
     await this.eventRepository.save(event);
 
     this.logger.log(
