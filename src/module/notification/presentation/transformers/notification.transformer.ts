@@ -1,3 +1,4 @@
+import { toKstDateString } from '@shared/utils';
 import { NotificationListItemQueryModel } from '../../domain/models';
 import {
   NotificationListItemResponseDto,
@@ -57,8 +58,6 @@ export class NotificationTransformer {
     if (diffHours < 24) return `${diffHours}h`;
     if (diffDays < 7) return `${diffDays}d`;
 
-    const month = createdAt.getMonth() + 1;
-    const day = createdAt.getDate();
-    return `${month}/${day}`;
+    return toKstDateString(createdAt);
   }
 }
