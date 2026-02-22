@@ -467,7 +467,7 @@ export class Event extends AggregateRoot<EventProps> {
    *
    * @throws {DomainRuleViolationException} EVENT_CANNOT_START - 시작할 수 없는 상태인 경우
    */
-  start(): void {
+  start(groupName: string): void {
     if (!this.canStart()) {
       throw new DomainRuleViolationException({
         entityName: 'Event',
@@ -483,6 +483,8 @@ export class Event extends AggregateRoot<EventProps> {
       new EventStartedEvent(this.id, {
         eventId: this.id.toString(),
         groupId: this.props.groupId,
+        groupName,
+        title: this.props.title.value,
         participantUserIds: this.props.participants.map((p) => p.userId),
         eventTime: this.props.schedule.eventTime,
         endTime: this.props.schedule.endTime,

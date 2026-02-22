@@ -4,3 +4,4 @@ export * from './event-created-notification.handler';
 export * from './event-cancelled-notification.handler';
 export * from './event-ended-notification.handler';
 export * from './member-kicked-notification.handler';
+export * from './event-started-notification.handler';

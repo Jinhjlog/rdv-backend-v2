@@ -6,8 +6,8 @@ import {
 } from './application/usecases';
 import {
   SystemNotificationPushHandler,
-  EventStartedPushHandler,
   EventCreatedPushHandler,
+  EventStartedPushHandler,
   EventCancelledPushHandler,
   EventEndedPushHandler,
   MemberKickedPushHandler,
@@ -29,8 +29,8 @@ const services: Provider[] = [PushDispatchService];
 
 const handlers: Provider[] = [
   SystemNotificationPushHandler,
-  EventStartedPushHandler,
   EventCreatedPushHandler,
+  EventStartedPushHandler,
   EventCancelledPushHandler,
   EventEndedPushHandler,
   MemberKickedPushHandler,
