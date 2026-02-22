@@ -4,6 +4,8 @@ import { IDomainEvent } from '@lib/domain/events/i-domain-event';
 export interface EventStartedEventData {
   eventId: string;
   groupId: string;
+  groupName: string;
+  title: string;
   participantUserIds: string[];
   eventTime: Date;
   endTime: Date;
