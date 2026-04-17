@@ -18,13 +18,26 @@ import {
   EventStartedEventHandler,
   EventEndedEventHandler,
 } from './application/handlers';
+import { EventSchedulerService } from './application/services';
+
+/**
+ * QUEUE_DRIVER 환경변수에 따라 BullMQ 관련 리소스를 조건부 등록한다.
+ *
+ * - `bullmq`: BullModule.registerQueue + EventProcessor 등록
+ * - `cloud-tasks`: 위 두 가지 스킵 (대신 EventQueueController가 활성화됨)
+ */
+const queueDriver =
+  process.env.QUEUE_DRIVER === 'cloud-tasks' ? 'cloud-tasks' : 'bullmq';
+
+const bullQueueImports =
+  queueDriver === 'bullmq'
+    ? [BullModule.registerQueue({ name: EVENT_QUEUE.NAME })]
+    : [];
+
+const bullProcessors = queueDriver === 'bullmq' ? [EventProcessor] : [];
 
 @Module({
-  imports: [
-    BullModule.registerQueue({
-      name: EVENT_QUEUE.NAME,
-    }),
-  ],
+  imports: [...bullQueueImports],
   providers: [
     {
       provide: EventQueryRepository,
@@ -39,7 +52,8 @@ import {
       useClass: GroupRepositoryImpl,
     },
     EventQueueService,
-    EventProcessor,
+    EventSchedulerService,
+    ...bullProcessors,
     // Event Handlers
     ParticipantsCheckPassedEventHandler,
     EventStartedEventHandler,
@@ -50,7 +64,7 @@ import {
     EventRepository,
     GroupRepository,
     EventQueueService,
-    EventProcessor,
+    EventSchedulerService,
   ],
 })
 export class EventCoreModule {}
