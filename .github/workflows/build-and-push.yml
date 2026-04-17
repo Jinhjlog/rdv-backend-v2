@@ -64,9 +64,19 @@ jobs:
             /secrets/.env=RDV_BACKEND_ENV:latest
 
           # [시스템 변수]
+          # QUEUE_DRIVER: bullmq | cloud-tasks
+          #   - bullmq (현재): 기존 Redis 기반 큐 유지
+          #   - cloud-tasks: Cloud Tasks로 전환 (Phase 3 스테이징 검증 후 변경)
           env_vars: |
             NODE_ENV=production
             LOG_LEVEL=debug
+            QUEUE_DRIVER=bullmq
+            GCP_PROJECT_ID=exalted-gamma-485513-e4
+            GCP_LOCATION=asia-northeast1
+            CLOUD_TASKS_INVOKER_SA=rdv-backend-runtime@exalted-gamma-485513-e4.iam.gserviceaccount.com
+            CLOUD_TASKS_TARGET_URL=https://rdv-backend-v2-213001418399.asia-northeast1.run.app/internal/queue/event
 
           # [포트, 인스턴스, 메모리, 실행환경, CPU 설정]
+          # NOTE: --min-instances 1, --no-cpu-throttling 은 월 ~7만원 상시 과금의 원인.
+          # Phase 4(스테이징 검증 완료 후) 에서 --min-instances 0 으로 변경 예정.
           flags: '--port 3000 --min-instances 1 --max-instances 10 --memory 1Gi --execution-environment gen2 --no-cpu-throttling'
