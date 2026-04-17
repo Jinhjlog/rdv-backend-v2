@@ -38,6 +38,12 @@ export class CharacterRepositoryImpl implements CharacterRepository {
     return raw.id;
   }
 
+  async findAll(): Promise<Character[]> {
+    const results = await this.prisma.characters.findMany();
+
+    return results.map((raw) => CharacterMapper.toDomain(raw));
+  }
+
   async findByEventType(eventType: string): Promise<Character[]> {
     const results = await this.prisma.characters.findMany({
       where: {
