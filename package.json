@@ -36,6 +36,7 @@
     "db:restore:dev": "sh -c 'LATEST_DUMP=$(ls -t dumps/production_data_*.sql 2>/dev/null | head -n1); if [ -z \"$LATEST_DUMP\" ]; then echo \"Error: No dump file found in dumps/\"; exit 1; fi; echo \"Restoring from: $LATEST_DUMP\"; docker exec -i supabase_db_rdv-backend-v2 psql -U postgres -d postgres < \"$LATEST_DUMP\"'"
   },
   "dependencies": {
+    "@google-cloud/tasks": "^6.2.1",
     "@nestjs-modules/ioredis": "^2.0.2",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/bullmq": "^11.0.0",
@@ -57,6 +58,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "firebase-admin": "^13.6.0",
+    "google-auth-library": "^10.6.2",
     "helmet": "^8.1.0",
     "ioredis": "^5.0.0",
     "nest-winston": "^1.10.2",
