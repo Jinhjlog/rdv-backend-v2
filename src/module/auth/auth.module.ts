@@ -4,6 +4,7 @@ import {
   UserJwtAuthGuard,
   ApiKeyGuard,
   AttestationGuard,
+  CloudTasksAuthGuard,
 } from './guards';
 import { UserJwtStrategy } from './strategies';
 import {
@@ -19,6 +20,7 @@ const guards: Provider[] = [
   JwtBlacklistCheckGuard,
   ApiKeyGuard,
   AttestationGuard,
+  CloudTasksAuthGuard,
 ];
 
 @Global()
