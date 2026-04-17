@@ -78,6 +78,6 @@ jobs:
           # - min-instances 0: 유휴 시 스케일 제로 허용 (월 ~7만원 상시 과금 제거)
           # - max-instances 1: 토이 규모 트래픽 + 비용 폭주 방지. Cloud Tasks
           #   재시도(최대 3회, exponential backoff)로 일시적 포화 상황 완화.
-          # - cpu-throttling: 기본 동작(요청 처리 중에만 CPU 할당)
+          # - cpu-throttling: 요청 처리 중에만 CPU 할당 (유휴 시 과금 제거)
           # - service-account: Cloud Tasks enqueuer·invoker 권한을 가진 전용 SA
-          flags: '--port 3000 --min-instances 0 --max-instances 1 --memory 1Gi --execution-environment gen2 --service-account rdv-backend-runtime@exalted-gamma-485513-e4.iam.gserviceaccount.com'
+          flags: '--port 3000 --min-instances 0 --max-instances 1 --memory 1Gi --execution-environment gen2 --cpu-throttling --service-account rdv-backend-runtime@exalted-gamma-485513-e4.iam.gserviceaccount.com'
