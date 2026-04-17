@@ -3,7 +3,7 @@ import { EVENT_QUEUE } from '../../event.constants';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventJobData } from '../services';
 import { Job } from 'bullmq';
-import { EventRepository, GroupRepository } from '../../domain/repositories';
+import { EventSchedulerService } from '../../application/services';
 
 @Injectable()
 @Processor(EVENT_QUEUE.NAME, {
@@ -57,10 +57,7 @@ import { EventRepository, GroupRepository } from '../../domain/repositories';
 export class EventProcessor extends WorkerHost {
   private readonly logger = new Logger(EventProcessor.name);
 
-  constructor(
-    private readonly eventRepository: EventRepository,
-    private readonly groupRepository: GroupRepository,
-  ) {
+  constructor(private readonly eventSchedulerService: EventSchedulerService) {
     super();
   }
 
@@ -72,13 +69,17 @@ export class EventProcessor extends WorkerHost {
     try {
       switch (job.name) {
         case EVENT_QUEUE.JOBS.PARTICIPANT_CHECK:
-          await this.handleParticipantCheck(job.data.eventId);
+          await this.eventSchedulerService.handleParticipantCheck(
+            job.data.eventId,
+          );
           break;
         case EVENT_QUEUE.JOBS.LOCATION_SHARING_START:
-          await this.handleLocationSharingStart(job.data.eventId);
+          await this.eventSchedulerService.handleLocationSharingStart(
+            job.data.eventId,
+          );
           break;
         case EVENT_QUEUE.JOBS.END:
-          await this.handleEventEnd(job.data.eventId);
+          await this.eventSchedulerService.handleEventEnd(job.data.eventId);
           break;
       }
     } catch (error) {
@@ -89,115 +90,5 @@ export class EventProcessor extends WorkerHost {
 
       throw error;
     }
-  }
-
-  /**
-   * 참여자 체크 처리
-   *
-   * Processor → Repository → Domain method → Domain Event 발행
-   * - 2명 이상: ParticipantsCheckPassedEvent 발행 → EventHandler에서 위치 공유 시작 스케줄링 예약
-   * - 1명 이하: EventCancelledEvent 발행 → 일정 취소
-   */
-  private async handleParticipantCheck(eventId: string): Promise<void> {
-    // 1. 조회
-    const event = await this.eventRepository.findById(eventId);
-    if (!event) {
-      this.logger.warn(`일정을 찾을 수 없음: ${eventId}`);
-      return;
-    }
-
-    // 2. 모임 이름 조회
-    const groupName = await this.groupRepository.findGroupNameById(
-      event.groupId,
-    );
-
-    // 3. 도메인 메서드 호출 (Domain Event 자동 발행)
-    const passed = event.checkParticipantsForStart(groupName);
-
-    // 4. 저장 (Domain Events 발행됨)
-    await this.eventRepository.save(event);
-
-    this.logger.log(
-      `참여자 체크 완료: eventId=${eventId}, passed=${passed}, participantCount=${event.participants.length}`,
-    );
-  }
-
-  /**
-   * 일정 시작 처리 (위치 공유 시작)
-   *
-   * Processor → Repository → Domain method → Domain Event 발행
-   * - RECRUITING → IN_PROGRESS 상태 전환
-   * - EventStartedEvent 발행 → EventHandler에서 일정 종료 스케줄링 예약
-   */
-  private async handleLocationSharingStart(eventId: string): Promise<void> {
-    // 1. 조회
-    const event = await this.eventRepository.findById(eventId);
-    if (!event) {
-      this.logger.warn(`일정을 찾을 수 없음: ${eventId}`);
-      return;
-    }
-
-    // 2. 상태 확인 (이미 진행중이면 스킵)
-    if (!event.canStart()) {
-      this.logger.warn(
-        `일정을 시작할 수 없는 상태: eventId=${eventId}, status=${event.status}`,
-      );
-      return;
-    }
-
-    // 3. 모임 이름 조회
-    const groupName = await this.groupRepository.findGroupNameById(
-      event.groupId,
-    );
-
-    // 4. 도메인 메서드 호출 (Domain Event 자동 발행)
-    event.start(groupName);
-
-    // 5. 저장 (Domain Events 발행됨)
-    await this.eventRepository.save(event);
-
-    this.logger.log(
-      `일정 시작 완료: eventId=${eventId}, status=${event.status}`,
-    );
-  }
-
-  /**
-   * 일정 종료 처리
-   *
-   * Processor → Repository → Domain method → Domain Event 발행
-   * - IN_PROGRESS → ENDED 상태 전환
-   * - 출석 결과 생성 (ARRIVED → 도착, DEPARTED → 지각, PREPARING → 부재)
-   * - EventEndedEvent 발행 → EventHandler에서 푸시 알림 발송
-   */
-  private async handleEventEnd(eventId: string): Promise<void> {
-    // 1. 조회
-    const event = await this.eventRepository.findById(eventId);
-    if (!event) {
-      this.logger.warn(`일정을 찾을 수 없음: ${eventId}`);
-      return;
-    }
-
-    // 2. 상태 확인 (이미 종료됐으면 스킵)
-    if (!event.canEnd()) {
-      this.logger.warn(
-        `일정을 종료할 수 없는 상태: eventId=${eventId}, status=${event.status}`,
-      );
-      return;
-    }
-
-    // 3. 모임 이름 조회
-    const groupName = await this.groupRepository.findGroupNameById(
-      event.groupId,
-    );
-
-    // 4. 도메인 메서드 호출 (Domain Event 자동 발행 + 출석 결과 생성)
-    event.end(groupName);
-
-    // 5. 저장 (Domain Events 발행됨)
-    await this.eventRepository.save(event);
-
-    this.logger.log(
-      `일정 종료 완료: eventId=${eventId}, status=${event.status}`,
-    );
   }
 }

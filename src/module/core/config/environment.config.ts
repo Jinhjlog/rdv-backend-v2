@@ -1,3 +1,5 @@
+export type QueueDriver = 'bullmq' | 'cloud-tasks';
+
 export type EnvironmentConfig = {
   database: {
     url: string;
@@ -34,6 +36,15 @@ export type EnvironmentConfig = {
       appleAppId: string;
     };
   };
+  queue: {
+    driver: QueueDriver;
+    cloudTasks: {
+      projectId: string;
+      location: string;
+      invokerServiceAccount: string;
+      targetUrl: string;
+    };
+  };
 };
 
 function validateEnvVariables(config: EnvironmentConfig) {
@@ -49,11 +60,27 @@ function validateEnvVariables(config: EnvironmentConfig) {
 
   if (!config.jwt.secret) missingVariables.push('JWT_SECRET');
 
+  if (config.queue.driver === 'cloud-tasks') {
+    if (!config.queue.cloudTasks.projectId)
+      missingVariables.push('GCP_PROJECT_ID');
+    if (!config.queue.cloudTasks.location)
+      missingVariables.push('GCP_LOCATION');
+    if (!config.queue.cloudTasks.invokerServiceAccount)
+      missingVariables.push('CLOUD_TASKS_INVOKER_SA');
+    if (!config.queue.cloudTasks.targetUrl)
+      missingVariables.push('CLOUD_TASKS_TARGET_URL');
+  }
+
   if (missingVariables.length > 0) {
     throw new Error(
       `Missing environment variables: ${missingVariables.join(', ')}`,
     );
   }
+}
+
+function parseQueueDriver(value: string | undefined): QueueDriver {
+  if (value === 'cloud-tasks') return 'cloud-tasks';
+  return 'bullmq';
 }
 
 export default (): EnvironmentConfig => {
@@ -108,6 +135,15 @@ export default (): EnvironmentConfig => {
         enabled: process.env.ATTESTATION_ENABLED === 'true',
         googlePackageName: process.env.GOOGLE_PACKAGE_NAME || '',
         appleAppId: process.env.APPLE_APP_ID || '',
+      },
+    },
+    queue: {
+      driver: parseQueueDriver(process.env.QUEUE_DRIVER),
+      cloudTasks: {
+        projectId: process.env.GCP_PROJECT_ID || '',
+        location: process.env.GCP_LOCATION || '',
+        invokerServiceAccount: process.env.CLOUD_TASKS_INVOKER_SA || '',
+        targetUrl: process.env.CLOUD_TASKS_TARGET_URL || '',
       },
     },
   };

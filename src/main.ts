@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './module/app.module';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { RequestMethod, ValidationPipe, VersioningType } from '@nestjs/common';
 import helmet from 'helmet';
 
 async function bootstrap() {
@@ -31,8 +31,10 @@ async function bootstrap() {
   });
 
   // 글로벌 프리픽스 및 버전 적용
+  // `internal/*` 은 Cloud Tasks 전용 내부 엔드포인트로, 사용자 API와 분리하여
+  // /api/v1 프리픽스를 적용하지 않는다. (컨트롤러 단에서 VERSION_NEUTRAL 지정)
   app.setGlobalPrefix('api', {
-    exclude: ['health'],
+    exclude: ['health', { path: 'internal/(.*)', method: RequestMethod.ALL }],
   });
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
 
