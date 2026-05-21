@@ -44,8 +44,6 @@
     "deny": [
       "Bash(git push:*)",
       "Bash(gh pr:*)",
-      // "Bash(rm:*)",
-      // "Bash(rmdir:*)",
       "Bash(git reset --hard:*)",
       "Bash(git clean -f:*)",
       "Bash(git checkout -- .:*)",
