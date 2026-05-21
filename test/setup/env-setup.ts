@@ -31,8 +31,10 @@ process.env.REDIS_QUEUE_DB = '15';
 process.env.QUEUE_DRIVER = 'cloud-tasks';
 process.env.GCP_PROJECT_ID = 'test-project';
 process.env.GCP_LOCATION = 'asia-northeast1';
-process.env.CLOUD_TASKS_INVOKER_SA = 'test@test-project.iam.gserviceaccount.com';
-process.env.CLOUD_TASKS_TARGET_URL = 'http://localhost:3000/internal/queue/event';
+process.env.CLOUD_TASKS_INVOKER_SA =
+  'test@test-project.iam.gserviceaccount.com';
+process.env.CLOUD_TASKS_TARGET_URL =
+  'http://localhost:3000/internal/queue/event';
 
 // JWT
 process.env.JWT_SECRET = 'test-jwt-secret-key';
