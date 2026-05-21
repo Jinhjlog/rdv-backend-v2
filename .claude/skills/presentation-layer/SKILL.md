@@ -1,247 +1,203 @@
 ---
 name: presentation-layer
-description: "DDD 프레젠테이션 레이어 구현. Controllers, Request/Response DTOs, Transformers를 생성. \"프레젠테이션 레이어 구현\" 또는 \"presentation layer\" 키워드 사용 시 실행."
+description: 'DDD 프레젠테이션 레이어 구현. Controllers, Request/Response DTOs, Transformers를 생성. "프레젠테이션 레이어 구현" 또는 "presentation layer" 키워드 사용 시 실행.'
 allowed-tools: Read, Write, Glob, Grep, Bash
 user-invocable: true
 ---
 
 # Presentation Layer 구현 스킬
 
-## ⚠️ IMPORTANT: Claude 자동 실행 지시사항
+## 실행 트리거
 
-**Claude는 사용자가 다음과 같은 요청을 하면 이 스킬 사용을 고려해야 합니다:**
-
-### 실행 트리거 (Invoke Triggers)
-
-- "프레젠테이션 레이어 구현"
+- "프레젠테이션 레이어 구현", "presentation layer"
 - "Controller 만들어줘", "컨트롤러 생성"
 - "API 엔드포인트 추가"
 - "Request DTO 작성", "Response DTO 작성"
 - "Transformer 추가"
-- "presentation layer implementation"
-- "create controller", "add endpoint"
-
-**실행 방법:**
-```typescript
-// 사용자 요청 감지 시 다음을 호출
-Skill({ skill: "presentation-layer" })
-```
-
-**권장 사항:**
-- ✅ 여러 엔드포인트를 한 번에 생성할 때 이 스킬 사용 권장
-- ✅ 역할별 Controller 구조가 복잡할 때 이 스킬 사용
-- ⚠️ 간단한 엔드포인트는 직접 구현도 가능
 
 ---
 
-DDD(Domain-Driven Design) 패턴에 따라 프레젠테이션 레이어를 구현합니다.
-
-## 📋 실행 프로세스
-
-### 1단계: 요구사항 분석
-
-요구사항 문서를 읽고 다음을 판단합니다:
-
-```markdown
-# 판단 기준
-
-- 어떤 API 엔드포인트가 필요한가?
-  - POST (생성)
-  - GET (조회 - 목록/상세)
-  - PATCH (수정)
-  - DELETE (삭제)
-- 어떤 역할(Role)이 접근하는가?
-  - super-admin, company-admin, user, my 등
-- Request DTOs가 필요한가?
-- Response DTOs가 필요한가?
-- Transformer가 필요한가?
-```
-
-**⏭️ 스킵 조건**:
-
-- Application Layer가 없는 경우
-- API 엔드포인트가 필요하지 않은 경우
-
-스킵 시 다음과 같이 출력:
-
-```
-⏭️ Presentation Layer 스킵
-이유: API 엔드포인트가 필요하지 않습니다.
-```
-
-### 2단계: 기존 패턴 참조
-
-구현 전 반드시 기존 모듈의 프레젠테이션 레이어를 참조하여 코드 스타일을 맞춥니다:
-
-- `src/module/company-post/presentation/`
-- `src/module/workplace/presentation/`
-- `src/module/tbm-education/presentation/`
-
-### 3단계: 파일 구조 생성
+## 파일 구조
 
 ```
 src/module/{module-name}/presentation/
 ├── controllers/
-│   ├── {role}-{entity}.controller.ts
+│   ├── {entity}.controller.ts          # 공개 API (인증 불필요)
+│   ├── admin-{entity}.controller.ts    # 관리자 API (@AdminAuth)
 │   └── index.ts
 ├── dtos/
 │   ├── request/
+│   │   ├── get-{entity}-list.request.dto.ts
+│   │   ├── get-admin-{entity}-list.request.dto.ts
 │   │   ├── create-{entity}.request.dto.ts
 │   │   ├── update-{entity}.request.dto.ts
 │   │   └── index.ts
 │   ├── response/
-│   │   ├── {entity}-detail.response.dto.ts
 │   │   ├── {entity}-list.response.dto.ts
+│   │   ├── {entity}-detail.response.dto.ts
+│   │   ├── admin-{entity}-list.response.dto.ts
+│   │   ├── admin-{entity}-detail.response.dto.ts
 │   │   └── index.ts
 │   └── index.ts
 └── transformers/
-    ├── {entity}.transformer.ts
+    ├── {entity}.transformer.ts         # 공개 API 변환
+    ├── admin-{entity}.transformer.ts   # 관리자 API 변환
     └── index.ts
 ```
 
-### 4단계: 스크립트를 사용한 빠른 생성 (권장)
+---
 
-boilerplate 코드 생성을 위한 스크립트를 제공합니다. 스크립트 실행 후 TODO 주석을 확인하고 비즈니스 로직을 작성하세요.
+## 핵심 규칙
 
-#### Controller 생성
+### 1. 컨트롤러 분리
 
-```bash
-cd .claude/skills/presentation-layer
-bash scripts/generate-controller.sh {module-name} {AggregateRootName} {role}
+- **공개 API**: `{entity}.controller.ts` — 인증 데코레이터 없음, GET만 제공
+- **관리자 API**: `admin-{entity}.controller.ts` — 클래스 레벨 `@AdminAuth()`, CRUD 전체
+
+### 2. 인증 패턴
+
+> **인증/인가 방식은 프로젝트마다 다를 수 있습니다.**
+> 구현 전 반드시 해당 프로젝트의 기존 인증 데코레이터, Guard, 사용자 정보 주입 방식을 파악한 후 동일하게 적용합니다.
+
+```typescript
+// 관리자 API — 클래스 레벨 인증
+@AdminAuth()
+@Controller({ path: 'admin/{entities}', version: '1' })
+export class Admin{Entity}Controller {
+  @Post()
+  async create(@Body() dto, @CurrentAdmin() admin: AuthenticatedAdmin) {
+    // admin.adminId, admin.name 사용
+  }
+}
+
+// 공개 API — 인증 없음
+@Controller({ path: '{entities}', version: '1' })
+export class {Entity}Controller { ... }
 ```
 
-**role 종류**: `super-admin`, `company-admin`, `user`, `my`
+**import 경로:**
 
-예시:
-
-```bash
-bash scripts/generate-controller.sh instructor Instructor company-admin
-bash scripts/generate-controller.sh instructor Instructor my
+```typescript
+import { AdminAuth } from '../../../admin/presentation/decorators/admin-auth.decorator';
+import { CurrentAdmin } from '../../../admin/presentation/decorators/current-admin.decorator';
+import type { AuthenticatedAdmin } from '../../../admin/presentation/guards';
 ```
 
-**상세 패턴이 필요하면**: `patterns/controller.md` 참조
+### 3. ID 타입
 
-#### Request DTO 생성
+- **ULID 사용** (UUID 아님)
+- `ParseUUIDPipe` 사용 금지
+- 파라미터는 `@Param('entityId') id: string`으로 직접 받음
+- 예시: `01HXK3G5N7MZQR8BVWEY6JKFP4`
 
-```bash
-cd .claude/skills/presentation-layer
-bash scripts/generate-request-dto.sh {module-name} {AggregateRootName} {action}
+### 4. 목록 조회 컨트롤러 패턴
+
+```typescript
+// 페이지네이션 있는 목록 — @Query() DTO 사용
+@Get()
+async getList(@Query() dto: GetListRequestDto): Promise<ListResponseDto> {
+  const result = await this.findListUseCase.execute({
+    limit: dto.limit ?? 20,
+    page: dto.page ?? 1,
+    keyword: dto.keyword,
+  });
+  return Transformer.toListResponse(result);
+}
+
+// 단순 목록 (카테고리, 활성 팝업 등) — 파라미터 없음
+@Get()
+async getCategoryList(): Promise<CategoryListResponseDto> {
+  const items = await this.findCategoryListUseCase.execute();
+  return CategoryTransformer.toListResponse(items);
+}
 ```
 
-**action 종류**: `create`, `update`
+### 5. Transformer 필수 사용
 
-예시:
+- **컨트롤러에서 인라인 맵핑 금지** — 반드시 Transformer 사용
+- Transformer는 `static` 메서드만 사용
+- `toListResponse()`, `toDetailResponse()` 메서드 제공
 
-```bash
-bash scripts/generate-request-dto.sh instructor Instructor create
-bash scripts/generate-request-dto.sh instructor Instructor update
+### 6. nullable 처리 규칙
+
+**Transformer (domain → presentation):**
+
+```typescript
+// 단순 필드: undefined → null 변환 (삼항 연산자 필수)
+description: readModel.description !== undefined ? readModel.description : null,
+
+// 중첩 객체
+category: readModel.category !== undefined
+  ? { id: readModel.category.id, name: readModel.category.name }
+  : null,
 ```
 
-**상세 패턴이 필요하면**: `patterns/request-dto.md` 참조
+**QueryService Impl (DB → domain):**
 
-#### Response DTO 생성
-
-```bash
-cd .claude/skills/presentation-layer
-bash scripts/generate-response-dto.sh {module-name} {AggregateRootName} {type}
+```typescript
+// null → undefined 변환 (삼항 연산자 필수)
+email: record.email !== null ? record.email : undefined,
 ```
 
-**type 종류**: `detail`, `list`
+> `??` 연산자 사용 금지. 삼항 연산자를 사용해야 정확합니다.
 
-예시:
+### 7. Swagger 문서화
 
-```bash
-bash scripts/generate-response-dto.sh instructor Instructor detail
-bash scripts/generate-response-dto.sh instructor Instructor list
+모든 엔드포인트에 필수:
+
+- `@ApiOperation({ summary, description })` — description은 HTML `<br>` 사용
+- `@ApiOkResponse` / `@ApiCreatedResponse` — 성공 응답 타입
+- `@ApiBadRequestResponse` — 검증 실패 에러 코드 명시
+- `@ApiNotFoundResponse` — 404 에러 코드 명시
+- `@ApiParam` — URL 파라미터 설명
+- `@HttpCode()` — 명시적 상태 코드 (GET: OK, POST: CREATED, DELETE: NO_CONTENT)
+
+### 8. 페이지네이션 응답 구조
+
+```typescript
+{
+  items: ListItemDto[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
 ```
 
-**상세 패턴이 필요하면**: `patterns/response-dto.md` 참조
+### 9. index.ts 패턴
 
-#### Transformer 생성
+모든 하위 디렉토리에 `index.ts`로 re-export:
 
-```bash
-cd .claude/skills/presentation-layer
-bash scripts/generate-transformer.sh {module-name} {AggregateRootName}
+```typescript
+export * from './{file-name}';
 ```
-
-예시:
-
-```bash
-bash scripts/generate-transformer.sh instructor Instructor
-```
-
-**상세 패턴이 필요하면**: `patterns/transformer.md` 참조
 
 ---
 
-## 🎯 구현 워크플로우
+## 구현 순서
 
-### 권장 순서
-
-#### Case 1: 전체 CRUD API 구현
-
-1. **Response DTOs 생성** (스크립트 사용)
-   → 필드 추가 및 수정
-
-2. **Request DTOs 생성** (스크립트 사용)
-   → Validation 데코레이터 추가
-
-3. **Transformer 생성** (스크립트 사용)
-   → QueryModel → Response DTO 매핑
-
-4. **Controller 생성** (스크립트 사용)
-   → UseCase 호출 및 Transformer 사용
+1. **Response DTOs** → 응답 구조 정의
+2. **Request DTOs** → 요청 검증 정의
+3. **Transformer** → ReadModel → Response DTO 변환
+4. **Controller** → 엔드포인트 연결
+5. **Swagger** → `Skill({ skill: 'swagger-bot' })` 호출하여 Swagger 데코레이터 생성
 
 ---
 
-## 🎯 실행 결과 출력
+## 상세 패턴 문서
 
-구현 완료 시:
-
-```
-✅ Presentation Layer 구현 완료
-
-생성된 파일:
-- presentation/controllers/{role}-{entity}.controller.ts
-- presentation/controllers/index.ts
-- presentation/dtos/request/create-{entity}.request.dto.ts
-- presentation/dtos/request/update-{entity}.request.dto.ts
-- presentation/dtos/request/index.ts
-- presentation/dtos/response/{entity}-detail.response.dto.ts
-- presentation/dtos/response/{entity}-list.response.dto.ts
-- presentation/dtos/response/index.ts
-- presentation/dtos/index.ts
-- presentation/transformers/{entity}.transformer.ts
-- presentation/transformers/index.ts
-
-다음 단계: 모듈 파일 업데이트 및 통합 테스트
-```
-
-## ⚠️ 주의사항
-
-1. **기존 코드 스타일 준수**: 반드시 company-post, workplace 모듈의 기존 패턴을 따릅니다
-2. **Swagger 문서화**: 모든 엔드포인트에 `@ApiOperation()` 추가
-3. **Validation**: Request DTO에 적절한 Validation 데코레이터 사용
-4. **nullable 처리**: Response DTO에서 nullable 필드는 명시적으로 표시
-5. **역할 기반 접근 제어**: `@UserAccess()` 데코레이터 사용
-6. **한국어 설명**: ApiOperation의 description은 한국어로 작성
-
-## 🚫 하지 말아야 할 것
-
-- ❌ Controller에 비즈니스 로직 작성
-- ❌ Request DTO에 `@ApiProperty()` 누락
-- ❌ Response DTO에서 nullable 처리 누락
-- ❌ Transformer 없이 직접 Response DTO 생성
-- ❌ Swagger 문서화 누락
-- ❌ Validation 데코레이터 누락
+- `patterns/controller.md`: 컨트롤러 작성 규칙
+- `patterns/request-dto.md`: Request DTO 작성 규칙
+- `patterns/response-dto.md`: Response DTO 작성 규칙
+- `patterns/transformer.md`: Transformer 작성 규칙
 
 ---
 
-## 📚 상세 패턴 문서
+## 금지 사항
 
-필요할 때 다음 문서를 참조하세요:
-
-- `patterns/controller.md`: Controller 작성 패턴
-- `patterns/request-dto.md`: Request DTO 작성 패턴
-- `patterns/response-dto.md`: Response DTO 작성 패턴
-- `patterns/transformer.md`: Transformer 작성 패턴
+- Controller에 비즈니스 로직 작성 금지
+- Controller에서 인라인 맵핑 금지 (Transformer 필수)
+- `ParseUUIDPipe` 사용 금지 (ULID)
+- `?? undefined`, `?? null` 사용 금지 (삼항 연산자 사용)
+- `@ApiProperty()` 누락 금지
+- Swagger 문서화 누락 금지
+- Validation 데코레이터 누락 금지
