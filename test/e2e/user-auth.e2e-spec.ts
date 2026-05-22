@@ -4,27 +4,14 @@ import { DomainEvents } from '../../src/lib/domain/events/domain-events';
 import { createTestApp } from '../helpers/test-app.helper';
 import { cleanDatabase } from '../helpers/db-cleanup.helper';
 import { publicRequest, authRequest } from '../helpers/api.helper';
+import { registerUser, getUserId } from '../helpers/e2e.helper';
+import { AuthResponse, UserProfileResponse } from '../helpers/types';
 import {
   seedDefaultCharacter,
   seedExtraCharacter,
   seedUser,
   grantCharacterToUser,
 } from '../helpers/seed';
-
-interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-}
-
-interface UserProfileResponse {
-  id: string;
-  nickname: string;
-  nameTag: string;
-  preferredThemeColor: string;
-  characterCode: string;
-  level: number;
-  experience: number;
-}
 
 describe('사용자 인증 & 프로필 (P0)', () => {
   let app: INestApplication;
@@ -45,19 +32,12 @@ describe('사용자 인증 & 프로필 (P0)', () => {
     await cleanDatabase(prisma);
   });
 
-  /** 회원가입 후 accessToken 반환하는 헬퍼 */
   async function registerAndGetToken(
     deviceId: string,
     nickname = '테스터',
   ): Promise<string> {
     await seedDefaultCharacter(prisma);
-    const res = await publicRequest(app).post('/api/v2/auth/register').send({
-      deviceId,
-      nickname,
-      preferredThemeColor: '#FF0000',
-    });
-    expect(res.status).toBe(201);
-    return (res.body as AuthResponse).accessToken;
+    return registerUser(app, deviceId, nickname);
   }
 
   // ─── TC-AUTH-001 ───
@@ -106,7 +86,6 @@ describe('사용자 인증 & 프로필 (P0)', () => {
   // ─── TC-AUTH-004 ───
 
   it('TC-AUTH-004: 이미 등록된 deviceId로 회원가입 시 409', async () => {
-    // Given: API로 정상 회원가입 (후속 이벤트 핸들러까지 완료)
     await seedDefaultCharacter(prisma);
     const firstReg = await publicRequest(app)
       .post('/api/v2/auth/register')
@@ -117,7 +96,9 @@ describe('사용자 인증 & 프로필 (P0)', () => {
       });
     expect(firstReg.status).toBe(201);
 
-    // When: 같은 deviceId로 다시 회원가입
+    // 도메인 이벤트 핸들러(알림 구독, 캐릭터 언락) 완료 대기
+    await new Promise((r) => setTimeout(r, 500));
+
     const response = await publicRequest(app)
       .post('/api/v2/auth/register')
       .send({
@@ -126,7 +107,6 @@ describe('사용자 인증 & 프로필 (P0)', () => {
         preferredThemeColor: '#000000',
       });
 
-    // Then
     expect(response.status).toBe(409);
     expect((response.body as { errorCode: string }).errorCode).toBe(
       'USER_ALREADY_EXISTS',
@@ -191,9 +171,7 @@ describe('사용자 인증 & 프로필 (P0)', () => {
   it('TC-AUTH-008: 보유 캐릭터로 변경 성공', async () => {
     const accessToken = await registerAndGetToken('char-change-device', '캐변');
     const extraChar = await seedExtraCharacter(prisma);
-
-    const profile = await authRequest(app, accessToken).get('/api/v1/users/me');
-    const userId = (profile.body as UserProfileResponse).id;
+    const userId = await getUserId(app, accessToken);
     await grantCharacterToUser(prisma, userId, extraChar.id);
 
     const response = await authRequest(app, accessToken)

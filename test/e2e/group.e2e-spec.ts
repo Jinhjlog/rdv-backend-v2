@@ -3,38 +3,17 @@ import { PrismaService } from '../../src/module/core/database/prisma.service';
 import { DomainEvents } from '../../src/lib/domain/events/domain-events';
 import { createTestApp } from '../helpers/test-app.helper';
 import { cleanDatabase } from '../helpers/db-cleanup.helper';
-import { publicRequest, authRequest } from '../helpers/api.helper';
+import { authRequest } from '../helpers/api.helper';
+import {
+  registerUser,
+  createGroup,
+  createInviteCode,
+  joinGroup,
+  inviteAndJoin,
+  getUserId,
+} from '../helpers/e2e.helper';
+import { GroupDetailResponse, GroupListResponse } from '../helpers/types';
 import { seedDefaultCharacter } from '../helpers/seed';
-
-interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-}
-
-interface GroupDetailResponse {
-  id: string;
-  name: string;
-  description: string;
-  iconCode: string;
-  ownerId: string;
-  maxMembers: number;
-  isPublic: boolean;
-  members: Array<{
-    id: string;
-    userId: string;
-    nickname: string;
-    role: string;
-  }>;
-}
-
-interface GroupListResponse {
-  items: Array<{ id: string; name: string }>;
-}
-
-interface InviteCodeResponse {
-  code: string;
-  expiresAt: string;
-}
 
 describe('모임 (P0)', () => {
   let app: INestApplication;
@@ -56,51 +35,10 @@ describe('모임 (P0)', () => {
     await seedDefaultCharacter(prisma);
   });
 
-  async function registerUser(deviceId: string, nickname = '테스터') {
-    const res = await publicRequest(app).post('/api/v2/auth/register').send({
-      deviceId,
-      nickname,
-      preferredThemeColor: '#FF0000',
-    });
-    expect(res.status).toBe(201);
-    return (res.body as AuthResponse).accessToken;
-  }
-
-  async function createGroup(token: string, name = '테스트모임') {
-    const res = await authRequest(app, token).post('/api/v1/groups').send({
-      name,
-      description: '테스트용 모임',
-      iconCode: 'icon_01',
-    });
-    expect(res.status).toBe(201);
-    return res.body as GroupDetailResponse;
-  }
-
-  async function createInviteCode(token: string, groupId: string) {
-    const res = await authRequest(app, token).post(
-      `/api/v1/groups/${groupId}/invite-codes`,
-    );
-    expect(res.status).toBe(201);
-    return res.body as InviteCodeResponse;
-  }
-
-  async function joinGroup(token: string, inviteCode: string) {
-    const res = await authRequest(app, token)
-      .post('/api/v1/groups/join')
-      .send({ inviteCode });
-    expect(res.status).toBe(201);
-    return res.body as GroupDetailResponse;
-  }
-
-  async function getUserId(token: string) {
-    const res = await authRequest(app, token).get('/api/v1/users/me');
-    return (res.body as { id: string }).id;
-  }
-
   // ─── TC-GRP-001 ───
 
   it('TC-GRP-001: 모임 생성 성공', async () => {
-    const token = await registerUser('grp-001');
+    const token = await registerUser(app, 'grp-001');
 
     const response = await authRequest(app, token).post('/api/v1/groups').send({
       name: '테스트모임',
@@ -118,9 +56,9 @@ describe('모임 (P0)', () => {
 
   // ─── TC-GRP-002 ───
 
-  it('TC-GRP-002: 이미 모임장인 사용자가 모임 생성 시 409', async () => {
-    const token = await registerUser('grp-002');
-    await createGroup(token);
+  it('TC-GRP-002: 이미 모임장인 사용자가 모임 생성 시 400', async () => {
+    const token = await registerUser(app, 'grp-002');
+    await createGroup(app, token);
 
     const response = await authRequest(app, token).post('/api/v1/groups').send({
       name: '두번째모임',
@@ -137,8 +75,8 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-003 ───
 
   it('TC-GRP-003: 모임 목록 조회 성공', async () => {
-    const token = await registerUser('grp-003');
-    await createGroup(token, '나의모임');
+    const token = await registerUser(app, 'grp-003');
+    await createGroup(app, token, '나의모임');
 
     const response = await authRequest(app, token).get('/api/v1/groups');
 
@@ -151,8 +89,8 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-004 ───
 
   it('TC-GRP-004: 모임 상세 조회 성공', async () => {
-    const token = await registerUser('grp-004');
-    const group = await createGroup(token);
+    const token = await registerUser(app, 'grp-004');
+    const group = await createGroup(app, token);
 
     const response = await authRequest(app, token).get(
       `/api/v1/groups/${group.id}`,
@@ -168,8 +106,8 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-005 ───
 
   it('TC-GRP-005: 모임 정보 수정 성공 (모임장)', async () => {
-    const token = await registerUser('grp-005');
-    const group = await createGroup(token);
+    const token = await registerUser(app, 'grp-005');
+    const group = await createGroup(app, token);
 
     const response = await authRequest(app, token)
       .patch(`/api/v1/groups/${group.id}`)
@@ -182,35 +120,27 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-006 ───
 
   it('TC-GRP-006: 초대 코드 생성 성공', async () => {
-    const token = await registerUser('grp-006');
-    const group = await createGroup(token);
+    const token = await registerUser(app, 'grp-006');
+    const group = await createGroup(app, token);
 
-    const response = await authRequest(app, token).post(
-      `/api/v1/groups/${group.id}/invite-codes`,
-    );
+    const invite = await createInviteCode(app, token, group.id);
 
-    expect(response.status).toBe(201);
-    const body = response.body as InviteCodeResponse;
-    expect(body.code).toBeDefined();
-    expect(body.expiresAt).toBeDefined();
+    expect(invite.code).toBeDefined();
+    expect(invite.expiresAt).toBeDefined();
   });
 
   // ─── TC-GRP-007 ───
 
   it('TC-GRP-007: 초대 코드로 모임 참여 성공', async () => {
-    const ownerToken = await registerUser('grp-007-owner', '모임장');
-    const memberToken = await registerUser('grp-007-member', '멤버');
-    const group = await createGroup(ownerToken);
-    const invite = await createInviteCode(ownerToken, group.id);
+    const ownerToken = await registerUser(app, 'grp-007-owner', '모임장');
+    const memberToken = await registerUser(app, 'grp-007-member', '멤버');
+    const group = await createGroup(app, ownerToken);
+    const invite = await createInviteCode(app, ownerToken, group.id);
 
-    const response = await authRequest(app, memberToken)
-      .post('/api/v1/groups/join')
-      .send({ inviteCode: invite.code });
+    const result = await joinGroup(app, memberToken, invite.code);
 
-    expect(response.status).toBe(201);
-    const body = response.body as GroupDetailResponse;
-    expect(body.members).toHaveLength(2);
-    const memberRoles = body.members.map((m) => m.role);
+    expect(result.members).toHaveLength(2);
+    const memberRoles = result.members.map((m) => m.role);
     expect(memberRoles).toContain('OWNER');
     expect(memberRoles).toContain('MEMBER');
   });
@@ -218,13 +148,13 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-008 ───
 
   it('TC-GRP-008: 사용된 초대 코드로 참여 시 400', async () => {
-    const ownerToken = await registerUser('grp-008-owner', '모임장');
-    const member1Token = await registerUser('grp-008-m1', '멤버일');
-    const member2Token = await registerUser('grp-008-m2', '멤버이');
-    const group = await createGroup(ownerToken);
-    const invite = await createInviteCode(ownerToken, group.id);
+    const ownerToken = await registerUser(app, 'grp-008-owner', '모임장');
+    const member1Token = await registerUser(app, 'grp-008-m1', '멤버일');
+    const member2Token = await registerUser(app, 'grp-008-m2', '멤버이');
+    const group = await createGroup(app, ownerToken);
+    const invite = await createInviteCode(app, ownerToken, group.id);
 
-    await joinGroup(member1Token, invite.code);
+    await joinGroup(app, member1Token, invite.code);
 
     const response = await authRequest(app, member2Token)
       .post('/api/v1/groups/join')
@@ -239,13 +169,12 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-009 ───
 
   it('TC-GRP-009: 모임장이 멤버 강퇴 성공', async () => {
-    const ownerToken = await registerUser('grp-009-owner', '모임장');
-    const memberToken = await registerUser('grp-009-member', '멤버');
-    const group = await createGroup(ownerToken);
-    const invite = await createInviteCode(ownerToken, group.id);
-    await joinGroup(memberToken, invite.code);
+    const ownerToken = await registerUser(app, 'grp-009-owner', '모임장');
+    const memberToken = await registerUser(app, 'grp-009-member', '멤버');
+    const group = await createGroup(app, ownerToken);
+    await inviteAndJoin(app, ownerToken, memberToken, group.id);
 
-    const memberId = await getUserId(memberToken);
+    const memberId = await getUserId(app, memberToken);
 
     const response = await authRequest(app, ownerToken).delete(
       `/api/v1/groups/${group.id}/members/${memberId}`,
@@ -257,9 +186,9 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-010 ───
 
   it('TC-GRP-010: 모임장 본인 강퇴 시 400', async () => {
-    const ownerToken = await registerUser('grp-010-owner', '모임장');
-    const group = await createGroup(ownerToken);
-    const ownerId = await getUserId(ownerToken);
+    const ownerToken = await registerUser(app, 'grp-010-owner', '모임장');
+    const group = await createGroup(app, ownerToken);
+    const ownerId = await getUserId(app, ownerToken);
 
     const response = await authRequest(app, ownerToken).delete(
       `/api/v1/groups/${group.id}/members/${ownerId}`,
@@ -274,11 +203,10 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-011 ───
 
   it('TC-GRP-011: 일반 멤버 모임 탈퇴 성공', async () => {
-    const ownerToken = await registerUser('grp-011-owner', '모임장');
-    const memberToken = await registerUser('grp-011-member', '멤버');
-    const group = await createGroup(ownerToken);
-    const invite = await createInviteCode(ownerToken, group.id);
-    await joinGroup(memberToken, invite.code);
+    const ownerToken = await registerUser(app, 'grp-011-owner', '모임장');
+    const memberToken = await registerUser(app, 'grp-011-member', '멤버');
+    const group = await createGroup(app, ownerToken);
+    await inviteAndJoin(app, ownerToken, memberToken, group.id);
 
     const response = await authRequest(app, memberToken).delete(
       `/api/v1/groups/${group.id}/leave`,
@@ -290,8 +218,8 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-012 ───
 
   it('TC-GRP-012: 모임장 탈퇴 시 400', async () => {
-    const ownerToken = await registerUser('grp-012-owner', '모임장');
-    const group = await createGroup(ownerToken);
+    const ownerToken = await registerUser(app, 'grp-012-owner', '모임장');
+    const group = await createGroup(app, ownerToken);
 
     const response = await authRequest(app, ownerToken).delete(
       `/api/v1/groups/${group.id}/leave`,
@@ -306,13 +234,13 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-013 ───
 
   it('TC-GRP-013: 모임장 이전 성공', async () => {
-    const ownerToken = await registerUser('grp-013-owner', '모임장');
-    const memberToken = await registerUser('grp-013-member', '멤버');
-    const group = await createGroup(ownerToken);
-    const invite = await createInviteCode(ownerToken, group.id);
-    await joinGroup(memberToken, invite.code);
+    const ownerToken = await registerUser(app, 'grp-013-owner', '모임장');
+    const memberToken = await registerUser(app, 'grp-013-member', '멤버');
+    const group = await createGroup(app, ownerToken);
+    await inviteAndJoin(app, ownerToken, memberToken, group.id);
 
-    const memberId = await getUserId(memberToken);
+    const memberId = await getUserId(app, memberToken);
+    const ownerId = await getUserId(app, ownerToken);
 
     const response = await authRequest(app, ownerToken)
       .post(`/api/v1/groups/${group.id}/transfer-ownership`)
@@ -321,8 +249,6 @@ describe('모임 (P0)', () => {
     expect(response.status).toBe(201);
     const body = response.body as GroupDetailResponse;
     expect(body.ownerId).toBe(memberId);
-
-    const ownerId = await getUserId(ownerToken);
     const newOwner = body.members.find((m) => m.userId === memberId);
     const oldOwner = body.members.find((m) => m.userId === ownerId);
     expect(newOwner?.role).toBe('OWNER');
@@ -332,9 +258,9 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-014 ───
 
   it('TC-GRP-014: 본인에게 모임장 이전 시 400', async () => {
-    const ownerToken = await registerUser('grp-014-owner', '모임장');
-    const group = await createGroup(ownerToken);
-    const ownerId = await getUserId(ownerToken);
+    const ownerToken = await registerUser(app, 'grp-014-owner', '모임장');
+    const group = await createGroup(app, ownerToken);
+    const ownerId = await getUserId(app, ownerToken);
 
     const response = await authRequest(app, ownerToken)
       .post(`/api/v1/groups/${group.id}/transfer-ownership`)
@@ -349,11 +275,10 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-015 ───
 
   it('TC-GRP-015: 다른 멤버가 있는 모임 삭제 시 400', async () => {
-    const ownerToken = await registerUser('grp-015-owner', '모임장');
-    const memberToken = await registerUser('grp-015-member', '멤버');
-    const group = await createGroup(ownerToken);
-    const invite = await createInviteCode(ownerToken, group.id);
-    await joinGroup(memberToken, invite.code);
+    const ownerToken = await registerUser(app, 'grp-015-owner', '모임장');
+    const memberToken = await registerUser(app, 'grp-015-member', '멤버');
+    const group = await createGroup(app, ownerToken);
+    await inviteAndJoin(app, ownerToken, memberToken, group.id);
 
     const response = await authRequest(app, ownerToken).delete(
       `/api/v1/groups/${group.id}`,
@@ -368,8 +293,8 @@ describe('모임 (P0)', () => {
   // ─── TC-GRP-016 ───
 
   it('TC-GRP-016: 모임장 혼자 남은 모임 삭제 성공', async () => {
-    const ownerToken = await registerUser('grp-016-owner', '모임장');
-    const group = await createGroup(ownerToken);
+    const ownerToken = await registerUser(app, 'grp-016-owner', '모임장');
+    const group = await createGroup(app, ownerToken);
 
     const response = await authRequest(app, ownerToken).delete(
       `/api/v1/groups/${group.id}`,
