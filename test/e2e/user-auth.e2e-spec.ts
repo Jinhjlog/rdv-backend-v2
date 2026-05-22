@@ -106,9 +106,18 @@ describe('사용자 인증 & 프로필 (P0)', () => {
   // ─── TC-AUTH-004 ───
 
   it('TC-AUTH-004: 이미 등록된 deviceId로 회원가입 시 409', async () => {
+    // Given: API로 정상 회원가입 (후속 이벤트 핸들러까지 완료)
     await seedDefaultCharacter(prisma);
-    await seedUser(prisma, { deviceId: 'duplicate-device' });
+    const firstReg = await publicRequest(app)
+      .post('/api/v2/auth/register')
+      .send({
+        deviceId: 'duplicate-device',
+        nickname: '원본',
+        preferredThemeColor: '#FF0000',
+      });
+    expect(firstReg.status).toBe(201);
 
+    // When: 같은 deviceId로 다시 회원가입
     const response = await publicRequest(app)
       .post('/api/v2/auth/register')
       .send({
@@ -117,6 +126,7 @@ describe('사용자 인증 & 프로필 (P0)', () => {
         preferredThemeColor: '#000000',
       });
 
+    // Then
     expect(response.status).toBe(409);
     expect((response.body as { errorCode: string }).errorCode).toBe(
       'USER_ALREADY_EXISTS',
