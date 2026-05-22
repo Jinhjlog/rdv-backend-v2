@@ -160,3 +160,4 @@
 - 모임 탈퇴 시 Event BC의 일정 상태를 확인해야 함 (도메인 서비스: GroupLeavePolicy)
 - 초대 코드 만료 검증은 서버 시간 기준
 - 모임 삭제 시 CASCADE로 group_members, invite_codes, events, chat_messages 삭제
+- 모임장 이전 시 ownerId 변경 + 멤버 role 교체 (promoteToOwner/demoteToMember)
