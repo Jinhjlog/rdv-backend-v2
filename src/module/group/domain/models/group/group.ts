@@ -257,7 +257,16 @@ export class Group extends AggregateRoot<GroupProps> {
       });
     }
 
-    // 모임장 변경
+    const currentOwner = this.props.members.find(
+      (m) => m.userId === this.props.ownerId,
+    );
+    if (currentOwner) {
+      currentOwner.demoteToMember();
+    }
+
+    member.promoteToOwner();
+
+    // ownerId 변경
     this.props.ownerId = newOwnerId;
     this.props.updatedAt = new Date();
   }

@@ -49,6 +49,14 @@ export class GroupMember extends EntityClass<GroupMemberProps> {
     return this.props.joinedAt;
   }
 
+  promoteToOwner(): void {
+    this.props.role = GroupMemberRole.OWNER;
+  }
+
+  demoteToMember(): void {
+    this.props.role = GroupMemberRole.MEMBER;
+  }
+
   /**
    * GroupMember 생성 팩토리 메서드
    */
