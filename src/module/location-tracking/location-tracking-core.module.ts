@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
+import { LocationTrackingRepository } from './domain/repositories';
 import {
-  EventRepository,
-  LocationTrackingQueryRepository,
-  LocationTrackingRepository,
-  UserRepository,
-} from './domain/repositories';
+  LocationTrackingQueryService,
+  EventLookupService,
+  UserLookupService,
+} from './domain/services';
+import { LocationTrackingRepositoryImpl } from './infra/repositories';
 import {
-  EventRepositoryImpl,
-  LocationTrackingQueryRepositoryImpl,
-  LocationTrackingRepositoryImpl,
-  UserRepositoryImpl,
-} from './infra/repositories';
+  LocationTrackingQueryServiceImpl,
+  EventLookupServiceImpl,
+  UserLookupServiceImpl,
+} from './infra/services';
 
 @Module({
   providers: [
@@ -19,23 +19,23 @@ import {
       useClass: LocationTrackingRepositoryImpl,
     },
     {
-      provide: LocationTrackingQueryRepository,
-      useClass: LocationTrackingQueryRepositoryImpl,
+      provide: LocationTrackingQueryService,
+      useClass: LocationTrackingQueryServiceImpl,
     },
     {
-      provide: UserRepository,
-      useClass: UserRepositoryImpl,
+      provide: EventLookupService,
+      useClass: EventLookupServiceImpl,
     },
     {
-      provide: EventRepository,
-      useClass: EventRepositoryImpl,
+      provide: UserLookupService,
+      useClass: UserLookupServiceImpl,
     },
   ],
   exports: [
     LocationTrackingRepository,
-    LocationTrackingQueryRepository,
-    UserRepository,
-    EventRepository,
+    LocationTrackingQueryService,
+    EventLookupService,
+    UserLookupService,
   ],
 })
 export class LocationTrackingCoreModule {}
