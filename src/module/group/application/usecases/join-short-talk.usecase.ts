@@ -4,8 +4,8 @@ import { takeWhile, map, catchError, startWith } from 'rxjs/operators';
 import {
   ShortTalkSessionRepository,
   GroupRepository,
-  ShortTalkUserQueryRepository,
 } from '../../domain/repositories';
+import { ShortTalkUserQueryService } from '../../domain/services';
 import { ShortTalkListener } from '../../domain/models';
 import {
   ShortTalkEventData,
@@ -31,7 +31,7 @@ export class JoinShortTalkUseCase {
   constructor(
     private readonly groupRepository: GroupRepository,
     private readonly shortTalkSessionRepository: ShortTalkSessionRepository,
-    private readonly shortTalkUserQueryRepository: ShortTalkUserQueryRepository,
+    private readonly shortTalkUserQueryService: ShortTalkUserQueryService,
   ) {}
 
   async execute(dto: JoinShortTalkDto): Promise<Observable<SseMessageEvent>> {
@@ -46,8 +46,9 @@ export class JoinShortTalkUseCase {
     }
 
     // 2. 사용자 정보 조회 (sender 정보로 활용)
-    const senderInfo =
-      await this.shortTalkUserQueryRepository.findSenderInfoById(dto.userId);
+    const senderInfo = await this.shortTalkUserQueryService.findSenderInfoById(
+      dto.userId,
+    );
     if (!senderInfo) {
       throw new DomainRuleViolationException({
         entityName: 'User',

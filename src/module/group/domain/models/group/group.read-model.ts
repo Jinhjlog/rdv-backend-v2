@@ -1,15 +1,11 @@
-/**
- * Group 목록/상세 조회용 쿼리 모델
- *
- * - 설명: 사용자가 속한 그룹 목록 및 상세 정보 조회
- * - 사용자: 인증된 사용자
- */
-export interface LastEndedEventQueryModel {
+/** 마지막 종료 일정 ReadModel */
+export interface LastEndedEventReadModel {
   eventTime: Date;
   locationDetail: string;
 }
 
-export interface GroupListItemQueryModel {
+/** 모임 목록 조회용 ReadModel */
+export interface GroupListReadModel {
   id: string;
   name: string;
   description: string;
@@ -20,10 +16,11 @@ export interface GroupListItemQueryModel {
   createdAt: Date;
   updatedAt: Date;
   memberCount: number;
-  lastEndedEvent: LastEndedEventQueryModel | undefined;
+  lastEndedEvent?: LastEndedEventReadModel;
 }
 
-export interface GroupDetailQueryModel {
+/** 모임 상세 조회용 ReadModel */
+export interface GroupDetailReadModel {
   id: string;
   name: string;
   description: string;
@@ -33,16 +30,11 @@ export interface GroupDetailQueryModel {
   isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
-  members: GroupMemberQueryModel[];
+  members: GroupMemberReadModel[];
 }
 
-/**
- * GroupMember 조회용 쿼리 모델
- *
- * - 설명: 그룹 멤버 목록 조회
- * - 사용자: 그룹 멤버
- */
-export interface GroupMemberQueryModel {
+/** 모임 멤버 ReadModel */
+export interface GroupMemberReadModel {
   id: string;
   groupId: string;
   userId: string;

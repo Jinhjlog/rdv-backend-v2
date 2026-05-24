@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@core/database/prisma.service';
 import {
-  ChatMessageQueryRepository,
+  ChatMessageQueryService,
   FindChatMessageListParams,
-} from '../../domain/repositories/chat-message-query.repository';
-import { ChatMessageQueryModel } from '../../domain/models/chat-message/chat-message.query-model';
+} from '../../domain/services';
+import { ChatMessageReadModel } from '../../domain/models';
 
 @Injectable()
-export class ChatMessageQueryRepositoryImpl implements ChatMessageQueryRepository {
+export class ChatMessageQueryServiceImpl implements ChatMessageQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findList(
     params: FindChatMessageListParams,
-  ): Promise<ChatMessageQueryModel[]> {
+  ): Promise<ChatMessageReadModel[]> {
     // sinceId가 있으면 해당 메시지의 createdAt을 먼저 조회
     let sinceMessage: { created_at: Date; id: string } | null = null;
     if (params.sinceId) {

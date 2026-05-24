@@ -3,24 +3,22 @@ import {
   FindGroupDetailParams,
   FindGroupListParams,
   FindMemberAttendanceStatisticsParams,
-  GroupQueryRepository,
-} from '../../domain/repositories';
+  GroupQueryService,
+} from '../../domain/services';
 import {
-  GroupDetailQueryModel,
-  GroupListItemQueryModel,
-  GroupMemberAttendanceStatisticsQueryModel,
-  MemberAttendanceStatisticsQueryModel,
+  GroupDetailReadModel,
+  GroupListReadModel,
+  GroupMemberAttendanceStatisticsReadModel,
+  MemberAttendanceStatisticsReadModel,
 } from '../../domain/models';
 import { PrismaService } from '@core/database/prisma.service';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
-export class GroupQueryRepositoryImpl implements GroupQueryRepository {
+export class GroupQueryServiceImpl implements GroupQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findList(
-    params: FindGroupListParams,
-  ): Promise<GroupListItemQueryModel[]> {
+  async findList(params: FindGroupListParams): Promise<GroupListReadModel[]> {
     const { contextUserId } = params;
     const whereClause: Prisma.groupsWhereInput = {};
 
@@ -89,7 +87,7 @@ export class GroupQueryRepositoryImpl implements GroupQueryRepository {
 
   async findDetail(
     params: FindGroupDetailParams,
-  ): Promise<GroupDetailQueryModel | undefined> {
+  ): Promise<GroupDetailReadModel | undefined> {
     const { groupId } = params;
 
     const group = await this.prisma.groups.findUnique({
@@ -156,7 +154,7 @@ export class GroupQueryRepositoryImpl implements GroupQueryRepository {
 
   async findMemberAttendanceStatistics(
     params: FindMemberAttendanceStatisticsParams,
-  ): Promise<GroupMemberAttendanceStatisticsQueryModel> {
+  ): Promise<GroupMemberAttendanceStatisticsReadModel> {
     const { groupId } = params;
 
     // 단일 Raw SQL 쿼리로 멤버 정보 + 출석 통계 조회
@@ -183,7 +181,7 @@ export class GroupQueryRepositoryImpl implements GroupQueryRepository {
       GROUP BY gm.user_id, u.nickname
     `;
 
-    const members: MemberAttendanceStatisticsQueryModel[] = rawResults.map(
+    const members: MemberAttendanceStatisticsReadModel[] = rawResults.map(
       (row) => {
         const arrivedCount = Number(row.arrived_count);
         const lateCount = Number(row.late_count);
