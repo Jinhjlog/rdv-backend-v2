@@ -29,6 +29,8 @@ describe('사용자 인증 & 프로필 (P0)', () => {
   });
 
   beforeEach(async () => {
+    // 이전 테스트의 비동기 도메인 이벤트 핸들러 완료 대기
+    await new Promise((r) => setTimeout(r, 500));
     await cleanDatabase(prisma);
   });
 
