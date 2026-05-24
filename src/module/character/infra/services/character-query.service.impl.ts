@@ -1,28 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
-  CharacterQueryRepository,
+  CharacterQueryService,
   FindCharacterDetailParams,
-} from '../../domain/repositories';
+} from '../../domain/services';
 import {
-  CharacterListItemQueryModel,
-  CharacterListItemWithOwnershipQueryModel,
-  CharacterDetailQueryModel,
+  CharacterListReadModel,
+  CharacterListWithOwnershipReadModel,
+  CharacterDetailReadModel,
   UnlockCondition,
 } from '../../domain/models';
 import { PrismaService } from '@core/database/prisma.service';
 import { PrismaJsonUtil } from '@core/database/prisma-json.util';
 
 @Injectable()
-export class CharacterQueryRepositoryImpl implements CharacterQueryRepository {
+export class CharacterQueryServiceImpl implements CharacterQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * 목록을 조회합니다.
-   *
-   * @returns 목록
-   */
-  async findList(): Promise<CharacterListItemQueryModel[]> {
+  async findList(): Promise<CharacterListReadModel[]> {
     const results = await this.prisma.characters.findMany({
       select: {
         id: true,
@@ -45,21 +40,15 @@ export class CharacterQueryRepositoryImpl implements CharacterQueryRepository {
       name: result.name,
       description: result.description,
       isDefault: result.is_default,
-      unlockHint: result.unlock_hint ?? undefined,
+      unlockHint: result.unlock_hint !== null ? result.unlock_hint : undefined,
       createdAt: result.created_at,
       updatedAt: result.updated_at,
     }));
   }
 
-  /**
-   * 보유 여부 포함 목록을 조회합니다.
-   *
-   * @param userId 사용자 ID
-   * @returns 보유 여부 포함 목록
-   */
   async findListWithOwnership(
     userId: string,
-  ): Promise<CharacterListItemWithOwnershipQueryModel[]> {
+  ): Promise<CharacterListWithOwnershipReadModel[]> {
     const results = await this.prisma.characters.findMany({
       select: {
         id: true,
@@ -86,22 +75,16 @@ export class CharacterQueryRepositoryImpl implements CharacterQueryRepository {
       name: char.name,
       description: char.description,
       isDefault: char.is_default,
-      unlockHint: char.unlock_hint ?? undefined,
+      unlockHint: char.unlock_hint !== null ? char.unlock_hint : undefined,
       createdAt: char.created_at,
       updatedAt: char.updated_at,
       isOwned: char.user_characters.length > 0,
     }));
   }
 
-  /**
-   * ID로 상세 정보를 조회합니다.
-   *
-   * @param id 엔티티 ID
-   * @returns 상세 정보 또는 null
-   */
   async findDetail(
     params: FindCharacterDetailParams,
-  ): Promise<CharacterDetailQueryModel | undefined> {
+  ): Promise<CharacterDetailReadModel | undefined> {
     const result = await this.prisma.characters.findUnique({
       where: { id: params.id },
       select: {
@@ -125,20 +108,13 @@ export class CharacterQueryRepositoryImpl implements CharacterQueryRepository {
       name: result.name,
       description: result.description,
       isDefault: result.is_default,
-      unlockHint: result.unlock_hint ?? undefined,
+      unlockHint: result.unlock_hint !== null ? result.unlock_hint : undefined,
       createdAt: result.created_at,
       updatedAt: result.updated_at,
     };
   }
 
-  /**
-   * 사용자가 트래킹해야 할 이벤트 타입 목록을 조회합니다.
-   *
-   * @param userId 사용자 ID
-   * @returns 중복 제거된 트래킹 가능한 이벤트 타입 목록
-   */
   async getTrackableEventTypes(userId: string): Promise<string[]> {
-    // 언락 조건이 있고 아직 보유하지 않은 캐릭터 조회
     const characters = await this.prisma.characters.findMany({
       where: {
         unlock_condition: { not: Prisma.DbNull },
@@ -151,7 +127,6 @@ export class CharacterQueryRepositoryImpl implements CharacterQueryRepository {
       },
     });
 
-    // eventType 추출 및 중복 제거
     const eventTypes = new Set<string>();
     for (const char of characters) {
       const condition = PrismaJsonUtil.deserialize<UnlockCondition>(

@@ -15,7 +15,7 @@ export class UserCharacterMapper {
    * @returns {UserCharacter} 도메인 Aggregate Root
    */
   static toDomain(prismaUserCharacter: UserCharacterPrisma): UserCharacter {
-    return new UserCharacter({
+    return UserCharacter.unsafeCreate({
       id: prismaUserCharacter.id,
       userId: prismaUserCharacter.user_id,
       characterId: prismaUserCharacter.character_id,
@@ -31,11 +31,11 @@ export class UserCharacterMapper {
    */
   static toPersistence(
     domainUserCharacter: UserCharacter,
-  ): Prisma.user_charactersCreateInput {
+  ): Prisma.user_charactersUncheckedCreateInput {
     return {
       id: domainUserCharacter.id.toString(),
-      users: { connect: { id: domainUserCharacter.userId } },
-      characters: { connect: { id: domainUserCharacter.characterId } },
+      user_id: domainUserCharacter.userId,
+      character_id: domainUserCharacter.characterId,
       unlocked_at: domainUserCharacter.unlockedAt,
     };
   }
