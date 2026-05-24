@@ -126,17 +126,14 @@ export class EventRepositoryImpl implements EventRepository {
       });
     }
 
-    // 2. 제거된 멤버 삭제 (Orphan 제거)
-    const currentParticipantIds = event.participants.map((participant) =>
-      participant.id.toString(),
-    );
-
-    await client.event_participants.deleteMany({
-      where: {
-        event_id: event.id.toString(),
-        NOT: { id: { in: currentParticipantIds } },
-      },
-    });
+    // 2. 명시적으로 삭제 요청된 참여자만 삭제
+    const removedParticipantIds = event.removedParticipantIds;
+    if (removedParticipantIds.length > 0) {
+      await client.event_participants.deleteMany({
+        where: { id: { in: [...removedParticipantIds] } },
+      });
+      event.clearRemovedParticipantIds();
+    }
 
     // 3. 멤버 저장/업데이트 (배치 처리)
     if (event.participants.length > 0) {
@@ -154,19 +151,7 @@ export class EventRepositoryImpl implements EventRepository {
       );
     }
 
-    // 4. 제거된 결과 삭제 (Orphan 제거)
-    const currentResultIds = event.results.map((result) =>
-      result.id.toString(),
-    );
-
-    await client.event_results.deleteMany({
-      where: {
-        event_id: event.id.toString(),
-        NOT: { id: { in: currentResultIds } },
-      },
-    });
-
-    // 5. Event Results 저장/업데이트
+    // 4. Event Results 저장/업데이트
     if (event.results.length > 0) {
       await Promise.all(
         event.results.map((result) => {

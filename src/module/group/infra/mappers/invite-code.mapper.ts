@@ -33,26 +33,19 @@ export class InviteCodeMapper {
    * @param {InviteCode} inviteCode 도메인 엔티티
    * @returns {Prisma.invite_codesCreateInput} Prisma 모델
    */
-  static toPersistence(inviteCode: InviteCode): Prisma.invite_codesCreateInput {
+  static toPersistence(
+    inviteCode: InviteCode,
+  ): Prisma.invite_codesUncheckedCreateInput {
     return {
       id: inviteCode.id.toString(),
+      group_id: inviteCode.groupId,
       code: inviteCode.code.value,
+      created_by: inviteCode.createdBy,
       expires_at: inviteCode.expiresAt,
       is_used: inviteCode.isUsed,
-      created_at: inviteCode.createdAt,
-      groups: {
-        connect: { id: inviteCode.groupId },
-      },
-      users_invite_codes_created_byTousers: {
-        connect: { id: inviteCode.createdBy },
-      },
-      users_invite_codes_used_byTousers:
-        inviteCode.usedBy !== undefined
-          ? {
-              connect: { id: inviteCode.usedBy },
-            }
-          : undefined,
+      used_by: inviteCode.usedBy !== undefined ? inviteCode.usedBy : null,
       used_at: inviteCode.usedAt !== undefined ? inviteCode.usedAt : null,
+      created_at: inviteCode.createdAt,
     };
   }
 }

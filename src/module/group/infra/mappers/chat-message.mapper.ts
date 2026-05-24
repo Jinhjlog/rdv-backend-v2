@@ -1,4 +1,4 @@
-import { chat_messages as ChatMessagePrisma } from '@prisma/client';
+import { chat_messages as ChatMessagePrisma, Prisma } from '@prisma/client';
 import { ChatMessage } from '../../domain/models/chat-message/chat-message';
 
 /**
@@ -23,13 +23,9 @@ export class ChatMessageMapper {
   /**
    * 도메인 엔티티를 Prisma 생성 데이터로 변환합니다
    */
-  static toPersistence(message: ChatMessage): {
-    id: string;
-    group_id: string;
-    sender_id: string;
-    content: string;
-    created_at: Date;
-  } {
+  static toPersistence(
+    message: ChatMessage,
+  ): Prisma.chat_messagesUncheckedCreateInput {
     return {
       id: message.id.toString(),
       group_id: message.groupId,
