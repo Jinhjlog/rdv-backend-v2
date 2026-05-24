@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EventRepository, GroupRepository } from '../../domain/repositories';
+import { EventRepository } from '../../domain/repositories';
+import { GroupLookupService } from '../../domain/services';
 import { CreateEventDto } from '../dtos';
 import { BoundedString, Coordinate } from '@lib/domain';
 import {
@@ -13,7 +14,7 @@ import {
   EventStatus,
   Location,
 } from '../../domain/models';
-import { EventQueueService } from '../../infra/services';
+import { EventSchedulingPort } from '../ports';
 
 @Injectable()
 export class CreateEventUseCase {
@@ -23,8 +24,8 @@ export class CreateEventUseCase {
 
   constructor(
     private readonly eventRepository: EventRepository,
-    private readonly groupRepository: GroupRepository,
-    private readonly eventQueueService: EventQueueService,
+    private readonly groupLookupService: GroupLookupService,
+    private readonly eventSchedulingPort: EventSchedulingPort,
   ) {}
 
   async execute(dto: CreateEventDto): Promise<{ eventId: string }> {
@@ -56,7 +57,7 @@ export class CreateEventUseCase {
       longitude: coordinates.longitude,
     });
 
-    const groupExists = await this.groupRepository.exists(dto.groupId);
+    const groupExists = await this.groupLookupService.exists(dto.groupId);
     if (!groupExists) {
       throw new EntityNotFoundException({
         entityName: 'Group',
@@ -90,7 +91,7 @@ export class CreateEventUseCase {
       });
     }
 
-    const event = new Event({
+    const event = Event.create({
       groupId: dto.groupId,
       createdBy: dto.userId,
       title,
@@ -99,8 +100,6 @@ export class CreateEventUseCase {
       location,
       status: EventStatus.RECRUITING,
       isParticipantChecked: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
       participants: [],
       results: [],
     });
@@ -112,13 +111,13 @@ export class CreateEventUseCase {
     event.addParticipant(participant);
 
     const [groupMemberUserIds, groupName] = await Promise.all([
-      this.groupRepository.findMemberUserIds(dto.groupId),
-      this.groupRepository.findGroupNameById(dto.groupId),
+      this.groupLookupService.findMemberUserIds(dto.groupId),
+      this.groupLookupService.findGroupNameById(dto.groupId),
     ]);
     event.markAsCreated(groupMemberUserIds, groupName);
 
     const scheduleSuccess =
-      await this.eventQueueService.scheduleParticipantCheck(
+      await this.eventSchedulingPort.scheduleParticipantCheck(
         event.id.toString(),
         event.schedule.participantCheckTime,
       );
@@ -138,7 +137,9 @@ export class CreateEventUseCase {
         `DB ERROR - 이벤트 저장에 실패했습니다. groupId: ${dto.groupId}, userId: ${dto.userId}, title: ${dto.title}`,
         error,
       );
-      await this.eventQueueService.cancelParticipantCheck(event.id.toString());
+      await this.eventSchedulingPort.cancelParticipantCheck(
+        event.id.toString(),
+      );
       throw new Error('이벤트 생성에 실패했습니다. 다시 시도해주세요.');
     }
 

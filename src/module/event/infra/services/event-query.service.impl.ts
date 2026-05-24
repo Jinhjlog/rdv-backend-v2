@@ -1,30 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import {
-  EventQueryRepository,
+  EventQueryService,
   FindEventListParams,
   FindEventDetailParams,
   FindActiveEventParams,
   FindCalendarMarkedDatesParams,
   FindCalendarEventListParams,
   FindEventResultParams,
-} from '../../domain/repositories';
+} from '../../domain/services';
 import { PrismaService } from '@core/database';
 import {
-  EventListItemQueryModel,
-  EventDetailQueryModel,
-  ActiveEventQueryModel,
-  CalendarEventListItemQueryModel,
-  EventResultQueryModel,
+  EventListReadModel,
+  EventDetailReadModel,
+  ActiveEventReadModel,
+  CalendarEventListReadModel,
+  EventResultReadModel,
 } from '../../domain/models';
 import { event_status, Prisma } from '@prisma/client';
 
 @Injectable()
-export class EventQueryRepositoryImpl implements EventQueryRepository {
+export class EventQueryServiceImpl implements EventQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findList(
-    params: FindEventListParams,
-  ): Promise<EventListItemQueryModel[]> {
+  async findList(params: FindEventListParams): Promise<EventListReadModel[]> {
     const { contextUserId, groupId, status } = params;
 
     const whereClause: Prisma.eventsWhereInput = {};
@@ -91,7 +89,7 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
 
   async findDetail(
     params: FindEventDetailParams,
-  ): Promise<EventDetailQueryModel | undefined> {
+  ): Promise<EventDetailReadModel | undefined> {
     const { eventId, contextUserId } = params;
 
     const whereClause: Prisma.eventsWhereUniqueInput = {
@@ -182,7 +180,7 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
 
   async findActiveEventByGroupId(
     params: FindActiveEventParams,
-  ): Promise<ActiveEventQueryModel | undefined> {
+  ): Promise<ActiveEventReadModel | undefined> {
     const { groupId, contextUserId } = params;
 
     const whereClause: Prisma.eventsWhereInput = {
@@ -275,7 +273,7 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
 
   async findCalendarEventList(
     params: FindCalendarEventListParams,
-  ): Promise<CalendarEventListItemQueryModel[]> {
+  ): Promise<CalendarEventListReadModel[]> {
     const { userId, date } = params;
 
     // KST(+09:00) 기준으로 해당 날짜의 시작과 끝 계산
@@ -343,7 +341,7 @@ export class EventQueryRepositoryImpl implements EventQueryRepository {
 
   async findEventResult(
     params: FindEventResultParams,
-  ): Promise<EventResultQueryModel | undefined> {
+  ): Promise<EventResultReadModel | undefined> {
     const { eventId, contextUserId } = params;
 
     const whereClause: Prisma.eventsWhereUniqueInput = {

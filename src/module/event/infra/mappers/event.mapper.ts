@@ -27,7 +27,7 @@ export class EventMapper {
     eventParticipants: EventParticipant[],
     eventResults: EventResult[] = [],
   ): Event {
-    return new Event({
+    return Event.unsafeCreate({
       id: prismaEvent.id,
       groupId: prismaEvent.group_id,
       createdBy: prismaEvent.created_by,
@@ -59,11 +59,11 @@ export class EventMapper {
    * @param {Event} domainEvent 도메인 Aggregate Root
    * @returns {Prisma.eventsCreateInput} Prisma 모델 (insert/update용)
    */
-  static toPersistence(domainEvent: Event): Prisma.eventsCreateInput {
+  static toPersistence(domainEvent: Event): Prisma.eventsUncheckedCreateInput {
     return {
-      groups: { connect: { id: domainEvent.groupId } },
-      users: { connect: { id: domainEvent.createdBy } },
       id: domainEvent.id.toString(),
+      group_id: domainEvent.groupId,
+      created_by: domainEvent.createdBy,
       title: domainEvent.title.value,
       description: domainEvent.description.value,
       event_time: domainEvent.schedule.eventTime,

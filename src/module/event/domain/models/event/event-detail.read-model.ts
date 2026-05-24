@@ -1,4 +1,5 @@
-interface EventParticipantQueryModel {
+/** 일정 참여자 ReadModel */
+interface EventParticipantReadModel {
   userId: string;
   nickname: string;
   nameTag: string;
@@ -7,35 +8,29 @@ interface EventParticipantQueryModel {
   status: string;
 }
 
-/**
- * 일정 결과 항목 Query Model
- */
-export interface EventResultItemQueryModel {
+/** 일정 결과 항목 ReadModel */
+export interface EventResultItemReadModel {
   userId: string;
   nickname: string;
   nameTag: string;
   characterCode: string;
   preferredThemeColor: string;
-  result: string; // ARRIVED, LATE, ABSENT
+  result: string; // 'ARRIVED' | 'LATE' | 'ABSENT'
 }
 
-/**
- * 일정 결과 조회 Query Model
- */
-export interface EventResultQueryModel {
+/** 일정 결과 조회 ReadModel */
+export interface EventResultReadModel {
   eventId: string;
   groupId: string;
   title: string;
   eventTime: Date;
   locationAddress: string;
   locationDetail: string;
-  results: EventResultItemQueryModel[];
+  results: EventResultItemReadModel[];
 }
 
-/**
- * 진행중인 일정 조회용 간소화된 Query Model
- */
-export interface ActiveEventQueryModel {
+/** 진행중인 일정 조회용 ReadModel */
+export interface ActiveEventReadModel {
   id: string;
   groupId: string;
   eventTime: Date;
@@ -43,11 +38,8 @@ export interface ActiveEventQueryModel {
   endTime: Date;
 }
 
-/**
- * Event 상세 조회 메인 Query Model
- */
-export interface EventDetailQueryModel {
-  // 공통 필드 (모든 상태)
+/** 일정 상세 조회 ReadModel */
+export interface EventDetailReadModel {
   id: string;
   groupId: string;
   createdBy: {
@@ -72,6 +64,5 @@ export interface EventDetailQueryModel {
   maxParticipants: number;
   createdAt: Date;
   updatedAt: Date;
-
-  participants: EventParticipantQueryModel[];
+  participants: EventParticipantReadModel[];
 }

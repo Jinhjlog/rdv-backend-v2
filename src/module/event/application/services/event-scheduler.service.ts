@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EventRepository, GroupRepository } from '../../domain/repositories';
+import { EventRepository } from '../../domain/repositories';
+import { GroupLookupService } from '../../domain/services';
 
 /**
  * 일정 스케줄링 잡 처리 서비스
@@ -18,7 +19,7 @@ export class EventSchedulerService {
 
   constructor(
     private readonly eventRepository: EventRepository,
-    private readonly groupRepository: GroupRepository,
+    private readonly groupLookupService: GroupLookupService,
   ) {}
 
   /**
@@ -34,7 +35,7 @@ export class EventSchedulerService {
       return;
     }
 
-    const groupName = await this.groupRepository.findGroupNameById(
+    const groupName = await this.groupLookupService.findGroupNameById(
       event.groupId,
     );
 
@@ -67,7 +68,7 @@ export class EventSchedulerService {
       return;
     }
 
-    const groupName = await this.groupRepository.findGroupNameById(
+    const groupName = await this.groupLookupService.findGroupNameById(
       event.groupId,
     );
 
@@ -101,7 +102,7 @@ export class EventSchedulerService {
       return;
     }
 
-    const groupName = await this.groupRepository.findGroupNameById(
+    const groupName = await this.groupLookupService.findGroupNameById(
       event.groupId,
     );
 

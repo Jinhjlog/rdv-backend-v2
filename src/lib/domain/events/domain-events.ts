@@ -53,15 +53,17 @@ export class DomainEvents {
     }
   }
 
-  public static register(
-    callback: (event: IDomainEvent) => void,
+  public static register<E extends IDomainEvent = IDomainEvent>(
+    callback: (event: E) => void,
     eventClassName: string,
   ): void {
     if (!(eventClassName in this.handlersMap)) {
       this.handlersMap[eventClassName] = [];
     }
 
-    this.handlersMap[eventClassName].push(callback);
+    this.handlersMap[eventClassName].push(
+      callback as (event: IDomainEvent) => void,
+    );
   }
 
   public static clearHandlers(): void {

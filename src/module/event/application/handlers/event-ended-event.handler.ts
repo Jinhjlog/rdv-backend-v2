@@ -35,6 +35,8 @@ export class EventEndedEventHandler implements OnModuleInit {
       this.logger.log(`  - userId=${r.userId}, result=${r.result}`);
     });
 
+    return Promise.resolve();
+
     // TODO: 1. 출석 결과 저장 (EventResultRepository)
     // await this.eventResultRepository.saveAll(eventId, results);
 

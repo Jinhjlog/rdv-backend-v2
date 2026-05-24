@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { EventQueryRepository } from '../../domain/repositories';
+import { EventQueryService } from '../../domain/services';
 import { FindEventListDto } from '../dtos';
-import { EventListItemQueryModel } from '../../domain/models';
+import { EventListReadModel } from '../../domain/models';
 
 @Injectable()
 export class FindEventListUseCase {
-  constructor(private readonly eventQueryRepository: EventQueryRepository) {}
+  constructor(private readonly eventQueryService: EventQueryService) {}
 
-  async execute(dto: FindEventListDto): Promise<EventListItemQueryModel[]> {
+  async execute(dto: FindEventListDto): Promise<EventListReadModel[]> {
     const { userId, groupId, status } = dto;
 
-    const events = await this.eventQueryRepository.findList({
+    const events = await this.eventQueryService.findList({
       contextUserId: userId,
       groupId,
       status,

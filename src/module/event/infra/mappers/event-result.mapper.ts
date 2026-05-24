@@ -29,13 +29,15 @@ export class EventResultMapper {
    * @param {EventResult} result 도메인 엔티티
    * @returns {Prisma.event_resultsCreateInput} Prisma 모델
    */
-  static toPersistence(result: EventResult): Prisma.event_resultsCreateInput {
+  static toPersistence(
+    result: EventResult,
+  ): Prisma.event_resultsUncheckedCreateInput {
     return {
       id: result.id.toString(),
+      event_id: result.eventId,
+      user_id: result.userId,
       result: result.result,
       created_at: result.createdAt,
-      events: { connect: { id: result.eventId } },
-      users: { connect: { id: result.userId } },
     };
   }
 }

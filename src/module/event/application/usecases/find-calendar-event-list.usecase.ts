@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { EventQueryRepository } from '../../domain/repositories';
+import { EventQueryService } from '../../domain/services';
 import { FindCalendarEventListDto } from '../dtos';
-import { CalendarEventListItemQueryModel } from '../../domain/models';
+import { CalendarEventListReadModel } from '../../domain/models';
 
 @Injectable()
 export class FindCalendarEventListUseCase {
-  constructor(private readonly eventQueryRepository: EventQueryRepository) {}
+  constructor(private readonly eventQueryService: EventQueryService) {}
 
   async execute(
     dto: FindCalendarEventListDto,
-  ): Promise<CalendarEventListItemQueryModel[]> {
+  ): Promise<CalendarEventListReadModel[]> {
     const { userId, date } = dto;
 
-    return this.eventQueryRepository.findCalendarEventList({
+    return this.eventQueryService.findCalendarEventList({
       userId,
       date,
     });
