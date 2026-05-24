@@ -1,4 +1,5 @@
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
+import { RedisContainer } from '@testcontainers/redis';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -7,15 +8,20 @@ const CONFIG_PATH = path.join(__dirname, '..', '.test-db-config.json');
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
 export default async function globalSetup() {
-  console.log('\n🐳 PostgreSQL 테스트 컨테이너 시작 중...');
+  console.log('\n🐳 PostgreSQL + Redis 테스트 컨테이너 시작 중...');
 
-  const container = await new PostgreSqlContainer('postgres:16-alpine')
-    .withDatabase('test_rdv')
-    .withUsername('test')
-    .withPassword('test123')
-    .start();
+  const [pgContainer, redisContainer] = await Promise.all([
+    new PostgreSqlContainer('postgres:16-alpine')
+      .withDatabase('test_rdv')
+      .withUsername('test')
+      .withPassword('test123')
+      .start(),
+    new RedisContainer('redis:7-alpine').start(),
+  ]);
 
+  const container = pgContainer;
   const databaseUrl = container.getConnectionUri();
+  const redisUrl = redisContainer.getConnectionUrl();
 
   fs.writeFileSync(
     CONFIG_PATH,
@@ -26,6 +32,7 @@ export default async function globalSetup() {
       username: container.getUsername(),
       password: container.getPassword(),
       databaseUrl,
+      redisUrl,
     }),
   );
 
@@ -84,8 +91,9 @@ export default async function globalSetup() {
   });
 
   global.__POSTGRES_CONTAINER__ = container;
+  global.__REDIS_CONTAINER__ = redisContainer;
 
   console.log(
-    `✅ PostgreSQL 테스트 컨테이너 준비 완료 (port: ${container.getMappedPort(5432)})\n`,
+    `✅ 테스트 컨테이너 준비 완료 (PostgreSQL: ${container.getMappedPort(5432)}, Redis: ${redisContainer.getMappedPort(6379)})\n`,
   );
 }
