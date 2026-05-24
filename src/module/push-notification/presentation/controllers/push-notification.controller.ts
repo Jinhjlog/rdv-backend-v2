@@ -1,16 +1,19 @@
-import { Controller, Post, Body, ForbiddenException } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiOkResponse,
   ApiBadRequestResponse,
+  ApiUnauthorizedResponse,
+  ApiHeader,
 } from '@nestjs/swagger';
 import { SendTestPushUseCase } from '../../application/usecases';
 import { SendTestPushRequestDto, SendTestPushResponseDto } from '../dtos';
-
-const TEST_API_KEY = 'wlsguswnsdmlzl';
+import { AdminApiKeyGuard } from 'src/module/auth/guards';
 
 @ApiTags('푸시 알림')
+@UseGuards(AdminApiKeyGuard)
+@ApiHeader({ name: 'x-api-key', description: '관리자 API 키', required: true })
 @Controller({ path: 'push-notifications', version: '1' })
 export class PushNotificationController {
   constructor(private readonly sendTestPushUseCase: SendTestPushUseCase) {}
@@ -19,6 +22,8 @@ export class PushNotificationController {
     summary: '테스트 푸시 알림 발송 [테스트]',
     description:
       '특정 사용자에게 테스트 푸시 알림을 발송합니다.<br><br>' +
+      '**인증**<br>' +
+      '`x-api-key` 헤더에 관리자 API 키 필요<br><br>' +
       '**필수 항목**<br>' +
       '- userId: 푸시 알림을 받을 사용자 ID<br>' +
       '- title: 알림 제목<br>' +
@@ -45,14 +50,13 @@ export class PushNotificationController {
       '**body**<br>' +
       '- body가 비어있는 경우: _**VALIDATION_ERROR**_<br>',
   })
+  @ApiUnauthorizedResponse({
+    description: '유효하지 않은 API 키: _**INVALID_API_KEY**_',
+  })
   @Post('test')
   async sendTestPush(
     @Body() dto: SendTestPushRequestDto,
   ): Promise<SendTestPushResponseDto> {
-    if (dto.testKey !== TEST_API_KEY) {
-      throw new ForbiddenException('유효하지 않은 테스트 키입니다.');
-    }
-
     return this.sendTestPushUseCase.execute({
       userId: dto.userId,
       title: dto.title,
