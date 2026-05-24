@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RegisterDeviceTokenDto } from '../dtos/register-device-token.dto';
 import { DeviceTokenRepository } from '../../domain/repositories';
 import { DeviceToken } from '../../domain/models';
-import { NotificationSenderService } from '@core/firebase/notification-sender.service';
+import { TokenValidationPort } from '../ports';
 
 /**
  * 디바이스 토큰 등록 UseCase
@@ -18,14 +18,12 @@ export class RegisterDeviceTokenUseCase {
 
   constructor(
     private readonly deviceTokenRepository: DeviceTokenRepository,
-    private readonly notificationSenderService: NotificationSenderService,
+    private readonly tokenValidationPort: TokenValidationPort,
   ) {}
 
   async execute(dto: RegisterDeviceTokenDto): Promise<void> {
     // 1. 토큰 유효성 검증 (FCM dry-run)
-    const isValid = await this.notificationSenderService.validateToken(
-      dto.token,
-    );
+    const isValid = await this.tokenValidationPort.validateToken(dto.token);
     if (!isValid) {
       this.logger.warn(`유효하지 않은 FCM 토큰: ${dto.token.slice(0, 20)}...`);
       return;
