@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { GroupRepository } from '../../domain/repositories';
+import { GroupLookupService } from '../../domain/services';
 import { PrismaService } from '@core/database';
 
 @Injectable()
-export class GroupRepositoryImpl implements GroupRepository {
+export class GroupLookupServiceImpl implements GroupLookupService {
   constructor(private readonly prisma: PrismaService) {}
 
   async exists(groupId: string): Promise<boolean> {
