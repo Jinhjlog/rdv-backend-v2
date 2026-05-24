@@ -50,6 +50,7 @@ process.env.FIREBASE_CLIENT_EMAIL = 'test@test-project.iam.gserviceaccount.com';
 
 // App Security
 process.env.APP_API_KEY = 'test-api-key';
+process.env.ADMIN_API_KEY = 'test-admin-api-key';
 process.env.ATTESTATION_ENABLED = 'false';
 process.env.GOOGLE_PACKAGE_NAME = 'com.eodigae.app';
 

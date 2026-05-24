@@ -30,6 +30,7 @@ export type EnvironmentConfig = {
   };
   appSecurity: {
     apiKey: string;
+    adminApiKey: string;
     attestation: {
       enabled: boolean;
       googlePackageName: string;
@@ -131,6 +132,7 @@ export default (): EnvironmentConfig => {
     },
     appSecurity: {
       apiKey: process.env.APP_API_KEY || '',
+      adminApiKey: process.env.ADMIN_API_KEY || '',
       attestation: {
         enabled: process.env.ATTESTATION_ENABLED === 'true',
         googlePackageName: process.env.GOOGLE_PACKAGE_NAME || '',
