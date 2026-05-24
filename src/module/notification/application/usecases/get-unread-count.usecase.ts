@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NotificationQueryRepository } from '../../domain/repositories';
+import { NotificationQueryService } from '../../domain/services';
 
 /**
  * 미읽음 알림 개수 조회 UseCase
@@ -7,10 +7,10 @@ import { NotificationQueryRepository } from '../../domain/repositories';
 @Injectable()
 export class GetUnreadCountUseCase {
   constructor(
-    private readonly notificationQueryRepository: NotificationQueryRepository,
+    private readonly notificationQueryService: NotificationQueryService,
   ) {}
 
   async execute(userId: string): Promise<number> {
-    return this.notificationQueryRepository.countUnread(userId);
+    return this.notificationQueryService.countUnread(userId);
   }
 }

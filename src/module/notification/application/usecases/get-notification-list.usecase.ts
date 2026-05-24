@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CursorUtil } from '@shared/utils';
-import { NotificationQueryRepository } from '../../domain/repositories';
-import { NotificationListItemQueryModel } from '../../domain/models';
+import { NotificationQueryService } from '../../domain/services';
+import { NotificationListItemReadModel } from '../../domain/models';
 import { NotificationType } from '../../domain/models';
 import { GetNotificationListDto } from '../dtos';
 
@@ -15,11 +15,11 @@ import { GetNotificationListDto } from '../dtos';
 @Injectable()
 export class GetNotificationListUseCase {
   constructor(
-    private readonly notificationQueryRepository: NotificationQueryRepository,
+    private readonly notificationQueryService: NotificationQueryService,
   ) {}
 
   async execute(dto: GetNotificationListDto): Promise<{
-    items: NotificationListItemQueryModel[];
+    items: NotificationListItemReadModel[];
     nextCursor?: string;
     hasNext: boolean;
   }> {
@@ -32,7 +32,7 @@ export class GetNotificationListUseCase {
     const type = dto.type ? NotificationType.create(dto.type) : undefined;
 
     // 3. limit + 1로 조회하여 다음 페이지 존재 여부 확인
-    const notifications = await this.notificationQueryRepository.findList({
+    const notifications = await this.notificationQueryService.findList({
       userId: dto.userId,
       type,
       cursor: decodedCursor,
