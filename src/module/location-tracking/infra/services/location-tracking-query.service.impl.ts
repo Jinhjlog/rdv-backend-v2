@@ -7,9 +7,7 @@ import {
 import { LocationTrackingReadModel } from '../../domain/models';
 
 @Injectable()
-export class LocationTrackingQueryServiceImpl
-  implements LocationTrackingQueryService
-{
+export class LocationTrackingQueryServiceImpl implements LocationTrackingQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findByEventId(

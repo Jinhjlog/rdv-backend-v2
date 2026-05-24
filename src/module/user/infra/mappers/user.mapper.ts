@@ -40,7 +40,9 @@ export class UserMapper {
    * @param {User} domainUser 도메인 Aggregate Root
    * @returns {Prisma.public_usersCreateInput} Prisma 모델 (insert/update용)
    */
-  static toPersistence(domainUser: User): Prisma.public_usersCreateInput {
+  static toPersistence(
+    domainUser: User,
+  ): Prisma.public_usersUncheckedCreateInput {
     return {
       id: domainUser.id.toString(),
       device_id: domainUser.deviceId,

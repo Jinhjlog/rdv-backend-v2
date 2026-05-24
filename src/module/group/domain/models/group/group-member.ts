@@ -25,7 +25,7 @@ export interface GroupMemberProps {
 }
 
 export class GroupMember extends EntityClass<GroupMemberProps> {
-  constructor(props: GroupMemberProps) {
+  private constructor(props: GroupMemberProps) {
     super(props, new UniqueEntityId(props.id));
   }
 

@@ -29,7 +29,7 @@ export interface EventResultProps {
 }
 
 export class EventResult extends EntityClass<EventResultProps> {
-  constructor(props: EventResultProps) {
+  private constructor(props: EventResultProps) {
     super(props, new UniqueEntityId(props.id));
   }
 

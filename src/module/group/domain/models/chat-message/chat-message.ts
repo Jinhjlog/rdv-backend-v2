@@ -18,7 +18,7 @@ export class ChatMessage extends EntityClass<ChatMessageProps> {
   private static readonly MAX_CONTENT_LENGTH = 1000;
   private static readonly MAX_LINE_COUNT = 10;
 
-  constructor(props: ChatMessageProps) {
+  private constructor(props: ChatMessageProps) {
     super(props, new UniqueEntityId(props.id));
   }
 
