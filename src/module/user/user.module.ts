@@ -1,5 +1,8 @@
 import { Module, Provider } from '@nestjs/common';
-import { CharactersRepositoryImpl, UserRepositoryImpl } from './infra/repositories';
+import {
+  CharactersRepositoryImpl,
+  UserRepositoryImpl,
+} from './infra/repositories';
 import {
   UserQueryServiceImpl,
   AttendanceStatisticsQueryServiceImpl,
