@@ -31,12 +31,7 @@ export class AppVersionRepositoryImpl implements AppVersionRepository {
 
     await this.prisma.app_versions.upsert({
       where: { platform: entity.platform.value },
-      update: {
-        latest_version: data.latest_version,
-        min_required_version: data.min_required_version,
-        store_url: data.store_url,
-        updated_at: data.updated_at,
-      },
+      update: data,
       create: data,
     });
   }
