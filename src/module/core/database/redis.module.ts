@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { RedisModule as NestRedisModule } from '@nestjs-modules/ioredis';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RedisModuleOptions } from '@nestjs-modules/ioredis';
@@ -40,6 +40,8 @@ interface RedisInstanceConfig {
 })
 export class RedisModule {}
 
+const logger = new Logger('RedisModule');
+
 function createRedisFactory(config: RedisInstanceConfig) {
   return (
     configService: ConfigService<EnvironmentConfig>,
@@ -56,13 +58,13 @@ function createRedisFactory(config: RedisInstanceConfig) {
     const baseRedisOptions: RedisOptions = {
       db,
       reconnectOnError: (err) => {
-        console.error(`Redis [${config.dbKey}] 연결 오류 발생: ${err}`);
+        logger.error(`Redis [${config.dbKey}] 연결 오류 발생: ${err}`);
         return true;
       },
       maxRetriesPerRequest: 3,
       retryStrategy: (times) => {
         if (times > 3) {
-          console.error(`Redis [${config.dbKey}] 재연결 시도 횟수 초과`);
+          logger.error(`Redis [${config.dbKey}] 재연결 시도 횟수 초과`);
           return null;
         }
         return Math.min(times * 1000, 3000);
