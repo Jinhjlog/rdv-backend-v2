@@ -1,38 +1,33 @@
 import { Module } from '@nestjs/common';
 import {
   GroupRepository,
-  GroupQueryRepository,
   ShortTalkSessionRepository,
   ChatMessageRepository,
-  ChatMessageQueryRepository,
-  ShortTalkUserQueryRepository,
-  EventRepository,
 } from './domain/repositories';
 import {
+  GroupQueryService,
+  ChatMessageQueryService,
+  ShortTalkUserQueryService,
+  EventLookupService,
+  GroupLeavePolicyService,
+} from './domain/services';
+import {
   GroupRepositoryImpl,
-  GroupQueryRepositoryImpl,
   ShortTalkSessionRepositoryImpl,
   ChatMessageRepositoryImpl,
-  ChatMessageQueryRepositoryImpl,
-  ShortTalkUserQueryRepositoryImpl,
-  EventRepositoryImpl,
 } from './infra/repositories';
-import { GroupLeavePolicyService } from './domain/services';
+import {
+  GroupQueryServiceImpl,
+  ChatMessageQueryServiceImpl,
+  ShortTalkUserQueryServiceImpl,
+  EventLookupServiceImpl,
+} from './infra/services';
 
-/**
- * Group Core 모듈
- *
- * Domain과 Infrastructure 레이어의 Repository를 등록하고 export합니다.
- */
 @Module({
   providers: [
     {
       provide: GroupRepository,
       useClass: GroupRepositoryImpl,
-    },
-    {
-      provide: GroupQueryRepository,
-      useClass: GroupQueryRepositoryImpl,
     },
     {
       provide: ShortTalkSessionRepository,
@@ -43,27 +38,31 @@ import { GroupLeavePolicyService } from './domain/services';
       useClass: ChatMessageRepositoryImpl,
     },
     {
-      provide: ChatMessageQueryRepository,
-      useClass: ChatMessageQueryRepositoryImpl,
+      provide: GroupQueryService,
+      useClass: GroupQueryServiceImpl,
     },
     {
-      provide: ShortTalkUserQueryRepository,
-      useClass: ShortTalkUserQueryRepositoryImpl,
+      provide: ChatMessageQueryService,
+      useClass: ChatMessageQueryServiceImpl,
     },
     {
-      provide: EventRepository,
-      useClass: EventRepositoryImpl,
+      provide: ShortTalkUserQueryService,
+      useClass: ShortTalkUserQueryServiceImpl,
+    },
+    {
+      provide: EventLookupService,
+      useClass: EventLookupServiceImpl,
     },
     GroupLeavePolicyService,
   ],
   exports: [
     GroupRepository,
-    GroupQueryRepository,
     ShortTalkSessionRepository,
     ChatMessageRepository,
-    ChatMessageQueryRepository,
-    ShortTalkUserQueryRepository,
-    EventRepository,
+    GroupQueryService,
+    ChatMessageQueryService,
+    ShortTalkUserQueryService,
+    EventLookupService,
     GroupLeavePolicyService,
   ],
 })
