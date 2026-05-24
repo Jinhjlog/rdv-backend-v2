@@ -1,7 +1,4 @@
-import {
-  EventListItemQueryModel,
-  EventDetailQueryModel,
-} from '../../domain/models';
+import { EventListReadModel, EventDetailReadModel } from '../../domain/models';
 import {
   EventListResponseDto,
   EventDetailResponseDto,
@@ -13,9 +10,7 @@ export class EventTransformer {
   /**
    * Event 엔티티를 목록 Response DTO로 변환합니다
    */
-  static toListResponse(
-    events: EventListItemQueryModel[],
-  ): EventListResponseDto {
+  static toListResponse(events: EventListReadModel[]): EventListResponseDto {
     return {
       items: events.map((event) => ({
         id: event.id,
@@ -36,9 +31,7 @@ export class EventTransformer {
   /**
    * Event 상세 Query Model을 Response DTO로 변환합니다
    */
-  static toDetailResponse(
-    event: EventDetailQueryModel,
-  ): EventDetailResponseDto {
+  static toDetailResponse(event: EventDetailReadModel): EventDetailResponseDto {
     return {
       id: event.id,
       groupId: event.groupId,
