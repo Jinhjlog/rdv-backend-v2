@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DomainRuleViolationException } from '@shared/exception';
-import { EventRepository } from '../repositories';
+import { EventLookupService } from './event-lookup.service';
 
 /**
  * 모임 탈퇴 정책 도메인 서비스
@@ -9,7 +9,7 @@ import { EventRepository } from '../repositories';
  */
 @Injectable()
 export class GroupLeavePolicyService {
-  constructor(private readonly eventRepository: EventRepository) {}
+  constructor(private readonly eventLookupService: EventLookupService) {}
 
   /**
    * 이벤트 관련 탈퇴 조건 검증
@@ -35,10 +35,10 @@ export class GroupLeavePolicyService {
     groupId: string,
   ): Promise<void> {
     const withdrawableEventIds =
-      await this.eventRepository.findWithdrawableEventIds(userId, groupId);
+      await this.eventLookupService.findWithdrawableEventIds(userId, groupId);
 
     if (withdrawableEventIds.length > 0) {
-      await this.eventRepository.withdrawFromEvents(
+      await this.eventLookupService.withdrawFromEvents(
         userId,
         withdrawableEventIds,
       );
@@ -53,7 +53,7 @@ export class GroupLeavePolicyService {
     groupId: string,
   ): Promise<void> {
     const hasInProgressEvent =
-      await this.eventRepository.hasParticipatingInProgressEvent(
+      await this.eventLookupService.hasParticipatingInProgressEvent(
         userId,
         groupId,
       );
@@ -75,7 +75,7 @@ export class GroupLeavePolicyService {
     groupId: string,
   ): Promise<void> {
     const hasNearCheckTimeEvent =
-      await this.eventRepository.hasParticipatingRecruitingEventNearCheckTime(
+      await this.eventLookupService.hasParticipatingRecruitingEventNearCheckTime(
         userId,
         groupId,
       );
@@ -98,7 +98,7 @@ export class GroupLeavePolicyService {
     groupId: string,
   ): Promise<void> {
     const hasCreatedActiveEvents =
-      await this.eventRepository.hasCreatedActiveEvents(userId, groupId);
+      await this.eventLookupService.hasCreatedActiveEvents(userId, groupId);
 
     if (hasCreatedActiveEvents) {
       throw new DomainRuleViolationException({

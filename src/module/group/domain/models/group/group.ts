@@ -20,8 +20,25 @@ export interface GroupProps {
 export class Group extends AggregateRoot<GroupProps> {
   private _removedMemberIds: string[] = [];
 
-  constructor(props: GroupProps) {
+  private constructor(props: GroupProps) {
     super(props, new UniqueEntityId(props.id));
+  }
+
+  /** 새로운 모임을 생성합니다. */
+  static create(
+    props: Omit<GroupProps, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Group {
+    const now = new Date();
+    return new Group({
+      ...props,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  /** DB에서 복원합니다 (Mapper 전용, 검증 없음). */
+  static unsafeCreate(props: GroupProps): Group {
+    return new Group(props);
   }
 
   /**
