@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SendTestPushDto } from '../dtos/send-test-push.dto';
 import { PushTokenRepository } from '../../domain/repositories';
-import { NotificationSenderService } from '@core/firebase/notification-sender.service';
+import { NotificationSenderPort } from '../ports';
 
 /**
  * 테스트 푸시 알림 발송 결과
@@ -26,7 +26,7 @@ export class SendTestPushUseCase {
 
   constructor(
     private readonly pushTokenRepository: PushTokenRepository,
-    private readonly notificationSenderService: NotificationSenderService,
+    private readonly notificationSenderPort: NotificationSenderPort,
   ) {}
 
   async execute(dto: SendTestPushDto): Promise<SendTestPushResult> {
@@ -47,7 +47,7 @@ export class SendTestPushUseCase {
 
     // 2. 푸시 알림 발송
     const response =
-      await this.notificationSenderService.sendToMultipleDeviceTokens(
+      await this.notificationSenderPort.sendToMultipleDeviceTokens(
         [token],
         'test',
         {
