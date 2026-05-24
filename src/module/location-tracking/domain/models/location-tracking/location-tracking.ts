@@ -23,8 +23,18 @@ export interface LocationTrackingProps {
  * 조회 최적화를 위해 별도 테이블로 관리되며 독립적인 Aggregate Root
  */
 export class LocationTracking extends AggregateRoot<LocationTrackingProps> {
-  constructor(props: LocationTrackingProps) {
+  private constructor(props: LocationTrackingProps) {
     super(props, new UniqueEntityId(props.id));
+  }
+
+  /** 새로운 위치 추적을 생성합니다. */
+  static create(props: Omit<LocationTrackingProps, 'id'>): LocationTracking {
+    return new LocationTracking(props);
+  }
+
+  /** DB에서 복원합니다 (Mapper 전용, 검증 없음). */
+  static unsafeCreate(props: LocationTrackingProps): LocationTracking {
+    return new LocationTracking(props);
   }
 
   get eventId(): string {

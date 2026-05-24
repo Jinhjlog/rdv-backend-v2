@@ -1,2 +1,2 @@
 export * from './location-tracking/location-tracking';
-export * from './location-tracking/location-tracking.query-model';
+export * from './location-tracking/location-tracking.read-model';
