@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { GroupQueryRepository } from '../../domain/repositories';
-import { GroupMemberAttendanceStatisticsQueryModel } from '../../domain/models';
+import { GroupQueryService } from '../../domain/services';
+import { GroupMemberAttendanceStatisticsReadModel } from '../../domain/models';
 import { GetGroupMemberAttendanceStatisticsDto } from '../dtos/get-group-member-attendance-statistics.dto';
 
 @Injectable()
 export class GetGroupMemberAttendanceStatisticsUseCase {
-  constructor(private readonly groupQueryRepository: GroupQueryRepository) {}
+  constructor(private readonly groupQueryService: GroupQueryService) {}
 
   async execute(
     dto: GetGroupMemberAttendanceStatisticsDto,
-  ): Promise<GroupMemberAttendanceStatisticsQueryModel> {
-    return this.groupQueryRepository.findMemberAttendanceStatistics({
+  ): Promise<GroupMemberAttendanceStatisticsReadModel> {
+    return this.groupQueryService.findMemberAttendanceStatistics({
       groupId: dto.groupId,
     });
   }

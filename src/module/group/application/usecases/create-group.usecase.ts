@@ -34,15 +34,13 @@ export class CreateGroupUseCase {
       maxLength: 200,
     });
 
-    const group = new Group({
+    const group = Group.create({
       name,
       description,
       iconCode: dto.iconCode,
       ownerId: dto.userId,
       maxMembers: 8,
       isPublic: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
       members: [],
     });
 

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { CursorUtil } from '@shared/utils';
 import { DomainRuleViolationException } from '@shared/exception';
 import { GroupRepository } from '../../domain/repositories';
-import { ChatMessageQueryRepository } from '../../domain/repositories/chat-message-query.repository';
-import { ChatMessageQueryModel } from '../../domain/models/chat-message/chat-message.query-model';
+import { ChatMessageQueryService } from '../../domain/services';
+import { ChatMessageReadModel } from '../../domain/models';
 import { GetChatMessageListDto } from '../dtos/get-chat-message-list.dto';
 
 /**
@@ -18,11 +18,11 @@ import { GetChatMessageListDto } from '../dtos/get-chat-message-list.dto';
 export class GetChatMessageListUseCase {
   constructor(
     private readonly groupRepository: GroupRepository,
-    private readonly chatMessageQueryRepository: ChatMessageQueryRepository,
+    private readonly chatMessageQueryService: ChatMessageQueryService,
   ) {}
 
   async execute(dto: GetChatMessageListDto): Promise<{
-    items: ChatMessageQueryModel[];
+    items: ChatMessageReadModel[];
     nextCursor?: string;
     hasMore: boolean;
   }> {
@@ -45,7 +45,7 @@ export class GetChatMessageListUseCase {
     }
 
     // 3. limit + 1로 조회하여 다음 페이지 존재 여부 확인
-    const messages = await this.chatMessageQueryRepository.findList({
+    const messages = await this.chatMessageQueryService.findList({
       groupId: dto.groupId,
       cursor: decodedCursor,
       sinceId: dto.sinceId,
