@@ -14,7 +14,7 @@ export interface InviteCodeProps {
 }
 
 export class InviteCode extends AggregateRoot<InviteCodeProps> {
-  constructor(props: InviteCodeProps) {
+  private constructor(props: InviteCodeProps) {
     super(props, new UniqueEntityId(props.id));
   }
 
