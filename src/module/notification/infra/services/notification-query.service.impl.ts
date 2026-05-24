@@ -2,18 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { notification_type } from '@prisma/client';
 import { PrismaService } from '@core/database/prisma.service';
 import {
-  NotificationQueryRepository,
+  NotificationQueryService,
   FindNotificationListParams,
-} from '../../domain/repositories';
-import { NotificationListItemQueryModel } from '../../domain/models';
+} from '../../domain/services';
+import { NotificationListItemReadModel } from '../../domain/models';
 
 @Injectable()
-export class NotificationQueryRepositoryImpl implements NotificationQueryRepository {
+export class NotificationQueryServiceImpl implements NotificationQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findList(
     params: FindNotificationListParams,
-  ): Promise<NotificationListItemQueryModel[]> {
+  ): Promise<NotificationListItemReadModel[]> {
     const results = await this.prisma.notifications.findMany({
       where: {
         user_id: params.userId,

@@ -15,8 +15,13 @@ export interface NotificationProps {
 }
 
 export class Notification extends AggregateRoot<NotificationProps> {
-  constructor(props: NotificationProps) {
+  private constructor(props: NotificationProps) {
     super(props, new UniqueEntityId(props.id));
+  }
+
+  /** DB에서 복원합니다 (Mapper 전용, 검증 없음). */
+  static unsafeCreate(props: NotificationProps): Notification {
+    return new Notification(props);
   }
 
   get userId(): string {
