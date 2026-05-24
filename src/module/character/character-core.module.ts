@@ -1,26 +1,28 @@
 import { Module } from '@nestjs/common';
 import {
   CharacterRepository,
-  CharacterQueryRepository,
   UserCharacterRepository,
-  UserRepository,
 } from './domain/repositories';
 import {
   UnlockConditionResolver,
   UNLOCK_CONDITION_RESOLVER,
+  CharacterQueryService,
+  UserLookupService,
 } from './domain/services';
 import {
   CharacterRepositoryImpl,
-  CharacterQueryRepositoryImpl,
   UserCharacterRepositoryImpl,
-  UserRepositoryImpl,
 } from './infra/repositories';
-import { UNLOCK_CONDITION_RESOLVER_CLASSES } from './infra/services';
+import {
+  CharacterQueryServiceImpl,
+  UserLookupServiceImpl,
+  UNLOCK_CONDITION_RESOLVER_CLASSES,
+} from './infra/services';
 
 /**
  * Character Core 모듈
  *
- * Domain과 Infrastructure 레이어의 Repository를 등록하고 export합니다.
+ * Domain과 Infrastructure 레이어의 Repository/Service를 등록하고 export합니다.
  */
 @Module({
   providers: [
@@ -29,16 +31,16 @@ import { UNLOCK_CONDITION_RESOLVER_CLASSES } from './infra/services';
       useClass: CharacterRepositoryImpl,
     },
     {
-      provide: CharacterQueryRepository,
-      useClass: CharacterQueryRepositoryImpl,
-    },
-    {
       provide: UserCharacterRepository,
       useClass: UserCharacterRepositoryImpl,
     },
     {
-      provide: UserRepository,
-      useClass: UserRepositoryImpl,
+      provide: CharacterQueryService,
+      useClass: CharacterQueryServiceImpl,
+    },
+    {
+      provide: UserLookupService,
+      useClass: UserLookupServiceImpl,
     },
     ...UNLOCK_CONDITION_RESOLVER_CLASSES,
     {
@@ -49,9 +51,9 @@ import { UNLOCK_CONDITION_RESOLVER_CLASSES } from './infra/services';
   ],
   exports: [
     CharacterRepository,
-    CharacterQueryRepository,
     UserCharacterRepository,
-    UserRepository,
+    CharacterQueryService,
+    UserLookupService,
     UNLOCK_CONDITION_RESOLVER,
   ],
 })
