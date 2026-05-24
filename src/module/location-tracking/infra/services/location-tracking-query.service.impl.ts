@@ -1,30 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@core/database';
 import {
-  LocationTrackingQueryRepository,
+  LocationTrackingQueryService,
   FindLocationsByEventParams,
-} from '../../domain/repositories';
-import { LocationTrackingQueryModel } from '../../domain/models';
+} from '../../domain/services';
+import { LocationTrackingReadModel } from '../../domain/models';
 
-/**
- * LocationTracking Query Repository 구현체
- *
- * 위치 추적 정보 조회 전용 레포지토리
- * Prisma를 사용하여 직접 조회하고 QueryModel로 변환
- */
 @Injectable()
-export class LocationTrackingQueryRepositoryImpl implements LocationTrackingQueryRepository {
+export class LocationTrackingQueryServiceImpl
+  implements LocationTrackingQueryService
+{
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * 일정별 참여자 위치 목록 조회
-   *
-   * 해당 일정의 모든 위치 추적 정보를 반환
-   * updated_at 기준 최신순 정렬
-   */
   async findByEventId(
     params: FindLocationsByEventParams,
-  ): Promise<LocationTrackingQueryModel[]> {
+  ): Promise<LocationTrackingReadModel[]> {
     const { eventId } = params;
 
     const locations = await this.prisma.location_trackings.findMany({

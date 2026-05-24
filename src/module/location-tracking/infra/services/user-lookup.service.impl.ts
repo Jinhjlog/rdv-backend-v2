@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { UserRepository } from '../../domain/repositories';
+import { UserLookupService } from '../../domain/services';
 import { PrismaService } from '@core/database';
 
 @Injectable()
-export class UserRepositoryImpl implements UserRepository {
+export class UserLookupServiceImpl implements UserLookupService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(

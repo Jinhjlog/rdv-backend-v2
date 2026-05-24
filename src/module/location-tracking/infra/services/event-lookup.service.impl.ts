@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { EventRepository } from '../../domain/repositories';
+import { EventLookupService } from '../../domain/services';
 import { PrismaService } from '@core/database';
 import { event_status } from '@prisma/client';
 
 @Injectable()
-export class EventRepositoryImpl implements EventRepository {
+export class EventLookupServiceImpl implements EventLookupService {
   constructor(private readonly prisma: PrismaService) {}
 
   async existsByStatusInProgress(eventId: string): Promise<boolean> {
