@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { LocationTrackingQueryRepository } from '../../domain/repositories';
-import { LocationTrackingQueryModel } from '../../domain/models';
+import { LocationTrackingQueryService } from '../../domain/services';
+import { LocationTrackingReadModel } from '../../domain/models';
 import { FindLocationsByEventDto } from '../dtos';
 
 /**
@@ -11,15 +11,15 @@ import { FindLocationsByEventDto } from '../dtos';
 @Injectable()
 export class FindLocationsByEventUseCase {
   constructor(
-    private readonly locationTrackingQueryRepository: LocationTrackingQueryRepository,
+    private readonly locationTrackingQueryService: LocationTrackingQueryService,
   ) {}
 
   async execute(
     dto: FindLocationsByEventDto,
-  ): Promise<LocationTrackingQueryModel[]> {
+  ): Promise<LocationTrackingReadModel[]> {
     const { eventId } = dto;
 
-    const locations = await this.locationTrackingQueryRepository.findByEventId({
+    const locations = await this.locationTrackingQueryService.findByEventId({
       eventId,
     });
 
