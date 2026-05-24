@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import {
   CharacterRepository,
   UserCharacterRepository,
-  UserRepository,
 } from '../../domain/repositories';
+import { UserLookupService } from '../../domain/services';
 import { UserCharacter } from '../../domain/models';
 import { UnlockCharacterDto } from '../dtos';
 import {
@@ -21,7 +21,7 @@ export class UnlockCharacterUseCase {
   constructor(
     private readonly userCharacterRepository: UserCharacterRepository,
     private readonly characterRepository: CharacterRepository,
-    private readonly userRepository: UserRepository,
+    private readonly userLookupService: UserLookupService,
   ) {}
 
   /**
@@ -36,7 +36,7 @@ export class UnlockCharacterUseCase {
     const { userId, characterId } = dto;
 
     // 1. 사용자 존재 확인
-    const existsUser = await this.userRepository.existsById(userId);
+    const existsUser = await this.userLookupService.existsById(userId);
     if (!existsUser) {
       throw new EntityNotFoundException({
         entityName: 'User',
@@ -70,11 +70,7 @@ export class UnlockCharacterUseCase {
     }
 
     // 4. UserCharacter Aggregate 생성
-    const userCharacter = new UserCharacter({
-      userId,
-      characterId,
-      unlockedAt: new Date(),
-    });
+    const userCharacter = UserCharacter.create({ userId, characterId });
 
     // 5. 저장
     await this.userCharacterRepository.save(userCharacter);

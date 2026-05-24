@@ -1,7 +1,7 @@
 /**
- * 캐릭터 목록 조회용 쿼리 모델
+ * 캐릭터 목록 조회용 ReadModel
  */
-export interface CharacterListItemQueryModel {
+export interface CharacterListReadModel {
   id: string;
   characterCode: string;
   name: string;
@@ -13,16 +13,16 @@ export interface CharacterListItemQueryModel {
 }
 
 /**
- * 보유 여부 포함 캐릭터 목록 조회용 쿼리 모델
+ * 보유 여부 포함 캐릭터 목록 조회용 ReadModel
  */
-export interface CharacterListItemWithOwnershipQueryModel extends CharacterListItemQueryModel {
+export interface CharacterListWithOwnershipReadModel extends CharacterListReadModel {
   isOwned: boolean;
 }
 
 /**
- * 캐릭터 상세 조회용 쿼리 모델
+ * 캐릭터 상세 조회용 ReadModel
  */
-export interface CharacterDetailQueryModel {
+export interface CharacterDetailReadModel {
   id: string;
   characterCode: string;
   name: string;

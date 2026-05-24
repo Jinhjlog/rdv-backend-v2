@@ -4,7 +4,7 @@ import { PrismaJsonUtil } from '@core/database/prisma-json.util';
 
 export class CharacterMapper {
   static toDomain(prismaCharacter: CharacterPrisma): Character {
-    return new Character({
+    return Character.unsafeCreate({
       id: prismaCharacter.id,
       characterCode: prismaCharacter.character_code,
       name: prismaCharacter.name,
@@ -24,7 +24,7 @@ export class CharacterMapper {
 
   static toPersistence(
     domainCharacter: Character,
-  ): Prisma.charactersCreateInput {
+  ): Prisma.charactersUncheckedCreateInput {
     return {
       id: domainCharacter.id.toString(),
       character_code: domainCharacter.characterCode,

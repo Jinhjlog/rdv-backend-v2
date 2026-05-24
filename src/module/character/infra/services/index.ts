@@ -1,6 +1,8 @@
 import { ChatCountResolver } from './chat-count.resolver';
 
 export { ChatCountResolver };
+export * from './character-query.service.impl';
+export * from './user-lookup.service.impl';
 
 /**
  * 모든 언락 조건 리졸버 목록

@@ -1,15 +1,12 @@
-import { CharacterListItemWithOwnershipQueryModel } from '../../domain/models';
+import { CharacterListWithOwnershipReadModel } from '../../domain/models';
 import { CharacterListResponseDto } from '../dtos/response';
 
 export class CharacterTransformer {
-  /**
-   * 보유 여부 포함 QueryModel 배열을 ListResponseDto로 변환합니다
-   */
   static toListResponse(
-    queryModels: CharacterListItemWithOwnershipQueryModel[],
+    readModels: CharacterListWithOwnershipReadModel[],
   ): CharacterListResponseDto {
     return {
-      characters: queryModels.map((model) => ({
+      characters: readModels.map((model) => ({
         id: model.id,
         characterCode: model.characterCode,
         name: model.name,
