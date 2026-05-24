@@ -21,8 +21,13 @@ export interface UserProps {
 }
 
 export class User extends AggregateRoot<UserProps> {
-  constructor(props: UserProps) {
+  private constructor(props: UserProps) {
     super(props, new UniqueEntityId(props.id));
+  }
+
+  /** DB에서 복원합니다 (Mapper 전용, 검증 없음). */
+  static unsafeCreate(props: UserProps): User {
+    return new User(props);
   }
 
   // Getter 메서드
