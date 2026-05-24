@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@core/database/prisma.service';
-import { ShortTalkUserQueryRepository } from '../../domain/repositories/short-talk-user-query.repository';
+import { ShortTalkUserQueryService } from '../../domain/services';
 import { ShortTalkSenderInfo } from '../../domain/models/short-talk/short-talk-event';
 
 @Injectable()
-export class ShortTalkUserQueryRepositoryImpl implements ShortTalkUserQueryRepository {
+export class ShortTalkUserQueryServiceImpl implements ShortTalkUserQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findSenderInfoById(
