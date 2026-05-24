@@ -24,7 +24,7 @@ export interface DeviceTokenProps {
  * 사용자는 여러 기기를 가질 수 있으므로 User:DeviceToken = 1:N 관계입니다.
  */
 export class DeviceToken extends AggregateRoot<DeviceTokenProps> {
-  constructor(props: DeviceTokenProps) {
+  private constructor(props: DeviceTokenProps) {
     super(props, new UniqueEntityId(props.id));
   }
 
@@ -109,5 +109,10 @@ export class DeviceToken extends AggregateRoot<DeviceTokenProps> {
       createdAt: now,
       updatedAt: now,
     });
+  }
+
+  /** DB에서 복원합니다 (Mapper 전용, 검증 없음). */
+  static unsafeCreate(props: DeviceTokenProps): DeviceToken {
+    return new DeviceToken(props);
   }
 }
