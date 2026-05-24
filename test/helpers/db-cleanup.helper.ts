@@ -10,9 +10,10 @@ export async function cleanDatabase(prisma: PrismaService): Promise<void> {
     Array<{ tablename: string }>
   >`SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename NOT LIKE '_prisma%'`;
 
-  for (const { tablename } of publicTables) {
-    await prisma.$executeRawUnsafe(
-      `TRUNCATE TABLE "public"."${tablename}" CASCADE`,
-    );
-  }
+  if (publicTables.length === 0) return;
+
+  const tableNames = publicTables
+    .map((t) => `"public"."${t.tablename}"`)
+    .join(', ');
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tableNames} CASCADE`);
 }
