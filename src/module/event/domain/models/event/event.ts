@@ -63,8 +63,25 @@ export interface EventProps {
 }
 
 export class Event extends AggregateRoot<EventProps> {
-  constructor(props: EventProps) {
+  private constructor(props: EventProps) {
     super(props, new UniqueEntityId(props.id));
+  }
+
+  /** 새로운 일정을 생성합니다. */
+  static create(
+    props: Omit<EventProps, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Event {
+    const now = new Date();
+    return new Event({
+      ...props,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  /** DB에서 복원합니다 (Mapper 전용, 검증 없음). */
+  static unsafeCreate(props: EventProps): Event {
+    return new Event(props);
   }
 
   get groupId(): string {
