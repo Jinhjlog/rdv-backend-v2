@@ -1,7 +1,4 @@
-import {
-  GroupDetailQueryModel,
-  GroupListItemQueryModel,
-} from '../../domain/models';
+import { GroupDetailReadModel, GroupListReadModel } from '../../domain/models';
 import { GroupDetailResponseDto, GroupListResponseDto } from '../dtos/response';
 
 export class GroupTransformer {
@@ -9,7 +6,7 @@ export class GroupTransformer {
    * QueryModel 배열을 ListResponseDto로 변환합니다
    */
   static toListResponse(
-    queryModels: GroupListItemQueryModel[],
+    queryModels: GroupListReadModel[],
   ): GroupListResponseDto {
     return {
       items: queryModels.map((model) => ({
@@ -37,7 +34,7 @@ export class GroupTransformer {
    * QueryModel과 멤버 목록을 DetailResponseDto로 변환합니다
    */
   static toDetailResponse(
-    queryModel: GroupDetailQueryModel,
+    queryModel: GroupDetailReadModel,
   ): GroupDetailResponseDto {
     return {
       id: queryModel.id,
