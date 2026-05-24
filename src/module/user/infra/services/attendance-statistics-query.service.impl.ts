@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@core/database';
-import { AttendanceStatisticsQueryRepository } from '../../domain/repositories/attendance-statistics-query.repository';
-import { AttendanceStatisticsQueryModel } from '../../domain/models';
+import { AttendanceStatisticsQueryService } from '../../domain/services';
+import { AttendanceStatisticsReadModel } from '../../domain/models';
 
 /**
  * 출석 통계 QueryRepository 구현체
@@ -9,10 +9,10 @@ import { AttendanceStatisticsQueryModel } from '../../domain/models';
  * Prisma를 사용하여 event_results 테이블에서 출석 통계를 집계합니다.
  */
 @Injectable()
-export class AttendanceStatisticsQueryRepositoryImpl implements AttendanceStatisticsQueryRepository {
+export class AttendanceStatisticsQueryServiceImpl implements AttendanceStatisticsQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByUserId(userId: string): Promise<AttendanceStatisticsQueryModel> {
+  async findByUserId(userId: string): Promise<AttendanceStatisticsReadModel> {
     const countByResult = await this.prisma.event_results.groupBy({
       by: ['result'],
       where: { user_id: userId },
