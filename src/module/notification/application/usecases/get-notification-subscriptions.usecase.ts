@@ -17,8 +17,6 @@ export class GetNotificationSubscriptionsUseCase {
   async execute(
     dto: GetNotificationSubscriptionsDto,
   ): Promise<NotificationSubscriptionReadModel[]> {
-    return this.notificationSubscriptionQueryService.findByUserId(
-      dto.userId,
-    );
+    return this.notificationSubscriptionQueryService.findByUserId(dto.userId);
   }
 }
