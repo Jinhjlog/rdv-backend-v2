@@ -4,21 +4,23 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-  ForbiddenException,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiNoContentResponse,
   ApiBadRequestResponse,
-  ApiForbiddenResponse,
+  ApiUnauthorizedResponse,
+  ApiHeader,
 } from '@nestjs/swagger';
 import { UpdateAppVersionUseCase } from '../../application/usecases';
 import { UpdateAppVersionRequestDto } from '../dtos';
-
-const ADMIN_API_KEY = 'wlsguswnsdmlzl';
+import { AdminApiKeyGuard } from 'src/module/auth/guards';
 
 @ApiTags('관리자 - 앱 버전')
+@UseGuards(AdminApiKeyGuard)
+@ApiHeader({ name: 'x-api-key', description: '관리자 API 키', required: true })
 @Controller({ path: 'admin/app-versions', version: '1' })
 export class AdminAppVersionController {
   constructor(
@@ -29,8 +31,8 @@ export class AdminAppVersionController {
     summary: '[관리자] - 앱 버전 정보 수정',
     description:
       '특정 플랫폼의 앱 버전 정보를 수정합니다.<br><br>' +
-      '**필수 항목**<br>' +
-      '관리자 API 키, 플랫폼, 최신 버전, 최소 필수 버전, 스토어 URL<br><br>' +
+      '**인증**<br>' +
+      '`x-api-key` 헤더에 관리자 API 키 필요<br><br>' +
       '**플랫폼 종류**<br>' +
       '- ANDROID: Android 앱<br>' +
       '- IOS: iOS 앱<br><br>' +
@@ -57,18 +59,14 @@ export class AdminAppVersionController {
       '**스토어 URL**<br>' +
       '- URL 형식이 올바르지 않은 경우: _**VALIDATION_ERROR**_<br>',
   })
-  @ApiForbiddenResponse({
-    description: '유효하지 않은 관리자 API 키',
+  @ApiUnauthorizedResponse({
+    description: '유효하지 않은 관리자 API 키: _**INVALID_API_KEY**_',
   })
   @HttpCode(HttpStatus.NO_CONTENT)
   @Put()
   async updateAppVersion(
     @Body() dto: UpdateAppVersionRequestDto,
   ): Promise<void> {
-    if (dto.adminKey !== ADMIN_API_KEY) {
-      throw new ForbiddenException('유효하지 않은 관리자 API 키입니다.');
-    }
-
     await this.updateAppVersionUseCase.execute({
       platform: dto.platform,
       latestVersion: dto.latestVersion,
