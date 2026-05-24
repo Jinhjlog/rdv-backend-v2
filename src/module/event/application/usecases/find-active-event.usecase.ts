@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { EventQueryRepository } from '../../domain/repositories';
+import { EventQueryService } from '../../domain/services';
 import { FindActiveEventDto } from '../dtos';
-import { ActiveEventQueryModel } from '../../domain/models';
+import { ActiveEventReadModel } from '../../domain/models';
 
 export interface FindActiveEventResult {
   hasActiveEvent: boolean;
-  event?: ActiveEventQueryModel;
+  event?: ActiveEventReadModel;
 }
 
 @Injectable()
 export class FindActiveEventUseCase {
-  constructor(private readonly eventQueryRepository: EventQueryRepository) {}
+  constructor(private readonly eventQueryService: EventQueryService) {}
 
   async execute(dto: FindActiveEventDto): Promise<FindActiveEventResult> {
     const { userId, groupId } = dto;
 
-    const event = await this.eventQueryRepository.findActiveEventByGroupId({
+    const event = await this.eventQueryService.findActiveEventByGroupId({
       groupId,
       contextUserId: userId,
     });

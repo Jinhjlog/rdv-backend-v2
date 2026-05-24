@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { EventRepository, GroupRepository } from '../../domain/repositories';
+import { EventRepository } from '../../domain/repositories';
+import { GroupLookupService } from '../../domain/services';
 import { EntityNotFoundException } from '@shared/exception';
 import { DeleteEventDto } from '../dtos';
-import { EventQueueService } from '../../infra/services';
+import { EventSchedulingPort } from '../ports';
 
 @Injectable()
 export class DeleteEventUseCase {
   constructor(
     private readonly eventRepository: EventRepository,
-    private readonly groupRepository: GroupRepository,
-    private readonly eventQueueService: EventQueueService,
+    private readonly groupLookupService: GroupLookupService,
+    private readonly eventSchedulingPort: EventSchedulingPort,
   ) {}
 
   async execute(dto: DeleteEventDto): Promise<void> {
@@ -27,7 +28,7 @@ export class DeleteEventUseCase {
     event.validateDeletion(dto.userId);
 
     // 3. 모임 이름 조회
-    const groupName = await this.groupRepository.findGroupNameById(
+    const groupName = await this.groupLookupService.findGroupNameById(
       event.groupId,
     );
 
@@ -35,7 +36,7 @@ export class DeleteEventUseCase {
     event.markAsDeleted(dto.userId, groupName);
 
     // 5. 큐 작업 취소
-    await this.eventQueueService.cancelParticipantCheck(dto.eventId);
+    await this.eventSchedulingPort.cancelParticipantCheck(dto.eventId);
 
     // 6. 삭제 (인프라 레이어에서 도메인 이벤트 발행)
     await this.eventRepository.delete(event);

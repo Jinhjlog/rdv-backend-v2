@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { EventQueryRepository } from '../../domain/repositories';
+import { EventQueryService } from '../../domain/services';
 import { FindEventDetailDto } from '../dtos';
-import { EventDetailQueryModel } from '../../domain/models';
+import { EventDetailReadModel } from '../../domain/models';
 import { EntityNotFoundException } from '@shared/exception';
 
 @Injectable()
 export class FindEventDetailUseCase {
-  constructor(private readonly eventQueryRepository: EventQueryRepository) {}
+  constructor(private readonly eventQueryService: EventQueryService) {}
 
-  async execute(dto: FindEventDetailDto): Promise<EventDetailQueryModel> {
+  async execute(dto: FindEventDetailDto): Promise<EventDetailReadModel> {
     const { userId, eventId } = dto;
 
-    const event = await this.eventQueryRepository.findDetail({
+    const event = await this.eventQueryService.findDetail({
       eventId,
       contextUserId: userId,
     });

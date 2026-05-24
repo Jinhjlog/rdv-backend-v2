@@ -1,7 +1,7 @@
 import { DomainEvents } from '@lib/domain/events/domain-events';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventStartedEvent } from '../../domain/events';
-import { EventQueueService } from '../../infra/services';
+import { EventSchedulingPort } from '../ports';
 
 /**
  * 일정 시작 이벤트 핸들러
@@ -15,7 +15,7 @@ import { EventQueueService } from '../../infra/services';
 export class EventStartedEventHandler implements OnModuleInit {
   private readonly logger = new Logger(EventStartedEventHandler.name);
 
-  constructor(private readonly eventQueueService: EventQueueService) {}
+  constructor(private readonly eventSchedulingPort: EventSchedulingPort) {}
 
   onModuleInit() {
     DomainEvents.register(
@@ -32,7 +32,7 @@ export class EventStartedEventHandler implements OnModuleInit {
     );
 
     // 1. 일정 종료 스케줄링 예약
-    const scheduled = await this.eventQueueService.scheduleEventEnd(
+    const scheduled = await this.eventSchedulingPort.scheduleEventEnd(
       eventId,
       endTime,
     );

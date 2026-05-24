@@ -1,7 +1,7 @@
 import { DomainEvents } from '@lib/domain/events/domain-events';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ParticipantsCheckPassedEvent } from '../../domain/events';
-import { EventQueueService } from '../../infra/services';
+import { EventSchedulingPort } from '../ports';
 
 /**
  * 참여자 체크 통과 이벤트 핸들러
@@ -14,7 +14,7 @@ export class ParticipantsCheckPassedEventHandler implements OnModuleInit {
     ParticipantsCheckPassedEventHandler.name,
   );
 
-  constructor(private readonly eventQueueService: EventQueueService) {}
+  constructor(private readonly eventSchedulingPort: EventSchedulingPort) {}
 
   onModuleInit() {
     DomainEvents.register(
@@ -31,10 +31,11 @@ export class ParticipantsCheckPassedEventHandler implements OnModuleInit {
     );
 
     // 위치 공유 시작 스케줄링 예약
-    const scheduled = await this.eventQueueService.scheduleLocationSharingStart(
-      eventId,
-      trackingStartTime,
-    );
+    const scheduled =
+      await this.eventSchedulingPort.scheduleLocationSharingStart(
+        eventId,
+        trackingStartTime,
+      );
 
     if (scheduled) {
       this.logger.log(
