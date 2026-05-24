@@ -3,6 +3,7 @@ import {
   JwtBlacklistCheckGuard,
   UserJwtAuthGuard,
   ApiKeyGuard,
+  AdminApiKeyGuard,
   AttestationGuard,
   CloudTasksAuthGuard,
 } from './guards';
@@ -19,6 +20,7 @@ const guards: Provider[] = [
   UserJwtAuthGuard,
   JwtBlacklistCheckGuard,
   ApiKeyGuard,
+  AdminApiKeyGuard,
   AttestationGuard,
   CloudTasksAuthGuard,
 ];
