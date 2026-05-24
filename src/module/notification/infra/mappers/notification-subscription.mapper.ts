@@ -9,7 +9,7 @@ export class NotificationSubscriptionMapper {
   static toDomain(
     raw: NotificationSubscriptionPrisma,
   ): NotificationSubscription {
-    return new NotificationSubscription({
+    return NotificationSubscription.unsafeCreate({
       id: raw.id,
       userId: raw.user_id,
       type: NotificationType.unsafeCreate(raw.type),
