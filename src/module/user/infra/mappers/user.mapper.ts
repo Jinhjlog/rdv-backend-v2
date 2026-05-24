@@ -17,7 +17,7 @@ export class UserMapper {
    */
 
   static toDomain(prismaUser: UserPrisma): User {
-    return new User({
+    return User.unsafeCreate({
       id: prismaUser.id,
       deviceId: prismaUser.device_id,
       nickname: BoundedString.unsafeCreate(prismaUser.nickname),

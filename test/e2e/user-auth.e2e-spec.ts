@@ -97,7 +97,7 @@ describe('사용자 인증 & 프로필 (P0)', () => {
     expect(firstReg.status).toBe(201);
 
     // 도메인 이벤트 핸들러(알림 구독, 캐릭터 언락) 완료 대기
-    await new Promise((r) => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 1500));
 
     const response = await publicRequest(app)
       .post('/api/v2/auth/register')

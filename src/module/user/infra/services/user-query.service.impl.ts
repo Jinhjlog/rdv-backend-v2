@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { UserQueryRepository } from '../../domain/repositories';
+import { UserQueryService } from '../../domain/services';
 import { PrismaService } from '@core/database';
-import { UserQueryModel } from '../../domain/models';
+import { UserReadModel } from '../../domain/models';
 
 @Injectable()
-export class UserQueryRepositoryImpl implements UserQueryRepository {
+export class UserQueryServiceImpl implements UserQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findById(userId: string): Promise<UserQueryModel | undefined> {
+  async findById(userId: string): Promise<UserReadModel | undefined> {
     const user = await this.prisma.public_users.findUnique({
       where: { id: userId },
       select: {
