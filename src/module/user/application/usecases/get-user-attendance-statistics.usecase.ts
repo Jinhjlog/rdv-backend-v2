@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { AttendanceStatisticsQueryRepository } from '../../domain/repositories';
+import { AttendanceStatisticsQueryService } from '../../domain/services';
 import { GetUserAttendanceStatisticsDto } from '../dtos/get-user-attendance-statistics.dto';
-import { AttendanceStatisticsQueryModel } from '../../domain/models';
+import { AttendanceStatisticsReadModel } from '../../domain/models';
 
 @Injectable()
 export class GetUserAttendanceStatisticsUseCase {
   constructor(
-    private readonly attendanceStatisticsQueryRepository: AttendanceStatisticsQueryRepository,
+    private readonly attendanceStatisticsQueryService: AttendanceStatisticsQueryService,
   ) {}
 
   async execute(
     dto: GetUserAttendanceStatisticsDto,
-  ): Promise<AttendanceStatisticsQueryModel> {
-    return this.attendanceStatisticsQueryRepository.findByUserId(dto.userId);
+  ): Promise<AttendanceStatisticsReadModel> {
+    return this.attendanceStatisticsQueryService.findByUserId(dto.userId);
   }
 }

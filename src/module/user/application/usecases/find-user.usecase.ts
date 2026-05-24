@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { UserQueryRepository } from '../../domain/repositories';
+import { UserQueryService } from '../../domain/services';
 import { FindUserDto } from '../dtos';
-import { UserQueryModel } from '../../domain/models';
+import { UserReadModel } from '../../domain/models';
 import { EntityNotFoundException } from '@shared/exception';
 
 @Injectable()
 export class FindUserUseCase {
-  constructor(private readonly userQueryRepository: UserQueryRepository) {}
+  constructor(private readonly userQueryService: UserQueryService) {}
 
-  async execute(dto: FindUserDto): Promise<UserQueryModel> {
-    const user = await this.userQueryRepository.findById(dto.userId);
+  async execute(dto: FindUserDto): Promise<UserReadModel> {
+    const user = await this.userQueryService.findById(dto.userId);
     if (!user) {
       throw new EntityNotFoundException({
         entityName: 'User',
