@@ -23,7 +23,7 @@ export interface CharacterProps {
 }
 
 export class Character extends AggregateRoot<CharacterProps> {
-  constructor(props: CharacterProps) {
+  private constructor(props: CharacterProps) {
     super(props, new UniqueEntityId(props.id));
   }
 
@@ -58,5 +58,10 @@ export class Character extends AggregateRoot<CharacterProps> {
 
   get updatedAt(): Date {
     return this.props.updatedAt;
+  }
+
+  /** DB에서 복원합니다 (Mapper 전용, 검증 없음). */
+  static unsafeCreate(props: CharacterProps): Character {
+    return new Character(props);
   }
 }

@@ -15,7 +15,7 @@ export interface UserCharacterProps {
  * 유저와 캐릭터 간의 관계를 관리하며, 캐릭터 언록 상태를 추적합니다.
  */
 export class UserCharacter extends AggregateRoot<UserCharacterProps> {
-  constructor(props: UserCharacterProps) {
+  private constructor(props: UserCharacterProps) {
     super(props, new UniqueEntityId(props.id));
   }
 
@@ -56,5 +56,10 @@ export class UserCharacter extends AggregateRoot<UserCharacterProps> {
 
   get unlockedAt(): Date {
     return this.props.unlockedAt;
+  }
+
+  /** DB에서 복원합니다 (Mapper 전용, 검증 없음). */
+  static unsafeCreate(props: UserCharacterProps): UserCharacter {
+    return new UserCharacter(props);
   }
 }
