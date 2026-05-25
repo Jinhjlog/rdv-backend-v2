@@ -1,29 +1,21 @@
 import { Module } from '@nestjs/common';
-import {
-  ShortTalkSessionRepository,
-  ChatMessageRepository,
-} from './domain/repositories';
+import { ChatMessageRepository } from './domain/repositories';
 import {
   ChatMessageQueryService,
   ShortTalkUserQueryService,
   GroupMembershipLookupService,
 } from './domain/services';
-import {
-  ShortTalkSessionRepositoryImpl,
-  ChatMessageRepositoryImpl,
-} from './infra/repositories';
+import { SseConnectionPort } from './application/ports';
+import { ChatMessageRepositoryImpl } from './infra/repositories';
 import {
   ChatMessageQueryServiceImpl,
   ShortTalkUserQueryServiceImpl,
   GroupMembershipLookupServiceImpl,
 } from './infra/services';
+import { SseConnectionAdapter } from './infra/adapters';
 
 @Module({
   providers: [
-    {
-      provide: ShortTalkSessionRepository,
-      useClass: ShortTalkSessionRepositoryImpl,
-    },
     {
       provide: ChatMessageRepository,
       useClass: ChatMessageRepositoryImpl,
@@ -40,13 +32,17 @@ import {
       provide: GroupMembershipLookupService,
       useClass: GroupMembershipLookupServiceImpl,
     },
+    {
+      provide: SseConnectionPort,
+      useClass: SseConnectionAdapter,
+    },
   ],
   exports: [
-    ShortTalkSessionRepository,
     ChatMessageRepository,
     ChatMessageQueryService,
     ShortTalkUserQueryService,
     GroupMembershipLookupService,
+    SseConnectionPort,
   ],
 })
 export class ShortTalkCoreModule {}
