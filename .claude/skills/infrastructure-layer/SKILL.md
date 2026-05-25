@@ -1,6 +1,6 @@
 ---
 name: infrastructure-layer
-description: "**PROACTIVE SKILL - AUTO-INVOKE**: MUST be automatically invoked for ALL infrastructure layer implementation tasks. Trigger keywords: 인프라 레이어, Repository 구현, Mapper 작성, Query Repository, infrastructure layer, implement repository. DO NOT manually implement infrastructure code - ALWAYS use this skill instead."
+description: '**PROACTIVE SKILL - AUTO-INVOKE**: MUST be automatically invoked for ALL infrastructure layer implementation tasks. Trigger keywords: 인프라 레이어, Repository 구현, Mapper 작성, Query Service, infrastructure layer, implement repository. DO NOT manually implement infrastructure code - ALWAYS use this skill instead.'
 allowed-tools: Read, Write, Glob, Grep, Bash
 user-invocable: true
 ---
@@ -17,17 +17,20 @@ user-invocable: true
 - "인프라스트럭처 레이어 작성"
 - "Repository 구현", "Repository 구현체 만들어줘"
 - "Mapper 작성", "Mapper 추가"
-- "Query Repository 구현"
+- "Query Service 구현"
+- "Domain Service 구현체"
 - "infrastructure layer implementation"
 - "implement repository", "create mapper"
 
 **실행 방법:**
+
 ```typescript
 // 사용자 요청 감지 시 즉시 다음을 호출
-Skill({ skill: "infrastructure-layer" })
+Skill({ skill: 'infrastructure-layer' });
 ```
 
 **금지 사항:**
+
 - ❌ Read, Write, Edit 툴로 직접 인프라 레이어 코드 작성
 - ❌ 스킬 없이 수동으로 Repository/Mapper 구현
 - ✅ 반드시 이 스킬을 통해서만 인프라 레이어 구현
@@ -47,7 +50,8 @@ DDD(Domain-Driven Design) 패턴에 따라 인프라스트럭처 레이어를 �
 
 - Domain Repository 인터페이스가 있는가?
 - Mapper가 필요한가?
-- Query Repository가 필요한가? (복잡한 조회 쿼리)
+- Query Service가 필요한가? (복잡한 조회 쿼리)
+- Domain Service 구현체가 필요한가? (abstract class가 있는 경우)
 ```
 
 **⏭️ 스킵 조건**:
@@ -62,13 +66,14 @@ DDD(Domain-Driven Design) 패턴에 따라 인프라스트럭처 레이어를 �
 이유: Domain Repository 인터페이스가 없거나 구현할 내용이 없습니다.
 ```
 
-### 2단계: 기존 패턴 참조
+### 2단계: 패턴 문서 참조
 
-구현 전 반드시 기존 모듈의 인프라 레이어를 참조하여 코드 스타일을 맞춥니다:
+구현 전 반드시 패턴 문서를 참조하여 코드 스타일을 맞춥니다:
 
-- `src/module/company-post/infra/`
-- `src/module/tbm-education/infra/`
-- `src/module/company/infra/`
+- `patterns/mapper.md`: Mapper 작성 패턴
+- `patterns/repository-impl.md`: Repository 구현체 패턴
+- `patterns/query-service-impl.md`: Query Service 구현체 패턴
+- `patterns/domain-service-impl.md`: Domain Service 구현체 (LookupService/ACL) 패턴
 
 ### 3단계: 파일 구조 생성
 
@@ -76,69 +81,25 @@ DDD(Domain-Driven Design) 패턴에 따라 인프라스트럭처 레이어를 �
 src/module/{module-name}/infra/
 ├── repositories/
 │   ├── {entity}.repository.impl.ts      # Repository 구현체
-│   ├── {entity}-query.repository.impl.ts # Query Repository (optional)
+│   └── index.ts
+├── services/
+│   ├── {entity}-query.service.impl.ts   # Query Service (optional)
+│   ├── {service}.service.impl.ts        # Domain Service LookupService (optional)
 │   └── index.ts
 └── mappers/
     ├── {entity}.mapper.ts                # Mapper
-    ├── {entity}-attachment.mapper.ts     # 하위 Entity Mapper (optional)
+    ├── {child-entity}.mapper.ts          # 하위 Entity Mapper (optional)
     └── index.ts
 ```
 
-### 4단계: 스크립트를 사용한 빠른 생성 (권장)
+### 4단계: 패턴 문서 기반 구현
 
-boilerplate 코드 생성을 위한 스크립트를 제공합니다. 스크립트 실행 후 TODO 주석을 확인하고 비즈니스 로직을 작성하세요.
+`patterns/` 디렉토리의 패턴 문서를 참조하여 직접 구현합니다:
 
-#### Mapper 생성 (먼저 수행)
-
-```bash
-cd .claude/skills/infrastructure-layer
-bash scripts/generate-mapper.sh {module-name} {AggregateRootName}
-```
-
-예시: `bash scripts/generate-mapper.sh anonymous-post AnonymousPost`
-
-**상세 패턴이 필요하면**: `patterns/mapper.md` 참조
-
-#### Repository 구현체 생성
-
-```bash
-cd .claude/skills/infrastructure-layer
-bash scripts/generate-repository-impl.sh {module-name} {AggregateRootName}
-```
-
-예시: `bash scripts/generate-repository-impl.sh anonymous-post AnonymousPost`
-
-생성되는 것:
-- `@Injectable()` 데코레이터
-- PrismaService 주입
-- 기본 메서드 (`save`, `findById`)
-- Domain Events 발행 로직
-
-**상세 패턴이 필요하면**: `patterns/repository-impl.md` 참조
-
-#### 하위 Entity Mapper 생성 (선택)
-
-```bash
-cd .claude/skills/infrastructure-layer
-bash scripts/generate-mapper.sh {module-name} {AggregateRootName} {EntityName}
-```
-
-예시: `bash scripts/generate-mapper.sh company-post CompanyPost CompanyPostAttachment`
-
-**상세 패턴이 필요하면**: `patterns/mapper.md` 참조
-
-#### Query Repository 구현체 생성 (선택)
-
-```bash
-cd .claude/skills/infrastructure-layer
-bash scripts/generate-query-repository-impl.sh {module-name} {AggregateRootName}
-```
-
-예시: `bash scripts/generate-query-repository-impl.sh company Company`
-
-복잡한 조회 쿼리용 ($queryRaw, findMany 등)
-
-**상세 패턴이 필요하면**: `patterns/query-repository-impl.md` 참조
+- `patterns/mapper.md`: Mapper 작성 패턴
+- `patterns/repository-impl.md`: Repository 구현체 패턴
+- `patterns/query-service-impl.md`: Query Service 구현체 패턴
+- `patterns/domain-service-impl.md`: Domain Service 구현체 (LookupService/ACL) 패턴
 
 ---
 
@@ -148,22 +109,15 @@ bash scripts/generate-query-repository-impl.sh {module-name} {AggregateRootName}
 
 #### Case 1: 새로운 Aggregate Root용 Infrastructure 생성
 
-1. **Mapper 생성** (스크립트 사용)
-   → Value Objects 필드 매핑 완료
+1. **Mapper 생성** → Value Objects 필드 매핑 완료
+2. **Repository 구현체 생성** → save/findById 메서드 구현
+3. **하위 Entity Mapper 생성** (필요시) → 하위 엔티티 매핑
+4. **Query Service 생성** (필요시) → 복잡한 조회 쿼리
+5. **Domain Service 구현체 생성** (필요시) → LookupService/ACL 패턴 구현
 
-2. **Repository 구현체 생성** (스크립트 사용)
-   → save/findById 메서드 구현
+#### Case 2: 기존 Infrastructure에 Query Service 추가
 
-3. **하위 Entity Mapper 생성** (필요시, 스크립트 사용)
-   → 하위 엔티티 매핑
-
-4. **Query Repository 생성** (필요시, 스크립트 사용)
-   → 복잡한 조회 쿼리
-
-#### Case 2: 기존 Infrastructure에 Query Repository 추가
-
-1. **Query Repository 생성** (스크립트 사용)
-   → 복잡한 조회 쿼리 작성
+1. **Query Service 생성** → 복잡한 조회 쿼리 작성
 
 ---
 
@@ -185,27 +139,19 @@ bash scripts/generate-query-repository-impl.sh {module-name} {AggregateRootName}
 
 ## ⚠️ 주의사항
 
-1. **기존 코드 스타일 준수**: 반드시 company-post, tbm-education 모듈의 기존 패턴을 따릅니다
+1. **패턴 문서 준수**: 반드시 `patterns/` 디렉토리의 패턴 문서를 따릅니다
 2. **Value Objects 처리**: `toDomain()`에서는 `unsafeCreate()` 사용
-3. **트랜잭션 처리**: Aggregate 저장은 `$transaction`으로
+3. **트랜잭션 사용 조건**: 하위 Entity 있을 때만 `$transaction`, 단일 Entity는 직접 upsert
 4. **Domain Events 발행**: 저장 후 `DomainEvents.dispatchEventsForAggregate()` 호출
-5. **관계 연결**: Prisma `connect` 사용
+5. **FK 관계**: `UncheckedCreateInput` + FK ID 직접 설정 (`connect` 사용 금지)
 6. **한국어 주석**: 모든 JSDoc과 주석은 한국어로 작성
 
 ## 🚫 하지 말아야 할 것
 
 - ❌ 도메인 레이어에서 Prisma 타입 직접 사용
 - ❌ Mapper에서 비즈니스 로직 포함
-- ❌ Query Repository에서 write 작업
+- ❌ Query Service에서 write 작업
 - ❌ Domain Events 발행 누락
-- ❌ 트랜잭션 없이 하위 엔티티 저장
-
----
-
-## 📚 상세 패턴 문서
-
-필요할 때 다음 문서를 참조하세요:
-
-- `patterns/repository-impl.md`: Repository 구현체 작성 패턴
-- `patterns/mapper.md`: Mapper 작성 패턴 (Aggregate Root + 하위 Entity)
-- `patterns/query-repository-impl.md`: Query Repository 구현체 작성 패턴
+- ❌ 단일 Entity에 불필요한 트랜잭션 사용
+- ❌ `connect: { id: ... }` 패턴 사용 (→ `UncheckedCreateInput` 사용)
+- ❌ `notIn`으로 Orphan Removal (→ `removedXxxIds` 추적 방식 사용)

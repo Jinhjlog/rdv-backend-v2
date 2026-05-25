@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  NotificationSenderService,
-  NotificationProps,
-  SendResponse,
+  NotificationSenderPort,
+  NotificationPayload,
+  SendResult,
   SilentPushData,
-} from '@core/firebase/notification-sender.service';
+} from '../ports';
 import { PushTokenRepository } from '../../domain/repositories';
 import { SubscriptionFilterRepository } from '../../domain/repositories';
 import { AlertPushTypeCode } from '../../domain/constants';
@@ -28,7 +28,7 @@ export class PushDispatchService {
 
   constructor(
     private readonly pushTokenRepository: PushTokenRepository,
-    private readonly notificationSenderService: NotificationSenderService,
+    private readonly notificationSenderPort: NotificationSenderPort,
     private readonly handleFailedTokensUseCase: HandleFailedTokensUseCase,
     private readonly subscriptionFilterRepository: SubscriptionFilterRepository,
   ) {}
@@ -41,7 +41,7 @@ export class PushDispatchService {
   async sendAlertPushToSubscribers(params: {
     type: AlertPushTypeCode;
     topic: string;
-    notification: NotificationProps;
+    notification: NotificationPayload;
     data?: Record<string, string>;
   }): Promise<PushDispatchResult> {
     const subscribedUserIds =
@@ -66,7 +66,7 @@ export class PushDispatchService {
     userIds: string[];
     type: AlertPushTypeCode;
     topic: string;
-    notification: NotificationProps;
+    notification: NotificationPayload;
     data?: Record<string, string>;
   }): Promise<PushDispatchResult> {
     const subscribedUserIds =
@@ -89,14 +89,14 @@ export class PushDispatchService {
   async sendAlertPush(params: {
     userIds: string[];
     topic: string;
-    notification: NotificationProps;
+    notification: NotificationPayload;
     data?: Record<string, string>;
   }): Promise<PushDispatchResult> {
     const tokens = await this.resolveTokens(params.userIds);
     if (tokens.length === 0) return this.noTargets();
 
     const response =
-      await this.notificationSenderService.sendToMultipleDeviceTokens(
+      await this.notificationSenderPort.sendToMultipleDeviceTokens(
         tokens,
         params.topic,
         params.notification,
@@ -119,7 +119,7 @@ export class PushDispatchService {
     if (tokens.length === 0) return this.noTargets();
 
     const response =
-      await this.notificationSenderService.sendSilentPushToMultipleDevices(
+      await this.notificationSenderPort.sendSilentPushToMultipleDevices(
         tokens,
         params.data,
       );
@@ -134,7 +134,7 @@ export class PushDispatchService {
     return this.pushTokenRepository.findTokensByUserIds(userIds);
   }
 
-  private async handleFailures(response: SendResponse): Promise<void> {
+  private async handleFailures(response: SendResult): Promise<void> {
     if (response.failureTokens.length > 0) {
       await this.handleFailedTokensUseCase.execute(response.failureTokens);
     }
@@ -144,7 +144,7 @@ export class PushDispatchService {
     return { sent: false, successCount: 0, failureCount: 0 };
   }
 
-  private toResult(response: SendResponse): PushDispatchResult {
+  private toResult(response: SendResult): PushDispatchResult {
     return {
       sent: true,
       successCount: response.successCount,

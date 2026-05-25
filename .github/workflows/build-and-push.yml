@@ -69,10 +69,10 @@ jobs:
             NODE_ENV=production
             LOG_LEVEL=debug
             QUEUE_DRIVER=cloud-tasks
-            GCP_PROJECT_ID=exalted-gamma-485513-e4
-            GCP_LOCATION=asia-northeast1
-            CLOUD_TASKS_INVOKER_SA=rdv-backend-runtime@exalted-gamma-485513-e4.iam.gserviceaccount.com
-            CLOUD_TASKS_TARGET_URL=https://rdv-backend-v2-213001418399.asia-northeast1.run.app/internal/queue/event
+            GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
+            GCP_LOCATION=${{ vars.GCP_LOCATION }}
+            CLOUD_TASKS_INVOKER_SA=${{ vars.CLOUD_TASKS_INVOKER_SA }}
+            CLOUD_TASKS_TARGET_URL=${{ vars.CLOUD_TASKS_TARGET_URL }}
 
           # [포트, 인스턴스, 메모리, 실행환경, CPU, 서비스 계정 설정]
           # - min-instances 0: 유휴 시 스케일 제로 허용 (월 ~7만원 상시 과금 제거)
@@ -80,4 +80,4 @@ jobs:
           #   재시도(최대 3회, exponential backoff)로 일시적 포화 상황 완화.
           # - cpu-throttling: 요청 처리 중에만 CPU 할당 (유휴 시 과금 제거)
           # - service-account: Cloud Tasks enqueuer·invoker 권한을 가진 전용 SA
-          flags: '--port 3000 --min-instances 0 --max-instances 1 --memory 1Gi --execution-environment gen2 --cpu-throttling --service-account rdv-backend-runtime@exalted-gamma-485513-e4.iam.gserviceaccount.com'
+          flags: '--port 3000 --min-instances 0 --max-instances 1 --memory 1Gi --execution-environment gen2 --cpu-throttling --service-account ${{ vars.CLOUD_RUN_SERVICE_ACCOUNT }}'

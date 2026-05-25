@@ -40,15 +40,15 @@ export class EventParticipantMapper {
    */
   static toPersistence(
     member: EventParticipant,
-  ): Prisma.event_participantsCreateInput {
+  ): Prisma.event_participantsUncheckedCreateInput {
     return {
       id: member.id.toString(),
+      event_id: member.eventId,
+      user_id: member.userId,
       status: member.status,
       joined_at: member.joinedAt,
       departed_at: member.departedAt !== undefined ? member.departedAt : null,
       arrived_at: member.arrivedAt !== undefined ? member.arrivedAt : null,
-      events: { connect: { id: member.eventId } },
-      users: { connect: { id: member.userId } },
     };
   }
 }

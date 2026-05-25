@@ -93,7 +93,7 @@ export interface AppVersionProps {
  * 각 플랫폼(ANDROID, IOS)별로 하나의 버전 정보가 존재합니다.
  */
 export class AppVersion extends AggregateRoot<AppVersionProps> {
-  constructor(props: AppVersionProps) {
+  private constructor(props: AppVersionProps) {
     super(props, new UniqueEntityId(props.id));
   }
 
@@ -155,5 +155,10 @@ export class AppVersion extends AggregateRoot<AppVersionProps> {
       createdAt: now,
       updatedAt: now,
     });
+  }
+
+  /** DB에서 복원합니다 (Mapper 전용, 검증 없음). */
+  static unsafeCreate(props: AppVersionProps): AppVersion {
+    return new AppVersion(props);
   }
 }

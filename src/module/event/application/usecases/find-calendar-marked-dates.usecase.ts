@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { EventQueryRepository } from '../../domain/repositories';
+import { EventQueryService } from '../../domain/services';
 import { FindCalendarMarkedDatesDto } from '../dtos';
 
 @Injectable()
 export class FindCalendarMarkedDatesUseCase {
-  constructor(private readonly eventQueryRepository: EventQueryRepository) {}
+  constructor(private readonly eventQueryService: EventQueryService) {}
 
   async execute(dto: FindCalendarMarkedDatesDto): Promise<string[]> {
     const { userId, year, month } = dto;
 
-    return this.eventQueryRepository.findCalendarMarkedDates({
+    return this.eventQueryService.findCalendarMarkedDates({
       userId,
       year,
       month,

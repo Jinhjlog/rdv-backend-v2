@@ -1,16 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { CharacterQueryRepository } from '../../domain/repositories';
+import { CharacterQueryService } from '../../domain/services';
 import { GetUnlockConfigDto, GetUnlockConfigResultDto } from '../dtos';
 
 @Injectable()
 export class GetUnlockConfigUseCase {
-  constructor(
-    private readonly characterQueryRepository: CharacterQueryRepository,
-  ) {}
+  constructor(private readonly characterQueryService: CharacterQueryService) {}
 
   async execute(dto: GetUnlockConfigDto): Promise<GetUnlockConfigResultDto> {
     const trackableEventTypes =
-      await this.characterQueryRepository.getTrackableEventTypes(dto.userId);
+      await this.characterQueryService.getTrackableEventTypes(dto.userId);
 
     return {
       needsUnlockTracking: trackableEventTypes.length > 0,

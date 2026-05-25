@@ -3,7 +3,7 @@ import { Notification, NotificationType } from '../../domain/models';
 
 export class NotificationMapper {
   static toDomain(raw: NotificationPrisma): Notification {
-    return new Notification({
+    return Notification.unsafeCreate({
       id: raw.id,
       userId: raw.user_id,
       type: NotificationType.unsafeCreate(raw.type),

@@ -6,14 +6,6 @@ import { IsNotEmpty, IsString, IsUrl, Matches } from 'class-validator';
  */
 export class UpdateAppVersionRequestDto {
   @ApiProperty({
-    description: '관리자 API 키',
-    example: 'admin-api-key',
-  })
-  @IsNotEmpty()
-  @IsString()
-  adminKey: string;
-
-  @ApiProperty({
     description: '플랫폼',
     enum: ['ANDROID', 'IOS'],
     example: 'ANDROID',

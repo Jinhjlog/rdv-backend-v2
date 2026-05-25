@@ -15,12 +15,13 @@ export class DeviceTokenMapper {
    * @returns 도메인 Aggregate Root
    */
   static toDomain(prismaModel: DeviceTokenPrisma): DeviceToken {
-    return new DeviceToken({
+    return DeviceToken.unsafeCreate({
       id: prismaModel.id,
       userId: prismaModel.user_id,
       token: prismaModel.token,
       platform: prismaModel.platform as DevicePlatform,
-      deviceInfo: prismaModel.device_info ?? undefined,
+      deviceInfo:
+        prismaModel.device_info !== null ? prismaModel.device_info : undefined,
       lastUsedAt: prismaModel.last_used_at,
       createdAt: prismaModel.created_at,
       updatedAt: prismaModel.updated_at,

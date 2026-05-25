@@ -1,223 +1,418 @@
 # UseCase 작성 패턴
 
-UseCase는 비즈니스 유즈케이스를 실행하는 애플리케이션 서비스입니다.
+UseCase는 비즈니스 유즈케이스를 실행하는 애플리케이션 서비스입니다. 도메인 메서드를 오케스트레이션하고, ReadModel 또는 결과 DTO를 반환합니다.
 
-## Create UseCase 패턴
+## 패턴 1: Command UseCase (생성)
+
+Entity의 `create()` 정적 메서드를 호출하여 생성합니다.
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { Create{Entity}Dto } from '../dtos';
+import { SignUpUserDto } from '../dtos';
 import { BoundedString } from '@lib/domain';
-import { {Entity} } from '../../domain/models';
-import { {Entity}Repository } from '../../domain/repositories';
+import { User } from '../../domain/models';
+import { UserRepository } from '../../domain/repositories';
 
 @Injectable()
-export class Create{Entity}UseCase {
-  constructor(
-    private readonly {entity}Repository: {Entity}Repository,
-  ) {}
+export class SignUpUserUseCase {
+  constructor(private readonly userRepository: UserRepository) {}
 
-  async execute(dto: Create{Entity}Dto): Promise<{ {entity}Id: string }> {
+  async execute(dto: SignUpUserDto): Promise<{ userId: string }> {
     // 1. Value Objects 생성
-    const name = BoundedString.create(dto.name, {
-      fieldName: 'name',
+    const username = BoundedString.create(dto.username, {
+      fieldName: 'username',
       minLength: 1,
-      maxLength: 100,
+      maxLength: 50,
     });
 
-    // 2. 도메인 엔티티 생성
-    const {entity} = new {Entity}({
-      name,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    // 2. 도메인 엔티티 생성 (static factory method)
+    const user = User.create({
+      username,
+      realname: dto.realname
+        ? BoundedString.create(dto.realname, {
+            fieldName: 'realname',
+            minLength: 1,
+            maxLength: 50,
+          })
+        : undefined,
+      // ...
     });
 
     // 3. 저장
-    await this.{entity}Repository.save({entity});
+    await this.userRepository.save(user);
 
     // 4. 결과 반환
-    return { {entity}Id: {entity}.id.toString() };
+    return { userId: user.id.toString() };
   }
 }
 ```
 
-### 중요 규칙
+### 핵심 규칙
 
-- `@Injectable()` 데코레이터 필수
-- Repository 주입
-- `execute(dto)` 메서드: 비즈니스 유즈케이스 실행
-- Value Objects는 UseCase에서 생성
-- 도메인 엔티티 생성 후 Repository로 저장
-- 반환값은 보통 `{ id: string }` 형태
+- `Entity.create()` 정적 메서드 사용 (`new Entity()` 직접 호출 금지)
+- Value Objects는 UseCase에서 생성 (`BoundedString.create()`)
+- 반환값은 `{ entityId: string }` 형태
 
----
+## 패턴 2: Command UseCase (수정)
 
-## Find Detail UseCase 패턴
+기존 엔티티를 조회한 후 도메인 메서드를 호출합니다.
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { {Entity}QueryRepository } from '../../domain/repositories';
-import { {Entity}DetailQueryModel } from '../../domain/models';
+import { UpdateStudentDto } from '../dtos';
+import { BoundedString } from '@lib/domain';
+import { UserRepository } from '../../domain/repositories';
 import { EntityNotFoundException } from '@shared/exception';
 
 @Injectable()
-export class Find{Entity}DetailUseCase {
-  constructor(
-    private readonly {entity}QueryRepository: {Entity}QueryRepository,
-  ) {}
+export class UpdateStudentUseCase {
+  constructor(private readonly userRepository: UserRepository) {}
 
-  async execute(dto: {
-    {entity}Id: string;
-  }): Promise<{Entity}DetailQueryModel> {
-    const detail = await this.{entity}QueryRepository.findDetailById(
-      dto.{entity}Id,
+  async execute(dto: UpdateStudentDto): Promise<void> {
+    // 1. 엔티티 조회
+    const user = await this.userRepository.findById(dto.userId);
+
+    if (!user) {
+      throw new EntityNotFoundException({
+        entityName: 'User',
+        errorCode: 'USER_NOT_FOUND',
+        id: dto.userId,
+      });
+    }
+
+    // 2. 도메인 메서드 호출 (직접 props 수정 금지)
+    user.updateProfile(
+      BoundedString.create(dto.realname, {
+        fieldName: 'realname',
+        minLength: 1,
+        maxLength: 50,
+      }),
+      dto.rank
+        ? BoundedString.create(dto.rank, {
+            fieldName: 'rank',
+            minLength: 1,
+            maxLength: 50,
+          })
+        : undefined,
+      dto.phone
+        ? BoundedString.create(dto.phone, {
+            fieldName: 'phone',
+            minLength: 1,
+            maxLength: 20,
+          })
+        : undefined,
     );
 
-    if (!detail) {
-      throw new EntityNotFoundException({
-        entityName: '{Entity}',
-        errorCode: '{ENTITY}_NOT_FOUND',
-        id: dto.{entity}Id,
-      });
-    }
-
-    return detail;
+    // 3. 저장
+    await this.userRepository.save(user);
   }
 }
 ```
 
-### 중요 규칙
+### 핵심 규칙
 
-- Query Repository 사용
-- QueryModel 반환 (도메인 엔티티 ❌)
-- 없으면 `EntityNotFoundException` 발생
+- `EntityNotFoundException`으로 존재 여부 확인
+- 도메인 메서드를 통한 수정 (직접 props 수정 금지)
+- 반환값 없음 (`void`)
 
----
+## 패턴 3: Command UseCase (상태 변경)
 
-## Find List UseCase 패턴
-
-```typescript
-import { Injectable } from '@nestjs/common';
-import { {Entity}QueryRepository } from '../../domain/repositories';
-import { {Entity}ListItemQueryModel } from '../../domain/models';
-import { Find{Entity}ListDto } from '../dtos';
-
-@Injectable()
-export class Find{Entity}ListUseCase {
-  constructor(
-    private readonly {entity}QueryRepository: {Entity}QueryRepository,
-  ) {}
-
-  async execute(dto: Find{Entity}ListDto): Promise<{Entity}ListItemQueryModel[]> {
-    return this.{entity}QueryRepository.findList({
-      // 필터 파라미터 전달
-      statusFilter: dto.statusFilter,
-      cursor: dto.cursor,
-      limit: dto.limit,
-    });
-  }
-}
-```
-
-### 중요 규칙
-
-- Query Repository 사용
-- 필터 파라미터 전달
-- QueryModel 배열 반환
-
----
-
-## Update UseCase 패턴
+단순 상태 변경에 사용합니다.
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { Update{Entity}Dto } from '../dtos';
-import { BoundedString } from '@lib/domain';
-import { {Entity}Repository } from '../../domain/repositories';
+import { ActivateStudentDto } from '../dtos';
+import { UserRepository } from '../../domain/repositories';
 import { EntityNotFoundException } from '@shared/exception';
 
 @Injectable()
-export class Update{Entity}UseCase {
-  constructor(
-    private readonly {entity}Repository: {Entity}Repository,
-  ) {}
+export class ActivateStudentUseCase {
+  constructor(private readonly userRepository: UserRepository) {}
 
-  async execute(dto: Update{Entity}Dto): Promise<void> {
-    // 1. 엔티티 조회
-    const {entity} = await this.{entity}Repository.findById(dto.{entity}Id);
+  async execute(dto: ActivateStudentDto): Promise<void> {
+    const user = await this.userRepository.findById(dto.userId);
 
-    if (!{entity}) {
+    if (!user) {
       throw new EntityNotFoundException({
-        entityName: '{Entity}',
-        errorCode: '{ENTITY}_NOT_FOUND',
-        id: dto.{entity}Id,
+        entityName: 'User',
+        errorCode: 'USER_NOT_FOUND',
+        id: dto.userId,
       });
     }
 
-    // 2. Value Objects 생성
-    const name = BoundedString.create(dto.name, {
-      fieldName: 'name',
-      minLength: 1,
-      maxLength: 100,
-    });
+    user.activate();
 
-    // 3. 도메인 메서드 호출
-    {entity}.updateName(name);
-
-    // 4. 저장
-    await this.{entity}Repository.save({entity});
+    await this.userRepository.save(user);
   }
 }
 ```
 
-### 중요 규칙
+## 패턴 4: Command UseCase (결과 DTO 반환)
 
-- 기존 엔티티 조회
-- 도메인 메서드로 수정 (직접 props 수정 ❌)
-- 저장 후 반환값 없음 (void)
-
----
-
-## Delete UseCase 패턴
+복잡한 처리 결과를 별도 Output DTO로 반환합니다.
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { {Entity}Repository } from '../../domain/repositories';
+import { RecordHeartbeatDto, HeartbeatResultDto } from '../dtos';
+import { PositiveNumber } from '@lib/domain/value-objects';
+import { LectureProgress } from '../../domain/models';
+import { LectureProgressRepository } from '../../domain/repositories';
+import { LectureLookupService } from '../../domain/services';
 import { EntityNotFoundException } from '@shared/exception';
+import { retry } from '@shared/utils';
 
 @Injectable()
-export class Delete{Entity}UseCase {
+export class RecordHeartbeatUseCase {
   constructor(
-    private readonly {entity}Repository: {Entity}Repository,
+    private readonly lectureProgressRepository: LectureProgressRepository,
+    private readonly lectureLookupService: LectureLookupService,
   ) {}
 
-  async execute(dto: { {entity}Id: string }): Promise<void> {
-    const {entity} = await this.{entity}Repository.findById(dto.{entity}Id);
+  async execute(dto: RecordHeartbeatDto): Promise<HeartbeatResultDto> {
+    const currentPosition = PositiveNumber.create(dto.currentPosition, {
+      fieldName: 'currentPosition',
+    }).value;
 
-    if (!{entity}) {
+    // 1. 외부 컨텍스트 조회 (LookupService)
+    const lectureInfo = await this.lectureLookupService.findForHeartbeat(
+      dto.lectureId,
+    );
+    if (!lectureInfo) {
       throw new EntityNotFoundException({
-        entityName: '{Entity}',
-        errorCode: '{ENTITY}_NOT_FOUND',
-        id: dto.{entity}Id,
+        entityName: 'Lecture',
+        id: dto.lectureId,
+        errorCode: 'LECTURE_NOT_FOUND',
       });
     }
 
-    await this.{entity}Repository.delete({entity}.id.toString());
+    // 2. 동시성 충돌 시 재시도
+    return retry(
+      async () => {
+        let progress =
+          await this.lectureProgressRepository.findByUserAndLecture(
+            dto.userId,
+            dto.lectureId,
+          );
+
+        if (!progress) {
+          progress = LectureProgress.create(dto.userId, dto.lectureId);
+        }
+
+        // 3. 도메인 메서드 호출
+        const justCompleted = progress.applyHeartbeat(
+          currentPosition,
+          dto.watchedSeconds,
+          lectureInfo.durationSeconds,
+          lectureInfo.completionThreshold,
+          lectureInfo.courseId,
+        );
+
+        // 4. 저장
+        await this.lectureProgressRepository.save(progress);
+
+        // 5. 결과 DTO 반환
+        return {
+          watchRate: progress.watchRate,
+          totalWatchedSeconds: progress.totalWatchedSeconds,
+          isCompleted: progress.isCompleted,
+          justCompleted,
+        };
+      },
+      { maxAttempts: 3 },
+    );
   }
 }
 ```
 
-### 중요 규칙
+### 핵심 규칙
 
-- 존재 여부 확인
-- Repository.delete() 호출
-- 반환값 없음 (void)
+- Output DTO는 `application/dtos/`에 정의
+- LookupService로 다른 컨텍스트 데이터 조회
+- `retry()` 유틸로 동시성 충돌 재시도
+- `Entity.create()` 정적 메서드로 새 엔티티 생성
 
----
+## 패턴 5: Query UseCase (목록 조회 + 페이지네이션)
+
+Query Service를 호출하여 **페이지네이션 메타 정보를 포함한 래핑 객체**를 반환합니다.
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { FindProductListDto, ProductListResult } from '../dtos';
+import { ProductQueryService } from '../../domain/services';
+
+@Injectable()
+export class FindProductListUseCase {
+  constructor(private readonly productQueryService: ProductQueryService) {}
+
+  async execute(dto: FindProductListDto): Promise<ProductListResult> {
+    // page → skip 변환 (UseCase 책임)
+    const page = dto.page ?? 1;
+    const skip = (page - 1) * dto.limit;
+
+    // findList + countList 병렬 조회
+    const [items, totalCount] = await Promise.all([
+      this.productQueryService.findList({
+        skip,
+        limit: dto.limit,
+        keyword: dto.keyword,
+        categoryId: dto.categoryId,
+      }),
+      this.productQueryService.countList({
+        keyword: dto.keyword,
+        categoryId: dto.categoryId,
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / dto.limit) || 1;
+
+    return {
+      items,
+      totalCount,
+      totalPages,
+      currentPage: page,
+    };
+  }
+}
+```
+
+### 핵심 규칙
+
+- Query Service 사용 (Repository 사용 금지)
+- `Promise.all()`로 findList + countList 병렬 조회
+- 결과는 `{ items, totalCount, totalPages, currentPage }` 래핑 객체
+- ReadModel 반환 (도메인 엔티티 반환 금지)
+
+## 패턴 6: Query UseCase (상세 조회 + 예외)
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { FindUserDto } from '../dtos';
+import { UserQueryService } from '../../domain/services';
+import { UserReadModel } from '../../domain/models';
+import { EntityNotFoundException } from '@shared/exception';
+
+@Injectable()
+export class FindUserUseCase {
+  constructor(private readonly userQueryService: UserQueryService) {}
+
+  async execute(dto: FindUserDto): Promise<UserReadModel> {
+    const user = await this.userQueryService.findById(dto.userId);
+
+    if (!user) {
+      throw new EntityNotFoundException({
+        entityName: 'User',
+        errorCode: 'USER_NOT_FOUND',
+        id: dto.userId,
+      });
+    }
+
+    return user;
+  }
+}
+```
+
+## 패턴 7: Event-Handler 전용 UseCase (크로스 모듈)
+
+다른 모듈의 Domain Event를 처리하는 UseCase입니다. Event Handler가 직접 호출합니다.
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+import { CourseCompletionRepository } from '../../domain/repositories';
+import { CourseCompletion } from '../../domain/models';
+import { CourseCompletionCheckService } from '../../domain/services';
+
+@Injectable()
+export class HandleLectureCompletedUseCase {
+  constructor(
+    private readonly courseCompletionRepository: CourseCompletionRepository,
+    private readonly courseCompletionCheckService: CourseCompletionCheckService,
+  ) {}
+
+  async execute(userId: string, courseId: string): Promise<void> {
+    // 1. Domain Service로 수료 조건 확인
+    const shouldComplete =
+      await this.courseCompletionCheckService.shouldMarkCompleted(
+        userId,
+        courseId,
+      );
+
+    if (!shouldComplete) {
+      return;
+    }
+
+    // 2. 이미 수료 처리됐는지 확인
+    const existing = await this.courseCompletionRepository.findByUserAndCourse(
+      userId,
+      courseId,
+    );
+    if (existing) {
+      return;
+    }
+
+    // 3. 수료 기록 생성
+    const completion = CourseCompletion.create(userId, courseId);
+    await this.courseCompletionRepository.save(completion);
+  }
+}
+```
+
+### 핵심 규칙
+
+- DTO 없이 직접 파라미터 (`userId: string, courseId: string`)
+- Event Handler에서 호출되므로 예외는 Handler가 catch
+- 멱등성 보장 (이미 존재하면 무시)
+
+## 패턴 8: Delete UseCase
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { CategoryRepository } from '../../domain/repositories';
+import { EntityNotFoundException } from '@shared/exception';
+
+@Injectable()
+export class DeleteCategoryUseCase {
+  constructor(private readonly categoryRepository: CategoryRepository) {}
+
+  async execute(dto: { categoryId: string }): Promise<void> {
+    const category = await this.categoryRepository.findById(dto.categoryId);
+
+    if (!category) {
+      throw new EntityNotFoundException({
+        entityName: 'Category',
+        errorCode: 'CATEGORY_NOT_FOUND',
+        id: dto.categoryId,
+      });
+    }
+
+    await this.categoryRepository.delete(category.id.toString());
+  }
+}
+```
+
+## UseCase 유형 선택 가이드
+
+| 유형          | 의존성                      | 반환 타입                    | 예시                                         |
+| ------------- | --------------------------- | ---------------------------- | -------------------------------------------- |
+| 생성          | Repository                  | `{ entityId: string }`       | SignUpUserUseCase                            |
+| 수정/상태변경 | Repository                  | `void`                       | UpdateStudentUseCase, ActivateStudentUseCase |
+| 삭제          | Repository                  | `void`                       | DeleteCategoryUseCase                        |
+| 결과 DTO 반환 | Repository + Domain Service | Output DTO                   | RecordHeartbeatUseCase                       |
+| 목록 조회     | Query Service               | `{ items, totalCount, ... }` | FindProductListUseCase                       |
+| 상세 조회     | Query Service               | `ReadModel`                  | FindUserUseCase                              |
+| 이벤트 처리   | Repository + Domain Service | `void`                       | HandleLectureCompletedUseCase                |
+
+## 중요 규칙
+
+- `@Injectable()` 데코레이터 필수
+- `async execute()` 메서드 (항상 async)
+- `Entity.create()` 정적 메서드로 생성 (`new Entity()` 금지)
+- Value Objects는 UseCase에서 생성 (`BoundedString.create()`)
+- 도메인 메서드를 통한 수정 (직접 props 수정 금지)
+- 조회는 Query Service + ReadModel (Repository로 Entity 조회 후 변환 금지)
 
 ## 주의사항
 
-- ❌ UseCase에 비즈니스 로직 직접 작성 (도메인 레이어에 작성)
-- ✅ Value Objects는 UseCase에서 생성
-- ✅ 도메인 메서드를 통한 수정
-- ✅ Query Repository로 조회 시 QueryModel 반환
+- UseCase에 비즈니스 로직 직접 작성 금지 (도메인 레이어에 작성)
+- Application DTO에 Value Objects 사용 금지
+- 조회 UseCase에서 도메인 엔티티 반환 금지
+- Presentation Layer 의존성 금지 (Controller, Request DTO 등)

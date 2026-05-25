@@ -1,29 +1,16 @@
 import { Module } from '@nestjs/common';
+import { GroupRepository } from './domain/repositories';
 import {
-  GroupRepository,
-  GroupQueryRepository,
-  ShortTalkSessionRepository,
-  ChatMessageRepository,
-  ChatMessageQueryRepository,
-  ShortTalkUserQueryRepository,
-  EventRepository,
-} from './domain/repositories';
+  GroupQueryService,
+  EventLookupService,
+  GroupLeavePolicyService,
+} from './domain/services';
+import { GroupRepositoryImpl } from './infra/repositories';
 import {
-  GroupRepositoryImpl,
-  GroupQueryRepositoryImpl,
-  ShortTalkSessionRepositoryImpl,
-  ChatMessageRepositoryImpl,
-  ChatMessageQueryRepositoryImpl,
-  ShortTalkUserQueryRepositoryImpl,
-  EventRepositoryImpl,
-} from './infra/repositories';
-import { GroupLeavePolicyService } from './domain/services';
+  GroupQueryServiceImpl,
+  EventLookupServiceImpl,
+} from './infra/services';
 
-/**
- * Group Core 모듈
- *
- * Domain과 Infrastructure 레이어의 Repository를 등록하고 export합니다.
- */
 @Module({
   providers: [
     {
@@ -31,39 +18,19 @@ import { GroupLeavePolicyService } from './domain/services';
       useClass: GroupRepositoryImpl,
     },
     {
-      provide: GroupQueryRepository,
-      useClass: GroupQueryRepositoryImpl,
+      provide: GroupQueryService,
+      useClass: GroupQueryServiceImpl,
     },
     {
-      provide: ShortTalkSessionRepository,
-      useClass: ShortTalkSessionRepositoryImpl,
-    },
-    {
-      provide: ChatMessageRepository,
-      useClass: ChatMessageRepositoryImpl,
-    },
-    {
-      provide: ChatMessageQueryRepository,
-      useClass: ChatMessageQueryRepositoryImpl,
-    },
-    {
-      provide: ShortTalkUserQueryRepository,
-      useClass: ShortTalkUserQueryRepositoryImpl,
-    },
-    {
-      provide: EventRepository,
-      useClass: EventRepositoryImpl,
+      provide: EventLookupService,
+      useClass: EventLookupServiceImpl,
     },
     GroupLeavePolicyService,
   ],
   exports: [
     GroupRepository,
-    GroupQueryRepository,
-    ShortTalkSessionRepository,
-    ChatMessageRepository,
-    ChatMessageQueryRepository,
-    ShortTalkUserQueryRepository,
-    EventRepository,
+    GroupQueryService,
+    EventLookupService,
     GroupLeavePolicyService,
   ],
 })

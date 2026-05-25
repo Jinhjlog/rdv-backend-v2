@@ -17,7 +17,7 @@ export class UserMapper {
    */
 
   static toDomain(prismaUser: UserPrisma): User {
-    return new User({
+    return User.unsafeCreate({
       id: prismaUser.id,
       deviceId: prismaUser.device_id,
       nickname: BoundedString.unsafeCreate(prismaUser.nickname),
@@ -40,7 +40,9 @@ export class UserMapper {
    * @param {User} domainUser 도메인 Aggregate Root
    * @returns {Prisma.public_usersCreateInput} Prisma 모델 (insert/update용)
    */
-  static toPersistence(domainUser: User): Prisma.public_usersCreateInput {
+  static toPersistence(
+    domainUser: User,
+  ): Prisma.public_usersUncheckedCreateInput {
     return {
       id: domainUser.id.toString(),
       device_id: domainUser.deviceId,

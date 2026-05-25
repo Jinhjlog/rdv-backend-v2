@@ -17,7 +17,7 @@ import { ProfanityModule } from './profanity/profanity.module';
       load: [environmentConfig],
       envFilePath: [
         '/secrets/.env', // Cloud Run 시크릿 마운트 경로
-        `.env.${process.env.NODE_ENV || 'development'}`,
+        `.env.${process.env.NODE_ENV || 'local'}`,
         '.env',
       ],
     }),

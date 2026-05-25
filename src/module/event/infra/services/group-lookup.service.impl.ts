@@ -1,0 +1,34 @@
+import { Injectable } from '@nestjs/common';
+import { GroupLookupService } from '../../domain/services';
+import { PrismaService } from '@core/database';
+
+@Injectable()
+export class GroupLookupServiceImpl implements GroupLookupService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async exists(groupId: string): Promise<boolean> {
+    const count = await this.prisma.groups.count({
+      where: { id: groupId },
+    });
+
+    return count > 0;
+  }
+
+  async findMemberUserIds(groupId: string): Promise<string[]> {
+    const members = await this.prisma.group_members.findMany({
+      where: { group_id: groupId },
+      select: { user_id: true },
+    });
+
+    return members.map((m) => m.user_id);
+  }
+
+  async findGroupNameById(groupId: string): Promise<string> {
+    const group = await this.prisma.groups.findUnique({
+      where: { id: groupId },
+      select: { name: true },
+    });
+
+    return group?.name ?? '';
+  }
+}

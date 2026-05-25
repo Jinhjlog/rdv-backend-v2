@@ -1,10 +1,12 @@
 import { Module, Provider } from '@nestjs/common';
 import {
   CharactersRepositoryImpl,
-  UserQueryRepositoryImpl,
   UserRepositoryImpl,
-  AttendanceStatisticsQueryRepositoryImpl,
 } from './infra/repositories';
+import {
+  UserQueryServiceImpl,
+  AttendanceStatisticsQueryServiceImpl,
+} from './infra/services';
 import {
   ChangeCharacterUseCase,
   CheckAccountExistsUseCase,
@@ -18,12 +20,11 @@ import {
   AuthV2Controller,
   UserController,
 } from './presentation/controllers';
+import { CharactersRepository, UserRepository } from './domain/repositories';
 import {
-  CharactersRepository,
-  UserQueryRepository,
-  UserRepository,
-  AttendanceStatisticsQueryRepository,
-} from './domain/repositories';
+  UserQueryService,
+  AttendanceStatisticsQueryService,
+} from './domain/services';
 import { JwtModule } from '@core/jwt/jwt.module';
 import { AuthService } from './domain/services/auth.service';
 
@@ -49,12 +50,12 @@ const useCases: Provider[] = [
       useClass: CharactersRepositoryImpl,
     },
     {
-      provide: UserQueryRepository,
-      useClass: UserQueryRepositoryImpl,
+      provide: UserQueryService,
+      useClass: UserQueryServiceImpl,
     },
     {
-      provide: AttendanceStatisticsQueryRepository,
-      useClass: AttendanceStatisticsQueryRepositoryImpl,
+      provide: AttendanceStatisticsQueryService,
+      useClass: AttendanceStatisticsQueryServiceImpl,
     },
     AuthService,
     ...useCases,

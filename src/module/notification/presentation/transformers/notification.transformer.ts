@@ -1,5 +1,5 @@
 import { toKstDateString } from '@shared/utils';
-import { NotificationListItemQueryModel } from '../../domain/models';
+import { NotificationListItemReadModel } from '../../domain/models';
 import {
   NotificationListItemResponseDto,
   NotificationListResponseDto,
@@ -10,7 +10,7 @@ export class NotificationTransformer {
    * 알림 목록 QueryModel -> Response DTO 변환
    */
   static toListResponse(
-    items: NotificationListItemQueryModel[],
+    items: NotificationListItemReadModel[],
     nextCursor: string | undefined,
     hasNext: boolean,
   ): NotificationListResponseDto {
@@ -22,7 +22,7 @@ export class NotificationTransformer {
   }
 
   private static toListItemResponse(
-    item: NotificationListItemQueryModel,
+    item: NotificationListItemReadModel,
   ): NotificationListItemResponseDto {
     return {
       id: item.id,

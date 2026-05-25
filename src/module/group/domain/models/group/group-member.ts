@@ -25,7 +25,7 @@ export interface GroupMemberProps {
 }
 
 export class GroupMember extends EntityClass<GroupMemberProps> {
-  constructor(props: GroupMemberProps) {
+  private constructor(props: GroupMemberProps) {
     super(props, new UniqueEntityId(props.id));
   }
 
@@ -47,6 +47,14 @@ export class GroupMember extends EntityClass<GroupMemberProps> {
 
   get joinedAt(): Date {
     return this.props.joinedAt;
+  }
+
+  promoteToOwner(): void {
+    this.props.role = GroupMemberRole.OWNER;
+  }
+
+  demoteToMember(): void {
+    this.props.role = GroupMemberRole.MEMBER;
   }
 
   /**

@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { GroupQueryRepository } from '../../domain/repositories';
-import { GroupDetailQueryModel } from '../../domain/models';
+import { GroupQueryService } from '../../domain/services';
+import { GroupDetailReadModel } from '../../domain/models';
 import { EntityNotFoundException } from '@shared/exception';
 import { FindGroupDetailDto } from '../dtos';
 
 @Injectable()
 export class FindGroupDetailUseCase {
-  constructor(private readonly groupQueryRepository: GroupQueryRepository) {}
+  constructor(private readonly groupQueryService: GroupQueryService) {}
 
-  async execute(dto: FindGroupDetailDto): Promise<GroupDetailQueryModel> {
-    const group = await this.groupQueryRepository.findDetail({
+  async execute(dto: FindGroupDetailDto): Promise<GroupDetailReadModel> {
+    const group = await this.groupQueryService.findDetail({
       groupId: dto.groupId,
     });
     if (!group) {

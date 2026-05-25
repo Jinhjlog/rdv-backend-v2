@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { NotificationSubscriptionQueryRepository } from '../../domain/repositories';
-import { NotificationSubscriptionQueryModel } from '../../domain/models';
+import { NotificationSubscriptionQueryService } from '../../domain/services';
+import { NotificationSubscriptionReadModel } from '../../domain/models';
 import { GetNotificationSubscriptionsDto } from '../dtos/get-notification-subscriptions.dto';
 
 /**
@@ -11,14 +11,12 @@ import { GetNotificationSubscriptionsDto } from '../dtos/get-notification-subscr
 @Injectable()
 export class GetNotificationSubscriptionsUseCase {
   constructor(
-    private readonly notificationSubscriptionQueryRepository: NotificationSubscriptionQueryRepository,
+    private readonly notificationSubscriptionQueryService: NotificationSubscriptionQueryService,
   ) {}
 
   async execute(
     dto: GetNotificationSubscriptionsDto,
-  ): Promise<NotificationSubscriptionQueryModel[]> {
-    return this.notificationSubscriptionQueryRepository.findByUserId(
-      dto.userId,
-    );
+  ): Promise<NotificationSubscriptionReadModel[]> {
+    return this.notificationSubscriptionQueryService.findByUserId(dto.userId);
   }
 }

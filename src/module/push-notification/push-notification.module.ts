@@ -1,5 +1,6 @@
 import { Module, Provider } from '@nestjs/common';
 import { PushDispatchService } from './application/services';
+import { NotificationSenderPort } from './application/ports';
 import {
   HandleFailedTokensUseCase,
   SendTestPushUseCase,
@@ -22,6 +23,12 @@ import {
   PushTokenRepositoryImpl,
   SubscriptionFilterRepositoryImpl,
 } from './infra/repositories';
+import {
+  FcmNotificationSenderAdapter,
+  MockNotificationSenderAdapter,
+} from './infra/adapters';
+
+const isTest = process.env.NODE_ENV === 'test';
 
 const useCases: Provider[] = [HandleFailedTokensUseCase, SendTestPushUseCase];
 
@@ -47,6 +54,12 @@ const handlers: Provider[] = [
     {
       provide: SubscriptionFilterRepository,
       useClass: SubscriptionFilterRepositoryImpl,
+    },
+    {
+      provide: NotificationSenderPort,
+      useClass: isTest
+        ? MockNotificationSenderAdapter
+        : FcmNotificationSenderAdapter,
     },
     ...useCases,
     ...services,

@@ -1,21 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-} from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class BroadcastNotificationRequestDto {
-  @ApiProperty({
-    description: '관리자 API 키',
-    example: 'admin-api-key',
-  })
-  @IsNotEmpty()
-  @IsString()
-  adminKey: string;
-
   @ApiProperty({
     description: '알림 제목',
     example: '서비스 점검 안내',

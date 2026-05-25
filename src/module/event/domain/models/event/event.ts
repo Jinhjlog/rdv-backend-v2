@@ -63,8 +63,35 @@ export interface EventProps {
 }
 
 export class Event extends AggregateRoot<EventProps> {
-  constructor(props: EventProps) {
+  private _removedParticipantIds: string[] = [];
+
+  private constructor(props: EventProps) {
     super(props, new UniqueEntityId(props.id));
+  }
+
+  /** 새로운 일정을 생성합니다. */
+  static create(
+    props: Omit<EventProps, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Event {
+    const now = new Date();
+    return new Event({
+      ...props,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  /** DB에서 복원합니다 (Mapper 전용, 검증 없음). */
+  static unsafeCreate(props: EventProps): Event {
+    return new Event(props);
+  }
+
+  get removedParticipantIds(): string[] {
+    return [...this._removedParticipantIds];
+  }
+
+  clearRemovedParticipantIds(): void {
+    this._removedParticipantIds = [];
   }
 
   get groupId(): string {
@@ -208,6 +235,8 @@ export class Event extends AggregateRoot<EventProps> {
       });
     }
 
+    const removed = this.props.participants[participantIndex];
+    this._removedParticipantIds.push(removed.id.toString());
     this.props.participants.splice(participantIndex, 1);
     this.props.updatedAt = new Date();
   }
@@ -270,6 +299,10 @@ export class Event extends AggregateRoot<EventProps> {
     // 시간 변경 시 생성자를 제외한 모든 참여자 제거
     if (params.schedule) {
       this.props.schedule = params.schedule;
+      const removed = this.props.participants.filter(
+        (p) => p.userId !== this.props.createdBy,
+      );
+      removed.forEach((p) => this._removedParticipantIds.push(p.id.toString()));
       this.props.participants = this.props.participants.filter(
         (p) => p.userId === this.props.createdBy,
       );

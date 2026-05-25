@@ -1,26 +1,25 @@
 import { Module } from '@nestjs/common';
 import {
   NotificationRepository,
-  NotificationQueryRepository,
   NotificationUserRepository,
   SystemNotificationRepository,
   NotificationSubscriptionRepository,
-  NotificationSubscriptionQueryRepository,
 } from './domain/repositories';
 import {
+  NotificationQueryService,
+  NotificationSubscriptionQueryService,
+} from './domain/services';
+import {
   NotificationRepositoryImpl,
-  NotificationQueryRepositoryImpl,
   NotificationUserRepositoryImpl,
   SystemNotificationRepositoryImpl,
   NotificationSubscriptionRepositoryImpl,
-  NotificationSubscriptionQueryRepositoryImpl,
 } from './infra/repositories';
+import {
+  NotificationQueryServiceImpl,
+  NotificationSubscriptionQueryServiceImpl,
+} from './infra/services';
 
-/**
- * Notification Core 모듈
- *
- * Domain과 Infrastructure 레이어의 Repository를 등록하고 export합니다.
- */
 @Module({
   providers: [
     {
@@ -28,8 +27,8 @@ import {
       useClass: NotificationRepositoryImpl,
     },
     {
-      provide: NotificationQueryRepository,
-      useClass: NotificationQueryRepositoryImpl,
+      provide: NotificationQueryService,
+      useClass: NotificationQueryServiceImpl,
     },
     {
       provide: NotificationUserRepository,
@@ -44,17 +43,17 @@ import {
       useClass: NotificationSubscriptionRepositoryImpl,
     },
     {
-      provide: NotificationSubscriptionQueryRepository,
-      useClass: NotificationSubscriptionQueryRepositoryImpl,
+      provide: NotificationSubscriptionQueryService,
+      useClass: NotificationSubscriptionQueryServiceImpl,
     },
   ],
   exports: [
     NotificationRepository,
-    NotificationQueryRepository,
+    NotificationQueryService,
     NotificationUserRepository,
     SystemNotificationRepository,
     NotificationSubscriptionRepository,
-    NotificationSubscriptionQueryRepository,
+    NotificationSubscriptionQueryService,
   ],
 })
 export class NotificationCoreModule {}

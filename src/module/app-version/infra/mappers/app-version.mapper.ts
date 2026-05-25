@@ -15,7 +15,7 @@ export class AppVersionMapper {
    * @returns 도메인 Aggregate Root
    */
   static toDomain(prismaModel: AppVersionPrisma): AppVersion {
-    return new AppVersion({
+    return AppVersion.unsafeCreate({
       id: prismaModel.id,
       platform: AppPlatform.unsafeCreate(prismaModel.platform),
       latestVersion: prismaModel.latest_version,

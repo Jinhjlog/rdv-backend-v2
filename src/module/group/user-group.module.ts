@@ -11,16 +11,9 @@ import {
   RemoveMemberUseCase,
   LeaveGroupUseCase,
   TransferOwnershipUseCase,
-  JoinShortTalkUseCase,
-  LeaveShortTalkUseCase,
-  SendShortTalkMessageUseCase,
-  GetChatMessageListUseCase,
   GetGroupMemberAttendanceStatisticsUseCase,
 } from './application/usecases';
-import {
-  UserGroupController,
-  ShortTalkController,
-} from './presentation/controllers';
+import { UserGroupController } from './presentation/controllers';
 import { InviteCodeCoreModule } from './invite-code-core.module';
 
 const useCases: Provider[] = [
@@ -34,17 +27,12 @@ const useCases: Provider[] = [
   RemoveMemberUseCase,
   LeaveGroupUseCase,
   TransferOwnershipUseCase,
-  JoinShortTalkUseCase,
-  LeaveShortTalkUseCase,
-  SendShortTalkMessageUseCase,
-  GetChatMessageListUseCase,
   GetGroupMemberAttendanceStatisticsUseCase,
 ];
 
 @Module({
   imports: [GroupCoreModule, InviteCodeCoreModule],
-  controllers: [UserGroupController, ShortTalkController],
+  controllers: [UserGroupController],
   providers: [...useCases],
-  exports: [],
 })
 export class UserGroupModule {}

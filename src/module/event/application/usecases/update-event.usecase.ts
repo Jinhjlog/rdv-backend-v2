@@ -4,7 +4,7 @@ import { UpdateEventDto } from '../dtos';
 import { BoundedString } from '@lib/domain';
 import { EntityNotFoundException } from '@shared/exception';
 import { EventSchedule } from '../../domain/models';
-import { EventQueueService } from '../../infra/services';
+import { EventSchedulingPort } from '../ports';
 
 @Injectable()
 export class UpdateEventUseCase {
@@ -12,7 +12,7 @@ export class UpdateEventUseCase {
 
   constructor(
     private readonly eventRepository: EventRepository,
-    private readonly eventQueueService: EventQueueService,
+    private readonly eventSchedulingPort: EventSchedulingPort,
   ) {}
 
   async execute(dto: UpdateEventDto): Promise<{ eventId: string }> {
@@ -63,16 +63,16 @@ export class UpdateEventUseCase {
 
     // 4. 시간 변경 시 큐 작업 재스케줄링
     if (updateParams.schedule) {
-      await this.eventQueueService.cancelParticipantCheck(dto.eventId);
+      await this.eventSchedulingPort.cancelParticipantCheck(dto.eventId);
 
       const scheduleSuccess =
-        await this.eventQueueService.scheduleParticipantCheck(
+        await this.eventSchedulingPort.scheduleParticipantCheck(
           dto.eventId,
           updateParams.schedule.participantCheckTime,
         );
 
       if (!scheduleSuccess) {
-        await this.eventQueueService.scheduleParticipantCheck(
+        await this.eventSchedulingPort.scheduleParticipantCheck(
           dto.eventId,
           originalParticipantCheckTime,
         );
@@ -96,8 +96,8 @@ export class UpdateEventUseCase {
       );
 
       if (updateParams.schedule) {
-        await this.eventQueueService.cancelParticipantCheck(dto.eventId);
-        await this.eventQueueService.scheduleParticipantCheck(
+        await this.eventSchedulingPort.cancelParticipantCheck(dto.eventId);
+        await this.eventSchedulingPort.scheduleParticipantCheck(
           dto.eventId,
           originalParticipantCheckTime,
         );
