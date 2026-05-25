@@ -154,3 +154,24 @@ export class DomainAuthenticationException extends DomainException {
     });
   }
 }
+
+/**
+ * DomainAuthorizationException
+ * 도메인 수준의 접근 권한이 부족할 때 발생하는 예외 (403 Forbidden)
+ *
+ * @example
+ * // 모임 멤버가 아닌 사용자가 리소스에 접근한 경우
+ * throw new DomainAuthorizationException({
+ *   message: '모임 멤버만 조회할 수 있습니다',
+ *   errorCode: 'NOT_GROUP_MEMBER',
+ * });
+ */
+export class DomainAuthorizationException extends DomainException {
+  constructor({ errorCode, message }: { errorCode?: string; message: string }) {
+    super({
+      statusCode: HttpStatus.FORBIDDEN,
+      errorCode: errorCode?.toUpperCase() || 'DOMAIN_AUTHORIZATION_FAILED',
+      message,
+    });
+  }
+}
