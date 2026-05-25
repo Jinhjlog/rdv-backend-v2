@@ -1,3 +1,5 @@
+[< README로 돌아가기](../../README.md)
+
 # 데이터베이스 스키마 워크플로우
 
 이 프로젝트는 **Supabase Studio(로컬)** 에서 테이블을 생성/변경하고, **Supabase 마이그레이션**으로 변경 이력을 관리합니다. Prisma는 타입 생성(`prisma generate`) 전용이며, Prisma 마이그레이션은 사용하지 않습니다.
@@ -198,12 +200,12 @@ npx supabase db push
 
 ### Prisma
 
-| 명령어                      | 역할                                                            |
-| --------------------------- | --------------------------------------------------------------- |
-| `npm run prisma:pull:local` | 로컬 DB → `schema.prisma` 동기화 (pre-pull + pull + fix-schema) |
-| `npm run prisma:pull:prod`  | Prod DB → `schema.prisma` 동기화                                |
-| `npm run prisma:generate:local` | Prisma Client 생성 (local 환경)                             |
-| `npm run prisma:sync:local` | pull + generate 한 번에 실행                                    |
+| 명령어                          | 역할                                                            |
+| ------------------------------- | --------------------------------------------------------------- |
+| `npm run prisma:pull:local`     | 로컬 DB → `schema.prisma` 동기화 (pre-pull + pull + fix-schema) |
+| `npm run prisma:pull:prod`      | Prod DB → `schema.prisma` 동기화                                |
+| `npm run prisma:generate:local` | Prisma Client 생성 (local 환경)                                 |
+| `npm run prisma:sync:local`     | pull + generate 한 번에 실행                                    |
 
 > **사용하지 않는 Prisma 명령어**: `prisma migrate dev`, `prisma migrate deploy`, `prisma db push`는 사용하지 않습니다. 스키마 변경은 Supabase 마이그레이션으로 관리합니다.
 
@@ -216,10 +218,10 @@ npx supabase db push
 
 ### 데이터 관리
 
-| 명령어                   | 역할                                         |
-| ------------------------ | -------------------------------------------- |
-| `npm run db:dump:prod`   | Prod 데이터를 `dumps/` 디렉토리에 SQL로 덤프 |
-| `npm run db:restore:local` | 최신 덤프 파일을 로컬 DB에 복원            |
+| 명령어                     | 역할                                         |
+| -------------------------- | -------------------------------------------- |
+| `npm run db:dump:prod`     | Prod 데이터를 `dumps/` 디렉토리에 SQL로 덤프 |
+| `npm run db:restore:local` | 최신 덤프 파일을 로컬 DB에 복원              |
 
 ---
 
@@ -299,3 +301,7 @@ npx supabase status
 # 실행 중이 아니면
 npx supabase start
 ```
+
+---
+
+[< README로 돌아가기](../../README.md)
