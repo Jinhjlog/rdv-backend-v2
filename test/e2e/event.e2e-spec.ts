@@ -85,6 +85,27 @@ describe('일정 (P1)', () => {
     expect(body.participants.length).toBeGreaterThanOrEqual(1);
   });
 
+  // ─── TC-EVT-001-1 ───
+
+  it('TC-EVT-001-1: 일정 생성 시 생성자가 참여자에 정확히 1번만 등록된다', async () => {
+    const token = await registerUser(app, 'evt-001-1');
+    const group = await createGroup(app, token);
+    const userId = await getUserId(app, token);
+
+    const event = await createEvent(token, group.id);
+
+    const response = await authRequest(app, token).get(
+      `/api/v1/events/${event.id}`,
+    );
+
+    expect(response.status).toBe(200);
+    const body = response.body as EventDetailResponse;
+    const creatorEntries = body.participants.filter(
+      (p) => p.userId === userId,
+    );
+    expect(creatorEntries).toHaveLength(1);
+  });
+
   // ─── TC-EVT-002 ───
 
   it('TC-EVT-002: 모집중 일정 최대 3개 초과 시 400', async () => {
