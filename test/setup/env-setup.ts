@@ -24,7 +24,6 @@ process.env.DIRECT_URL = config.databaseUrl;
 // Redis (Testcontainer에서 동적 할당된 URL 사용)
 process.env.REDIS_URL = config.redisUrl;
 process.env.REDIS_AUTH_DB = '0';
-process.env.REDIS_MEETING_ROOM_DB = '1';
 process.env.REDIS_QUEUE_DB = '15';
 
 // Queue (BullMQ 대신 Cloud Tasks 드라이버로 Redis 연결 방지)
