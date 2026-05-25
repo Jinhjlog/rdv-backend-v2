@@ -33,7 +33,7 @@ import {
   SendShortTalkMessageUseCase,
   GetChatMessageListUseCase,
 } from '../../application/usecases';
-import { SseMessageEvent } from '../../domain/models/short-talk/short-talk-event';
+import { SseMessageEvent } from '../../application/ports';
 import { SendShortTalkMessageRequestDto } from '../dtos/request/send-short-talk-message.request.dto';
 import { GetChatMessageListRequestDto } from '../dtos/request/get-chat-message-list.request.dto';
 import { SendShortTalkMessageResponseDto } from '../dtos/response/send-short-talk-message.response.dto';
