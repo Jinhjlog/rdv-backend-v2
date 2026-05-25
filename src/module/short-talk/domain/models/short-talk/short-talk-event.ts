@@ -10,50 +10,40 @@ export interface ShortTalkSenderInfo {
 }
 
 /**
- * SSE 이벤트 데이터 타입
+ * SSE 이벤트 Discriminated Union
  *
- * Short Talk에서 전송되는 모든 이벤트의 공통 타입입니다.
- * NestJS SSE는 { data } 형식을 사용하므로 data 필드 안에 포함됩니다.
+ * 이벤트 타입별로 필수 필드가 다르며, 타입 분기 시 컴파일 타임에 검증됩니다.
  */
-export interface ShortTalkEventData {
-  type: 'connected' | 'message' | 'ping' | 'error';
-  timestamp?: string;
-  groupId?: string;
-  content?: string;
-  senderId?: string;
-  message?: string; // 에러 메시지용
-  sender?: ShortTalkSenderInfo;
-  [key: string]: unknown;
+export type ShortTalkEvent =
+  | ShortTalkConnectedEvent
+  | ShortTalkMessageEvent
+  | ShortTalkPingEvent
+  | ShortTalkErrorEvent;
+
+export interface ShortTalkConnectedEvent {
+  type: 'connected';
+  groupId: string;
+  timestamp: string;
 }
 
-/**
- * NestJS SSE MessageEvent 형식
- * @see https://docs.nestjs.com/techniques/server-sent-events
- *
- * - id: 메시지 ID (Last-Event-Id로 재연결 시 사용)
- * - type: 이벤트 타입 (클라이언트에서 addEventListener로 구분)
- * - data: 이벤트 데이터
- * - retry: 재연결 간격 (ms)
- */
-export interface SseMessageEvent {
-  data: ShortTalkEventData;
-  id?: string;
-  type?: string;
-  retry?: number;
+export interface ShortTalkMessageEvent {
+  type: 'message';
+  id: string;
+  groupId: string;
+  senderId: string;
+  content: string;
+  createdAt: string;
+  timestamp: string;
+  sender: ShortTalkSenderInfo;
 }
 
-/**
- * ShortTalkEventData를 SSE 형식으로 변환하는 헬퍼 함수
- * @param data - 이벤트 데이터
- * @param id - 메시지 ID (선택, Last-Event-Id용)
- */
-export function toSseEvent(
-  data: ShortTalkEventData,
-  id?: string,
-): SseMessageEvent {
-  const event: SseMessageEvent = { data };
-  if (id) {
-    event.id = id;
-  }
-  return event;
+export interface ShortTalkPingEvent {
+  type: 'ping';
+  timestamp: string;
+}
+
+export interface ShortTalkErrorEvent {
+  type: 'error';
+  message: string;
+  timestamp: string;
 }

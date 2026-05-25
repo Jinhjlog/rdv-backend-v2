@@ -4,7 +4,7 @@ import { ChatMessage } from '../models/chat-message/chat-message';
  * ChatMessage Repository 인터페이스
  *
  * 메시지 저장 및 단건 조회를 처리합니다.
- * 목록 조회는 ChatMessageQueryRepository를 사용하세요.
+ * 목록 조회는 ChatMessageQueryService를 사용하세요.
  */
 export abstract class ChatMessageRepository {
   /**
