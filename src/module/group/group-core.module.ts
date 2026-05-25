@@ -1,25 +1,13 @@
 import { Module } from '@nestjs/common';
-import {
-  GroupRepository,
-  ShortTalkSessionRepository,
-  ChatMessageRepository,
-} from './domain/repositories';
+import { GroupRepository } from './domain/repositories';
 import {
   GroupQueryService,
-  ChatMessageQueryService,
-  ShortTalkUserQueryService,
   EventLookupService,
   GroupLeavePolicyService,
 } from './domain/services';
-import {
-  GroupRepositoryImpl,
-  ShortTalkSessionRepositoryImpl,
-  ChatMessageRepositoryImpl,
-} from './infra/repositories';
+import { GroupRepositoryImpl } from './infra/repositories';
 import {
   GroupQueryServiceImpl,
-  ChatMessageQueryServiceImpl,
-  ShortTalkUserQueryServiceImpl,
   EventLookupServiceImpl,
 } from './infra/services';
 
@@ -30,24 +18,8 @@ import {
       useClass: GroupRepositoryImpl,
     },
     {
-      provide: ShortTalkSessionRepository,
-      useClass: ShortTalkSessionRepositoryImpl,
-    },
-    {
-      provide: ChatMessageRepository,
-      useClass: ChatMessageRepositoryImpl,
-    },
-    {
       provide: GroupQueryService,
       useClass: GroupQueryServiceImpl,
-    },
-    {
-      provide: ChatMessageQueryService,
-      useClass: ChatMessageQueryServiceImpl,
-    },
-    {
-      provide: ShortTalkUserQueryService,
-      useClass: ShortTalkUserQueryServiceImpl,
     },
     {
       provide: EventLookupService,
@@ -57,11 +29,7 @@ import {
   ],
   exports: [
     GroupRepository,
-    ShortTalkSessionRepository,
-    ChatMessageRepository,
     GroupQueryService,
-    ChatMessageQueryService,
-    ShortTalkUserQueryService,
     EventLookupService,
     GroupLeavePolicyService,
   ],

@@ -4,6 +4,7 @@ import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 import { UserModule } from './user/user.module';
 import { UserGroupModule } from './group/user-group.module';
+import { UserShortTalkModule } from './short-talk/user-short-talk.module';
 import { UserCharacterModule } from './character/user-character.module';
 import { UserEventModule } from './event/user-event.module';
 import { EventQueueModule } from './event/event-queue.module';
@@ -27,6 +28,7 @@ export const modules: Type<any>[] = [
   UserModule,
   UserCharacterModule,
   UserGroupModule,
+  UserShortTalkModule,
   UserEventModule,
   UserLocationTrackingModule,
   DeviceTokenModule,
