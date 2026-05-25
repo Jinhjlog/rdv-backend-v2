@@ -6,7 +6,6 @@ import { RedisOptions } from 'ioredis';
 import { EnvironmentConfig } from '@core/config/environment.config';
 
 export const AUTH_REDIS_CONNECTION = 'auth';
-export const MEETING_ROOM_REDIS_CONNECTION = 'meetingRoom';
 
 interface RedisInstanceConfig {
   dbKey: keyof EnvironmentConfig['redis'];
@@ -24,16 +23,6 @@ interface RedisInstanceConfig {
         }),
       },
       AUTH_REDIS_CONNECTION,
-    ),
-    NestRedisModule.forRootAsync(
-      {
-        imports: [ConfigModule],
-        inject: [ConfigService],
-        useFactory: createRedisFactory({
-          dbKey: 'meetingRoomDB',
-        }),
-      },
-      MEETING_ROOM_REDIS_CONNECTION,
     ),
   ],
   exports: [NestRedisModule],
@@ -54,7 +43,6 @@ function createRedisFactory(config: RedisInstanceConfig) {
 
     const db = redisConfig[config.dbKey] as number;
 
-    // 기본 옵션
     const baseRedisOptions: RedisOptions = {
       db,
       reconnectOnError: (err) => {
@@ -71,7 +59,6 @@ function createRedisFactory(config: RedisInstanceConfig) {
       },
     };
 
-    // 커스텀 옵션 병합
     const redisOptions: RedisOptions = {
       ...baseRedisOptions,
       ...config.customOptions,

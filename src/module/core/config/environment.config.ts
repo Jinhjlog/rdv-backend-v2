@@ -7,7 +7,6 @@ export type EnvironmentConfig = {
   redis: {
     url: string;
     authDB: number;
-    meetingRoomDB: number;
     queueDB: number;
   };
   jwt: {
@@ -55,8 +54,6 @@ function validateEnvVariables(config: EnvironmentConfig) {
 
   if (!config.redis.url) missingVariables.push('REDIS_URL');
   if (config.redis.authDB === -1) missingVariables.push('REDIS_AUTH_DB');
-  if (config.redis.meetingRoomDB === -1)
-    missingVariables.push('REDIS_MEETING_ROOM_DB');
   if (config.redis.queueDB === -1) missingVariables.push('REDIS_QUEUE_DB');
 
   if (!config.jwt.secret) missingVariables.push('JWT_SECRET');
@@ -93,9 +90,6 @@ export default (): EnvironmentConfig => {
       url: process.env.REDIS_URL || '',
       authDB: process.env.REDIS_AUTH_DB
         ? parseInt(process.env.REDIS_AUTH_DB, 10)
-        : -1,
-      meetingRoomDB: process.env.REDIS_MEETING_ROOM_DB
-        ? parseInt(process.env.REDIS_MEETING_ROOM_DB, 10)
         : -1,
       queueDB: process.env.REDIS_QUEUE_DB
         ? parseInt(process.env.REDIS_QUEUE_DB, 10)
