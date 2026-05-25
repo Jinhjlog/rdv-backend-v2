@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CursorUtil } from '@shared/utils';
 import { DomainRuleViolationException } from '@shared/exception';
-import { GroupRepository } from '../../domain/repositories';
-import { ChatMessageQueryService } from '../../domain/services';
+import {
+  ChatMessageQueryService,
+  GroupMembershipLookupService,
+} from '../../domain/services';
 import { ChatMessageReadModel } from '../../domain/models';
 import { GetChatMessageListDto } from '../dtos/get-chat-message-list.dto';
 
@@ -17,7 +19,7 @@ import { GetChatMessageListDto } from '../dtos/get-chat-message-list.dto';
 @Injectable()
 export class GetChatMessageListUseCase {
   constructor(
-    private readonly groupRepository: GroupRepository,
+    private readonly groupMembershipLookupService: GroupMembershipLookupService,
     private readonly chatMessageQueryService: ChatMessageQueryService,
   ) {}
 
@@ -26,9 +28,12 @@ export class GetChatMessageListUseCase {
     nextCursor?: string;
     hasMore: boolean;
   }> {
-    // 1. 그룹 조회 및 참여자 검증
-    const group = await this.groupRepository.findById(dto.groupId);
-    if (!group || !group.hasMember(dto.userId)) {
+    // 1. 그룹 멤버십 검증
+    const isMember = await this.groupMembershipLookupService.isMember(
+      dto.groupId,
+      dto.userId,
+    );
+    if (!isMember) {
       throw new DomainRuleViolationException({
         entityName: 'GroupMember',
         errorCode: 'NOT_GROUP_MEMBER',

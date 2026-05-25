@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Observable, Subject, interval, merge, of } from 'rxjs';
 import { takeWhile, map, catchError, startWith } from 'rxjs/operators';
+import { ShortTalkSessionRepository } from '../../domain/repositories';
 import {
-  ShortTalkSessionRepository,
-  GroupRepository,
-} from '../../domain/repositories';
-import { ShortTalkUserQueryService } from '../../domain/services';
+  ShortTalkUserQueryService,
+  GroupMembershipLookupService,
+} from '../../domain/services';
 import { ShortTalkListener } from '../../domain/models';
 import {
   ShortTalkEventData,
@@ -29,15 +29,18 @@ export class JoinShortTalkUseCase {
   private readonly logger = new Logger(JoinShortTalkUseCase.name);
 
   constructor(
-    private readonly groupRepository: GroupRepository,
+    private readonly groupMembershipLookupService: GroupMembershipLookupService,
     private readonly shortTalkSessionRepository: ShortTalkSessionRepository,
     private readonly shortTalkUserQueryService: ShortTalkUserQueryService,
   ) {}
 
   async execute(dto: JoinShortTalkDto): Promise<Observable<SseMessageEvent>> {
-    // 1. 그룹 조회 및 참여자 검증
-    const group = await this.groupRepository.findById(dto.groupId);
-    if (!group || !group.hasMember(dto.userId)) {
+    // 1. 그룹 멤버십 검증
+    const isMember = await this.groupMembershipLookupService.isMember(
+      dto.groupId,
+      dto.userId,
+    );
+    if (!isMember) {
       throw new DomainRuleViolationException({
         entityName: 'GroupMember',
         errorCode: 'NOT_GROUP_MEMBER',

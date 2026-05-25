@@ -1,6 +1,6 @@
 # 숏 톡 (Short Talk)
 
-> Group 모듈 내 별도 컨트롤러 (`src/module/group/presentation/controllers/short-talk.controller.ts`)
+> 독립 모듈 (`src/module/short-talk/`)
 
 ## 1. 배경 및 문제 정의
 

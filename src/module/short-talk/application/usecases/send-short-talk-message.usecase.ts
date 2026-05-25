@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  GroupRepository,
   ShortTalkSessionRepository,
+  ChatMessageRepository,
 } from '../../domain/repositories';
-import { ChatMessageRepository } from '../../domain/repositories/chat-message.repository';
+import { GroupMembershipLookupService } from '../../domain/services';
 import { ChatMessage } from '../../domain/models/chat-message/chat-message';
 import {
   SendShortTalkMessageDto,
@@ -26,7 +26,7 @@ export class SendShortTalkMessageUseCase {
   private readonly logger = new Logger(SendShortTalkMessageUseCase.name);
 
   constructor(
-    private readonly groupRepository: GroupRepository,
+    private readonly groupMembershipLookupService: GroupMembershipLookupService,
     private readonly chatMessageRepository: ChatMessageRepository,
     private readonly shortTalkSessionRepository: ShortTalkSessionRepository,
     private readonly profanityFilter: ProfanityFilterService,
@@ -35,9 +35,12 @@ export class SendShortTalkMessageUseCase {
   async execute(
     dto: SendShortTalkMessageDto,
   ): Promise<SendShortTalkMessageResultDto> {
-    // 1. 그룹 조회 및 참여자 검증
-    const group = await this.groupRepository.findById(dto.groupId);
-    if (!group || !group.hasMember(dto.senderId)) {
+    // 1. 그룹 멤버십 검증
+    const isMember = await this.groupMembershipLookupService.isMember(
+      dto.groupId,
+      dto.senderId,
+    );
+    if (!isMember) {
       throw new DomainRuleViolationException({
         entityName: 'GroupMember',
         errorCode: 'NOT_GROUP_MEMBER',
