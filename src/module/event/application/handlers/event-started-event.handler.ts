@@ -6,10 +6,8 @@ import { EventSchedulingPort } from '../ports';
 /**
  * 일정 시작 이벤트 핸들러
  *
- * EventStartedEvent를 수신하여 부수 효과를 처리합니다:
- * - 일정 종료 스케줄링 예약
- * - 푸시 알림 발송 (TODO)
- * - 위치 추적 세션 시작 (TODO)
+ * EventStartedEvent를 수신하여 일정 종료 스케줄링을 예약합니다.
+ * 푸시 알림은 PushNotification 모듈, 위치 추적은 LocationTracking 모듈에서 각각 처리합니다.
  */
 @Injectable()
 export class EventStartedEventHandler implements OnModuleInit {
@@ -44,11 +42,5 @@ export class EventStartedEventHandler implements OnModuleInit {
     } else {
       this.logger.error(`일정 종료 스케줄링 실패: eventId=${eventId}`);
     }
-
-    // TODO: 2. 푸시 알림 발송 - "일정이 곧 시작됩니다! 출발 준비를 해주세요"
-    // await this.pushNotificationService.sendToUsers(participantUserIds, { ... });
-
-    // TODO: 3. 위치 추적 세션 시작
-    // await this.locationTrackingService.startSession(eventId, participantUserIds);
   }
 }
