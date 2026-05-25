@@ -40,6 +40,7 @@ npm run prisma:sync:local      # pull + generate 한 번에 실행
 | **시작하기**                                                            |                                                          |
 | [스키마 워크플로우](docs/guide/SCHEMA_WORKFLOW.md)                      | Supabase 기반 DB 스키마 변경 절차 (Local → Prod)         |
 | **아키텍처**                                                            |                                                          |
+| [Authentication (인증)](docs/architecture/AUTHENTICATION.md)            | 디바이스 ID + Play Integrity + JWT 인증 흐름             |
 | [Short Talk (SSE 채팅)](docs/architecture/SHORT_TALK.md)                | SSE 실시간 채팅 동작 방식, Port/Adapter 구조             |
 | [Location Tracking (위치 추적)](docs/architecture/LOCATION_TRACKING.md) | 백그라운드 위치 추적, 동적 폴링 정책, 독립 FlutterEngine |
 | **테스트**                                                              |                                                          |

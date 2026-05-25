@@ -5,3 +5,4 @@ export * from './api-key.guard';
 export * from './admin-api-key.guard';
 export * from './attestation.guard';
 export * from './cloud-tasks-auth.guard';
+export * from './local-only.guard';
