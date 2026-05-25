@@ -34,9 +34,10 @@
 
 API Contract Test와 별도로, 실제 사용자 업무 흐름을 검증하는 시나리오 테스트를 운영합니다.
 
-| 시나리오    | 스펙 문서 | 테스트 파일 | 관련 모듈 |
-| ----------- | --------- | ----------- | --------- |
-| (아직 없음) |           |             |           |
+| 시나리오 | 스펙 문서 | 테스트 파일 | 스텝 | 상태 |
+|----------|-----------|-------------|------|------|
+| SCN-001: 모임→일정→위치 추적 | [scenario-meeting-full-journey.md](./scenario-meeting-full-journey.md) | `test/scenarios/meeting-full-journey.scenario.ts` | 8 | ✅ PASS |
+| SCN-002: 모임→채팅 | [scenario-chat-journey.md](./scenario-chat-journey.md) | `test/scenarios/chat-journey.scenario.ts` | 5 | ✅ PASS |
 
 실행 방법: `npm run test:scenarios`
 

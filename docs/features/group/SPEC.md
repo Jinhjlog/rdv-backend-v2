@@ -151,7 +151,7 @@
 ### 명시적 제외
 
 - 일정 생성/관리 → Event BC
-- 채팅 → Short Talk (같은 모듈 내 별도 컨트롤러)
+- 채팅 → Short Talk BC (독립 모듈)
 - 위치 추적 → Location Tracking BC
 
 ## 5. 전제 조건 및 제약사항
