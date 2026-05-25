@@ -17,4 +17,31 @@ export class EventLookupServiceImpl implements EventLookupService {
 
     return count > 0;
   }
+
+  async isGroupMemberOfEvent(
+    eventId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const count = await this.prisma.group_members.count({
+      where: {
+        user_id: userId,
+        groups: {
+          events: {
+            some: { id: eventId },
+          },
+        },
+      },
+    });
+
+    return count > 0;
+  }
+
+  async findEventTimeById(eventId: string): Promise<Date | undefined> {
+    const event = await this.prisma.events.findUnique({
+      where: { id: eventId },
+      select: { event_time: true },
+    });
+
+    return event?.event_time ?? undefined;
+  }
 }

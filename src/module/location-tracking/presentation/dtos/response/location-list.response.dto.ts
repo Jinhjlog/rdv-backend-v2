@@ -63,4 +63,10 @@ export class LocationListResponseDto {
     type: [LocationListItemResponseDto],
   })
   items: LocationListItemResponseDto[];
+
+  @ApiProperty({
+    description: '클라이언트 폴링 간격 (초)',
+    example: 30,
+  })
+  pollingIntervalSeconds: number;
 }

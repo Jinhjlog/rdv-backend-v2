@@ -5,4 +5,5 @@
  */
 export class FindLocationsByEventDto {
   eventId: string;
+  userId: string;
 }
