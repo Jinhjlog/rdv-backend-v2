@@ -99,13 +99,6 @@ export class EventRepositoryImpl implements EventRepository {
     client: PrismaService | PrismaTransactionClient,
     event: Event,
   ): Promise<void> {
-    // 0. 새로 생성된 Event인지 확인 (upsert 전에 존재 여부 체크)
-    const existingEvent = await client.events.findUnique({
-      where: { id: event.id.toString() },
-      select: { created_at: true },
-    });
-    const isNewEvent = !existingEvent;
-
     // 1. Event (Aggregate Root) 저장
     const eventData = EventMapper.toPersistence(event);
 
@@ -114,17 +107,6 @@ export class EventRepositoryImpl implements EventRepository {
       update: eventData,
       create: eventData,
     });
-
-    // 1-1. 새로 생성된 경우, 생성자를 참여자에 자동 추가
-    if (isNewEvent) {
-      await client.event_participants.create({
-        data: {
-          event_id: event.id.toString(),
-          user_id: event.createdBy,
-          status: 'PREPARING',
-        },
-      });
-    }
 
     // 2. 명시적으로 삭제 요청된 참여자만 삭제
     const removedParticipantIds = event.removedParticipantIds;
