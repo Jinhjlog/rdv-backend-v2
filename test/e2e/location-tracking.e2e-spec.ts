@@ -17,6 +17,7 @@ interface LocationListResponse {
     longitude: string | null;
     lastUpdatedAt: string | null;
   }>;
+  pollingIntervalSeconds: number;
 }
 
 describe('위치 추적 (P3)', () => {
@@ -100,6 +101,8 @@ describe('위치 추적 (P3)', () => {
     expect(body.items.length).toBeGreaterThanOrEqual(1);
     expect(body.items[0].userId).toBe(userId);
     expect(body.items[0].nickname).toBe('테스터');
+    expect(body.pollingIntervalSeconds).toBeDefined();
+    expect(typeof body.pollingIntervalSeconds).toBe('number');
   });
 
   // ─── TC-LOC-002 ───
