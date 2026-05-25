@@ -1,25 +1,27 @@
 import {
   Body,
   Controller,
-  ForbiddenException,
   HttpCode,
   HttpStatus,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiOkResponse,
   ApiBadRequestResponse,
-  ApiForbiddenResponse,
+  ApiUnauthorizedResponse,
+  ApiHeader,
 } from '@nestjs/swagger';
+import { AdminApiKeyGuard } from '../../../auth/guards';
 import { BroadcastSystemNotificationUseCase } from '../../application/usecases';
 import { BroadcastNotificationRequestDto } from '../dtos/request';
 import { BroadcastNotificationResponseDto } from '../dtos/response';
 
-const ADMIN_API_KEY = 'wlsguswnsdmlzl';
-
 @ApiTags('관리자 - 알림')
+@ApiHeader({ name: 'x-api-key', description: '관리자 API 키', required: true })
+@UseGuards(AdminApiKeyGuard)
 @Controller({ path: 'admin/notifications', version: '1' })
 export class AdminNotificationController {
   constructor(
@@ -42,18 +44,14 @@ export class AdminNotificationController {
   @ApiBadRequestResponse({
     description: '잘못된 요청 (필드 검증 실패)',
   })
-  @ApiForbiddenResponse({
-    description: '유효하지 않은 관리자 API 키',
+  @ApiUnauthorizedResponse({
+    description: '유효하지 않은 관리자 API 키: _**INVALID_API_KEY**_',
   })
   @Post('broadcast')
   @HttpCode(HttpStatus.OK)
   async broadcast(
     @Body() body: BroadcastNotificationRequestDto,
   ): Promise<{ data: BroadcastNotificationResponseDto }> {
-    if (body.adminKey !== ADMIN_API_KEY) {
-      throw new ForbiddenException('유효하지 않은 관리자 API 키입니다.');
-    }
-
     const result = await this.broadcastSystemNotificationUseCase.execute({
       title: body.title,
       subtitle: body.subtitle,
