@@ -79,7 +79,7 @@
 ### 시스템 공지 (관리자)
 
 - [x] POST /api/v1/admin/notifications/broadcast (관리자 API 키)
-- [x] 입력: title, subtitle, sendPush? (기본 false), adminKey
+- [x] 입력: title, subtitle, sendPush? (기본 false)
 - [x] 전체 유저에게 SYSTEM 타입 알림 Fan-out 생성
 - [x] sendPush=true 시 FCM 푸시 함께 발송
 - [x] 응답: notifiedUserCount
@@ -104,4 +104,4 @@
 - 알림 타입은 DB UPPER_CASE, API 응답은 lowercase (Transformer에서 변환)
 - 모든 응답은 `{ data: ... }` 형태로 래핑하여 반환 (다른 모듈과 패턴 다름)
 - 사용자 삭제 시 CASCADE로 알림 + 구독 설정 삭제
-- 관리자 API 키는 하드코딩 상태 (보안 개선 필요)
+- 관리자 API 키는 환경변수(`ADMIN_API_KEY`)에서 로드, `AdminApiKeyGuard`로 헤더(`x-api-key`) 검증

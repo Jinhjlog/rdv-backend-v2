@@ -104,4 +104,4 @@ FCM(Firebase Cloud Messaging) 기반 푸시 알림 발송 시스템. 디바이�
 - FCM dry-run 검증 실패 시 토큰 등록 무시 (에러 미발생)
 - 알림 구독 off인 사용자에게는 푸시 미발송 (SubscriptionFilter)
 - 발송 실패 토큰(InvalidRegistration, NotRegistered 등)은 자동 삭제
-- 테스트 API 키는 하드코딩 상태 (보안 개선 필요)
+- 관리자/테스트 API 키는 환경변수(`ADMIN_API_KEY`)에서 로드, `AdminApiKeyGuard`로 헤더(`x-api-key`) 검증

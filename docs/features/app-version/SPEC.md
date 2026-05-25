@@ -59,4 +59,4 @@
 
 - 인증 불필요 (Public API) — 앱 실행 최초 단계에서 호출
 - 플랫폼당 1개 레코드 (platform UNIQUE 제약)
-- 관리자 API 키는 하드코딩 상태 (보안 개선 필요)
+- 관리자 API 키는 환경변수(`ADMIN_API_KEY`)에서 로드, `AdminApiKeyGuard`로 헤더(`x-api-key`) 검증

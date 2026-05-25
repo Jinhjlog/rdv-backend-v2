@@ -77,12 +77,13 @@ V2 API에서 API Key + Platform Attestation(Play Integrity) 검증을 추가하�
 - [x] 자동 처리: 네임태그 할당, 디폴트 캐릭터 지급, 레벨 1, 경험치 0
 - [x] 응답: 사용자 정보 + accessToken
 
-### 인증 (V1 — 하위 호환)
+### 인증 (V1 — 로컬 개발/테스트 전용)
 
 - [x] GET /api/v1/auth/check-account?deviceId= (Public)
 - [x] POST /api/v1/auth/login (Public)
 - [x] POST /api/v1/auth/register (Public)
 - [x] V2와 동일한 로직이지만 API Key + Platform Attestation 검증 없음
+- [x] `LocalOnlyGuard` 적용 — 프로덕션 환경에서 403 `API_VERSION_DEPRECATED` 반환
 
 ### 사용자 프로필
 
