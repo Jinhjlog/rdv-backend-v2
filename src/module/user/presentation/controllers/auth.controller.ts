@@ -6,6 +6,7 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -29,8 +30,10 @@ import {
   LoginRequestDto,
   RegisterRequestDto,
 } from '../dtos';
+import { LocalOnlyGuard } from '../../../auth/guards';
 
-@ApiTags('인증 - Auth 관리')
+@ApiTags('인증 - Auth 관리 (v1, 로컬 전용)')
+@UseGuards(LocalOnlyGuard)
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
   constructor(
