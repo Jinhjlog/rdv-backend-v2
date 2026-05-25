@@ -11,28 +11,20 @@
 
 ## 진행 현황
 
-| 모듈          | TC 수  | 테스트 파일                              | 상태            |
-| ------------- | ------ | ---------------------------------------- | --------------- |
-| 헬스체크      | 4      | `test/e2e/health.e2e-spec.ts`            | ✅ PASS         |
-| 사용자 인증   | 9      | `test/e2e/user-auth.e2e-spec.ts`         | ✅ PASS         |
-| 모임          | 16     | `test/e2e/group.e2e-spec.ts`             | ✅ PASS         |
-| 일정          | 11     | `test/e2e/event.e2e-spec.ts`             | ✅ PASS         |
-| 숏 톡         | 5      | `test/e2e/short-talk.e2e-spec.ts`        | ✅ PASS         |
-| 캐릭터        | 4      | `test/e2e/character.e2e-spec.ts`         | ✅ PASS         |
-| 알림          | 5      | `test/e2e/notification.e2e-spec.ts`      | ✅ PASS         |
-| 위치 추적     | 4      | `test/e2e/location-tracking.e2e-spec.ts` | ⚠️ 3 PASS / 1 FAIL (의도적) |
-| 디바이스 토큰 | 3      | `test/e2e/device-token.e2e-spec.ts`      | ✅ PASS         |
-| 앱 버전       | 4      | `test/e2e/app-version.e2e-spec.ts`       | ✅ PASS         |
-| 푸시 알림     | 2      | `test/e2e/push-notification.e2e-spec.ts` | ✅ PASS         |
-| **합계**      | **67** |                                          | **64 PASS / 1 의도적 FAIL** |
-
----
-
-## 의도적 실패 TC
-
-| TC ID      | 사유                                             | 해제 조건                          |
-| ---------- | ------------------------------------------------ | ---------------------------------- |
-| TC-LOC-004 | 모임 외부 멤버 위치 조회 시 403 (권한 검증 미구현) | UseCase에 모임 멤버 검증 로직 추가 |
+| 모듈          | TC 수  | 테스트 파일                              | 상태    |
+| ------------- | ------ | ---------------------------------------- | ------- |
+| 헬스체크      | 4      | `test/e2e/health.e2e-spec.ts`            | ✅ PASS |
+| 사용자 인증   | 9      | `test/e2e/user-auth.e2e-spec.ts`         | ✅ PASS |
+| 모임          | 16     | `test/e2e/group.e2e-spec.ts`             | ✅ PASS |
+| 일정          | 11     | `test/e2e/event.e2e-spec.ts`             | ✅ PASS |
+| 숏 톡         | 5      | `test/e2e/short-talk.e2e-spec.ts`        | ✅ PASS |
+| 캐릭터        | 4      | `test/e2e/character.e2e-spec.ts`         | ✅ PASS |
+| 알림          | 5      | `test/e2e/notification.e2e-spec.ts`      | ✅ PASS |
+| 위치 추적     | 4      | `test/e2e/location-tracking.e2e-spec.ts` | ✅ PASS |
+| 디바이스 토큰 | 3      | `test/e2e/device-token.e2e-spec.ts`      | ✅ PASS |
+| 앱 버전       | 4      | `test/e2e/app-version.e2e-spec.ts`       | ✅ PASS |
+| 푸시 알림     | 2      | `test/e2e/push-notification.e2e-spec.ts` | ✅ PASS |
+| **합계**      | **67** |                                          | **67 PASS** |
 
 ---
 
